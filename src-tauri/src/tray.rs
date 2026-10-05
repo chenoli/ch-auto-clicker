@@ -218,14 +218,19 @@ pub fn show_main<R: Runtime>(app: &AppHandle<R>) {
     }
 }
 
-/// Stops the engine safely, saves everything and exits ("Sair", or closing with "Sair").
-pub fn quit<R: Runtime>(app: &AppHandle<R>) {
+/// Stops a running engine and waits for it, so nothing clicks during an exit or an update.
+pub fn stop_engine<R: Runtime>(app: &AppHandle<R>) {
     let state = app.state::<AppState>();
     if state.engine.shared().state().is_active() {
         state.engine.stop();
         let _ = state.engine.wait_idle(Duration::from_millis(1_000));
     }
     state.persister.flush();
+}
+
+/// Stops the engine safely, saves everything and exits ("Sair", or closing with "Sair").
+pub fn quit<R: Runtime>(app: &AppHandle<R>) {
+    stop_engine(app);
     app.exit(0);
 }
 

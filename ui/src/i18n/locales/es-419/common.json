@@ -137,7 +137,9 @@
     "ANTI_CHEAT_ACK": "Lee el aviso sobre anti-cheat antes de iniciar.",
     "AUTOSTART_FAILED": "No se pudo cambiar el inicio con Windows.",
     "OPEN_FAILED": "No se pudo abrir el navegador.",
-    "BENCHMARK_FAILED": "No se pudo medir el programador."
+    "BENCHMARK_FAILED": "No se pudo medir el programador.",
+    "UPDATE_FAILED": "No se pudo actualizar la aplicación.",
+    "UPDATE_NONE": "No hay ninguna actualización disponible."
   },
   "gallery": {
     "title": "Galería de pantallas",
@@ -368,5 +370,15 @@
   "degraded": {
     "timing": "Esta computadora no logra el ritmo pedido. Aumenta el intervalo o cierra programas pesados.",
     "displayChanged": "Las pantallas cambiaron durante la ejecución, así que se pausó. Revisa los puntos o el área antes de reanudar."
+  },
+  "update": {
+    "check": "Buscar actualizaciones",
+    "checking": "Buscando…",
+    "latest": "Tienes la versión más reciente",
+    "failed": "No se pudo verificar",
+    "install": "Instalar la {version} y reiniciar",
+    "installing": "Descargando la actualización…",
+    "available": "La versión {version} está disponible.",
+    "open": "Actualizar ›"
   }
 }

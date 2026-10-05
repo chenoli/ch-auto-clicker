@@ -4,12 +4,13 @@ import { useTranslation } from "react-i18next";
 
 import { commands } from "../../ipc";
 
-import { applyCapabilities, useAppStore } from "../../store/app-store";
+import { applyCapabilities, applyUpdate, useAppStore } from "../../store/app-store";
 
 import { themeLabel } from "../themes/themes-route";
 import { SettingsScreen } from "./settings-screen";
 
 import type { Settings } from "../../ipc";
+import type { UpdateState } from "./settings-screen";
 import type { ReactElement } from "react";
 
 interface SettingsRouteProps {
@@ -28,6 +29,10 @@ export function SettingsRoute({ settings, ...nav }: SettingsRouteProps): ReactEl
   const capabilities = useAppStore((s) => s.capabilities);
   const [error, setError] = useState<string | null>(null);
   const [measuring, setMeasuring] = useState(false);
+  const found = useAppStore((s) => s.update);
+  const [update, setUpdate] = useState<UpdateState>({ kind: "idle" });
+  const shownUpdate: UpdateState =
+    found && update.kind !== "installing" ? { kind: "available", version: found } : update;
 
   const save = (next: Settings) => {
     setError(null);
@@ -58,6 +63,26 @@ export function SettingsRoute({ settings, ...nav }: SettingsRouteProps): ReactEl
           setMeasuring(false);
           if (r.status === "ok") applyCapabilities(r.data);
           else setError("BENCHMARK_FAILED");
+        });
+      }}
+      update={shownUpdate}
+      onCheckUpdate={() => {
+        setUpdate({ kind: "checking" });
+        void commands.updateCheck().then((r) => {
+          if (r.status === "error") setUpdate({ kind: "failed" });
+          else if (r.data) {
+            applyUpdate(r.data.version);
+            setUpdate({ kind: "idle" });
+          } else setUpdate({ kind: "latest" });
+        });
+      }}
+      onInstallUpdate={() => {
+        setUpdate({ kind: "installing" });
+        void commands.updateInstall().then((r) => {
+          if (r.status === "error") {
+            setUpdate({ kind: "failed" });
+            setError(r.error.code);
+          }
         });
       }}
       {...nav}

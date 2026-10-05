@@ -42,6 +42,8 @@ const mocks = vi.hoisted(() => ({
     appOpenSupport: vi.fn(),
     engineRunBenchmark: vi.fn(),
     hudResize: vi.fn(),
+    updateCheck: vi.fn(),
+    updateInstall: vi.fn(),
   },
 }));
 
@@ -65,6 +67,7 @@ vi.mock("../ipc", () => {
       overlayChanged: event,
       navigateRequested: event,
       hudHover: event,
+      updateAvailable: event,
     },
   };
 });
@@ -238,6 +241,27 @@ describe("Anti-cheat notice and settings", () => {
     expect(await screen.findByText("1 ms")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Medir novamente" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("medir o agendador");
+  });
+});
+
+describe("Updates", () => {
+  it("checks, finds a version, installs it and reports failures", async () => {
+    mocks.commands.updateCheck
+      .mockResolvedValueOnce({ status: "ok", data: null })
+      .mockResolvedValueOnce({ status: "error", error: { code: "UPDATE_FAILED", message: "" } })
+      .mockResolvedValueOnce({ status: "ok", data: { version: "0.1.1", notes: null } });
+    mocks.commands.updateInstall.mockResolvedValue({ status: "error", error: { code: "UPDATE_FAILED", message: "" } });
+    render(<MainWindow />);
+    fireEvent.click(await screen.findByRole("button", { name: "Configurações" }));
+    fireEvent.click(screen.getByRole("button", { name: "Verificar atualizações" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Você está na versão mais recente" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Não foi possível verificar" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Instalar a 0.1.1 e reiniciar" }));
+    expect(mocks.commands.updateInstall).toHaveBeenCalledOnce();
+    expect(await screen.findByRole("alert")).toHaveTextContent("Não foi possível atualizar");
+    fireEvent.click(screen.getByRole("button", { name: "Voltar" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Atualizar ›" }));
+    expect(screen.getByRole("heading", { name: "Configurações" })).toBeInTheDocument();
   });
 });
 

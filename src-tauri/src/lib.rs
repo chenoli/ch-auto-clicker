@@ -20,6 +20,7 @@ mod thumbs;
 mod tokens;
 mod tray;
 mod tray_icon;
+mod updater;
 mod windowing;
 
 use tauri::Manager;
@@ -75,6 +76,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_notification::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_autostart::init(
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
             Some(vec![STARTED_MINIMIZED]),
@@ -94,6 +96,7 @@ pub fn run() {
             tray::install(app.handle())?;
             hud::create(app.handle())?;
             display_watch::spawn(app.handle().clone());
+            updater::spawn(app.handle().clone());
             // Autostart passes --minimized: stay in the tray (T11.5).
             let minimized = std::env::args().any(|a| a == STARTED_MINIMIZED);
             if let Some(main) = app.get_webview_window("main") {

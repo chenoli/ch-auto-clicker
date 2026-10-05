@@ -32,6 +32,9 @@ export interface MainWindowViewProps {
   commandError?: string | null;
   /** The run is not going as asked: the requested rate is not met, or the screens changed. */
   degraded?: DegradedReason | null;
+  /** A newer version is published (it is installed from Configurações). */
+  update?: string | null;
+  onOpenUpdate?: () => void;
   onEdit: (mutate: (p: Profile) => Profile) => void;
   onPrimary: () => void;
   onOpenVariation: () => void;
@@ -65,6 +68,8 @@ export function MainWindowView({
   errorCode,
   commandError,
   degraded = null,
+  update = null,
+  onOpenUpdate,
   onEdit,
   onPrimary,
   onOpenVariation,
@@ -98,7 +103,7 @@ export function MainWindowView({
   const active = engine.state === "countdown" || engine.state === "running" || engine.state === "paused";
   // A refused start shortcut shows the error state while idle; the engine itself is fine.
   const shortcutBroken = Boolean(hotkeyError) && engine.state === "idle";
-  const extraRows = `${String(active)}|${commandError ?? ""}|${String(shortcutBroken)}|${degraded ?? ""}`;
+  const extraRows = `${String(active)}|${commandError ?? ""}|${String(shortcutBroken)}|${degraded ?? ""}|${update ?? ""}`;
 
   useLayoutEffect(() => {
     const root = rootRef.current;
@@ -150,6 +155,16 @@ export function MainWindowView({
           <button type="button" className="link" onClick={onStartAnyway}>
             {t("button.startAnyway")}
           </button>
+        </div>
+      )}
+      {update && !active && (
+        <div className="flex-none px-4 pb-3">
+          <Callout tone="info">
+            {t("update.available", { version: update })}{" "}
+            <button type="button" className="link" onClick={onOpenUpdate}>
+              {t("update.open")}
+            </button>
+          </Callout>
         </div>
       )}
       {degraded && (

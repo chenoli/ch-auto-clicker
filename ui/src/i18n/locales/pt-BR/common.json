@@ -137,7 +137,9 @@
     "ANTI_CHEAT_ACK": "Leia o aviso sobre anti-cheat antes de iniciar.",
     "AUTOSTART_FAILED": "Não foi possível alterar a inicialização com o Windows.",
     "OPEN_FAILED": "Não foi possível abrir o navegador.",
-    "BENCHMARK_FAILED": "Não foi possível medir o agendador."
+    "BENCHMARK_FAILED": "Não foi possível medir o agendador.",
+    "UPDATE_FAILED": "Não foi possível atualizar o aplicativo.",
+    "UPDATE_NONE": "Não há atualização disponível."
   },
   "gallery": {
     "title": "Galeria de telas",
@@ -368,5 +370,15 @@
   "degraded": {
     "timing": "O ritmo pedido não está sendo cumprido neste computador. Aumente o intervalo ou feche programas pesados.",
     "displayChanged": "As telas mudaram durante a execução, então ela foi pausada. Confira os pontos ou a área antes de retomar."
+  },
+  "update": {
+    "check": "Verificar atualizações",
+    "checking": "Verificando…",
+    "latest": "Você está na versão mais recente",
+    "failed": "Não foi possível verificar",
+    "install": "Instalar a {version} e reiniciar",
+    "installing": "Baixando a atualização…",
+    "available": "A versão {version} está disponível.",
+    "open": "Atualizar ›"
   }
 }

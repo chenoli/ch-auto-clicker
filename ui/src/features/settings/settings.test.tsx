@@ -109,6 +109,27 @@ describe("SettingsScreen", () => {
     expect(props.onMeasure).toHaveBeenCalledOnce();
   });
 
+  it("shows every update state in the footer", () => {
+    const onCheckUpdate = vi.fn();
+    const onInstallUpdate = vi.fn();
+    const props = setup({ update: { kind: "idle" }, onCheckUpdate, onInstallUpdate });
+    fireEvent.click(screen.getByRole("button", { name: "Verificar atualizações" }));
+    expect(onCheckUpdate).toHaveBeenCalledOnce();
+    for (const [update, text] of [
+      [{ kind: "checking" }, "Verificando…"],
+      [{ kind: "installing" }, "Baixando a atualização…"],
+    ] as const) {
+      setup({ ...props, update });
+      expect(screen.getAllByText(text).length).toBeGreaterThan(0);
+    }
+    setup({ ...props, update: { kind: "latest" } });
+    fireEvent.click(screen.getAllByRole("button", { name: "Você está na versão mais recente" })[0] as HTMLElement);
+    expect(onCheckUpdate).toHaveBeenCalledTimes(2);
+    setup({ ...props, update: { kind: "available", version: "0.1.1" } });
+    fireEvent.click(screen.getByRole("button", { name: "Instalar a 0.1.1 e reiniciar" }));
+    expect(onInstallUpdate).toHaveBeenCalledOnce();
+  });
+
   it("says when nothing was measured yet, while measuring and on errors", () => {
     setup({
       capabilities: { ...capabilities, measured: false, minReliableIntervalMs: 4, results: [] },

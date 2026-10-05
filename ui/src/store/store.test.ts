@@ -36,6 +36,7 @@ vi.mock("../ipc", () => {
       hotkeyStatusChanged: event("hotkeyStatusChanged"),
       hotkeyActionFailed: event("hotkeyActionFailed"),
       engineDegraded: event("engineDegraded"),
+      updateAvailable: event("updateAvailable"),
     },
   };
 });
@@ -179,6 +180,8 @@ describe("connectStore", () => {
     ipc.listeners.engineDegraded?.({ payload: { degraded: true, reason: "timing" } });
     ipc.listeners.engineDegraded?.({ payload: { degraded: false, reason: "timing" } });
     expect(useAppStore.getState().degraded).toBeNull();
+    ipc.listeners.updateAvailable?.({ payload: { version: "0.1.1", notes: null } });
+    expect(useAppStore.getState().update).toBe("0.1.1");
     ipc.listeners.hotkeyActionFailed?.({ payload: { code: "NO_AREA" } });
     expect(useAppStore.getState().commandError).toBe("NO_AREA");
     expect(useAppStore.getState().capabilities?.minReliableIntervalMs).toBe(2);

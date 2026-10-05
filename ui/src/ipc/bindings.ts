@@ -20,6 +20,13 @@ export const commands = {
 	appOpenSupport: () => typedError<null, AppError>(__TAURI_INVOKE("app_open_support")),
 	/**  The HUD page reports the pill's size; the window follows it, keeping the right edge. */
 	hudResize: (width: number | null, height: number | null) => __TAURI_INVOKE<void>("hud_resize", { width, height }),
+	/**  Checks now; resolves with the new version, or null when this one is the latest. */
+	updateCheck: () => typedError<{
+	version: string,
+	notes: string | null,
+} | null, AppError>(__TAURI_INVOKE("update_check")),
+	/**  Downloads the update, verifies its signature and runs the installer, which restarts the app. */
+	updateInstall: () => typedError<null, AppError>(__TAURI_INVOKE("update_install")),
 	/**
 	 *  Replaces a profile. `base_updated_at` is the version the caller edited; if another window saved
 	 *  in between, the update is refused with `STALE_PROFILE` instead of silently overwriting it.
@@ -114,6 +121,7 @@ export const events = {
 	overlayChanged: makeEvent<OverlayChanged>("overlay-changed"),
 	profilesChanged: makeEvent<ProfilesChanged>("profiles-changed"),
 	settingsChanged: makeEvent<SettingsChanged>("settings-changed"),
+	updateAvailable: makeEvent<UpdateAvailable>("update-available"),
 };
 
 /* Types */
@@ -421,6 +429,12 @@ export type StopAfter = {
 export type StopReason = "user" | "timer" | "emergency" | "completed" | "error" | "profileSwitch";
 
 export type ThemeId = "grafite" | "blueprint" | "fosforo" | "bancada" | "papel" | "contraste";
+
+/**  A newer version is published. */
+export type UpdateAvailable = {
+	version: string,
+	notes: string | null,
+};
 
 export type Variation = {
 	enabled: boolean,

@@ -6,7 +6,17 @@ Auto clicker nativo para Windows 10/11, da Chenoli Labs. Núcleo em Rust (injeç
 - Backlog em fases: [`docs/TASKS.md`](docs/TASKS.md)
 - Regras de trabalho: [`CLAUDE.md`](CLAUDE.md)
 
-## Pré-requisitos
+## Instalação
+
+Baixe o `CH Clicker_*_x64-setup.exe` em [Releases](https://github.com/chenoli/chenoli-auto-clicker/releases). Ele instala só para o seu usuário, sem pedir administrador, e o app se atualiza sozinho.
+
+> **Ainda sem assinatura de código.** O Windows mostra "Editor desconhecido": clique em **Mais informações → Executar assim mesmo**. Com o **Controle Inteligente de Aplicativos** ligado, o Windows 11 bloqueia o app até a assinatura chegar (estamos pedindo a assinatura gratuita para projetos open source; veja [`docs/release.md`](docs/release.md)).
+
+> **Jogos online com anti-cheat** detectam entrada automatizada e podem suspender ou banir a conta. O CH. Clicker não oculta sua atividade. Não use onde os termos de serviço proíbem automação.
+
+## Desenvolvimento
+
+### Pré-requisitos
 
 - Windows 10 1803+ ou Windows 11
 - [Rust](https://rustup.rs) stable (MSVC) e Visual Studio Build Tools com a carga "Desenvolvimento para desktop com C++"
@@ -15,7 +25,7 @@ Auto clicker nativo para Windows 10/11, da Chenoli Labs. Núcleo em Rust (injeç
 
 O **Controle Inteligente de Aplicativos** do Windows 11 bloqueia os executáveis gerados pelo build. Para desenvolver, ele precisa estar desligado.
 
-## Comandos
+### Comandos
 
 | Comando                                                                  | O que faz                                                                     |
 | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------- |
@@ -34,7 +44,7 @@ O **Controle Inteligente de Aplicativos** do Windows 11 bloqueia os executáveis
 | `cargo test -p ch-win --test injection -- --ignored`                     | Testes que injetam cliques reais (só com jogos e apps sensíveis fechados)     |
 | `cargo run -p jitter-bench --release -- --seconds 10`                    | Benchmark de jitter do scheduler (relatório em `docs/bench/`)                 |
 
-## Estrutura
+### Estrutura
 
 ```
 crates/ch-core     domínio puro (sem Windows): modelos, padrões, scheduler
@@ -48,6 +58,6 @@ design/            tokens (fonte da verdade) e ícone
 tools/             gerador de tokens e regras de lint locais
 ```
 
-## Aviso
+## Licença
 
-Sistemas anti-cheat detectam entrada automatizada. O CH. Clicker não oculta sua atividade. Não use onde os termos de serviço proíbem automação.
+[MIT](LICENSE) © 2026 Chenoli Labs. As fontes Syne e Space Grotesk são distribuídas sob a SIL Open Font License 1.1.

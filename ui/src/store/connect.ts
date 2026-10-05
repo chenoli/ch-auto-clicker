@@ -5,6 +5,7 @@ import {
   applyDegraded,
   applyHotkeys,
   applySettings,
+  applyUpdate,
   applyStatus,
   applyTick,
   hydrate,
@@ -22,6 +23,7 @@ export async function connectStore(): Promise<() => void> {
     events.profilesChanged.listen((e) => applyProfilesChanged(e.payload)),
     events.capabilities.listen((e) => applyCapabilities(e.payload)),
     events.engineDegraded.listen((e) => applyDegraded(e.payload)),
+    events.updateAvailable.listen((e) => applyUpdate(e.payload.version)),
     events.hotkeyStatusChanged.listen((e) => applyHotkeys(e.payload)),
     events.hotkeyActionFailed.listen((e) => setCommandError(e.payload.code)),
   ]);

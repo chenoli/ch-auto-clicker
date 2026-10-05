@@ -2,7 +2,7 @@
 
 use tauri_specta::{Builder, collect_commands, collect_events};
 
-use crate::{capabilities, commands, events, hotkeys, hud, overlay, profiles, tray};
+use crate::{capabilities, commands, events, hotkeys, hud, overlay, profiles, tray, updater};
 
 const BINDINGS_PATH: &str = "../ui/src/ipc/bindings.ts";
 const BINDINGS_HEADER: &str = "// Regenerate with `cargo test -p ch-clicker export_bindings`.";
@@ -16,6 +16,8 @@ pub fn builder() -> Builder<tauri::Wry> {
             commands::settings_acknowledge_anti_cheat,
             commands::app_open_support,
             hud::hud_resize,
+            updater::update_check,
+            updater::update_install,
             commands::profile_update,
             commands::engine_start,
             commands::engine_stop,
@@ -65,7 +67,8 @@ pub fn builder() -> Builder<tauri::Wry> {
             capabilities::Capabilities,
             overlay::OverlayChanged,
             hud::HudHover,
-            tray::NavigateRequested
+            tray::NavigateRequested,
+            updater::UpdateAvailable
         ])
 }
 

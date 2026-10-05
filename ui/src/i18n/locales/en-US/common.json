@@ -137,7 +137,9 @@
     "ANTI_CHEAT_ACK": "Read the anti-cheat notice before starting.",
     "AUTOSTART_FAILED": "Could not change starting with Windows.",
     "OPEN_FAILED": "Could not open the browser.",
-    "BENCHMARK_FAILED": "Could not measure the scheduler."
+    "BENCHMARK_FAILED": "Could not measure the scheduler.",
+    "UPDATE_FAILED": "Could not update the app.",
+    "UPDATE_NONE": "No update is available."
   },
   "gallery": {
     "title": "Screen gallery",
@@ -368,5 +370,15 @@
   "degraded": {
     "timing": "This computer is not keeping up with the requested rate. Raise the interval or close heavy programs.",
     "displayChanged": "The screens changed during the run, so it was paused. Check the points or the area before resuming."
+  },
+  "update": {
+    "check": "Check for updates",
+    "checking": "Checking…",
+    "latest": "You are on the latest version",
+    "failed": "Could not check",
+    "install": "Install {version} and restart",
+    "installing": "Downloading the update…",
+    "available": "Version {version} is available.",
+    "open": "Update ›"
   }
 }

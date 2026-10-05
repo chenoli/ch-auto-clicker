@@ -17,6 +17,42 @@ import type { ReactElement, ReactNode } from "react";
 
 export const COUNTDOWN_MAX = 10;
 
+export type UpdateState =
+  | { kind: "idle" }
+  | { kind: "checking" }
+  | { kind: "latest" }
+  | { kind: "available"; version: string }
+  | { kind: "installing" }
+  | { kind: "failed" };
+
+/** Footer action: check, show the result, or install the version found. */
+function UpdateAction({
+  update,
+  onCheck,
+  onInstall,
+}: {
+  update: UpdateState;
+  onCheck?: (() => void) | undefined;
+  onInstall?: (() => void) | undefined;
+}) {
+  const { t } = useTranslation();
+  if (update.kind === "available") {
+    return (
+      <button type="button" className="link" onClick={onInstall}>
+        {t("update.install", { version: update.version })}
+      </button>
+    );
+  }
+  if (update.kind === "checking" || update.kind === "installing") {
+    return <span>{t(`update.${update.kind}`)}</span>;
+  }
+  return (
+    <button type="button" className="footer-action" onClick={onCheck}>
+      {update.kind === "idle" ? t("update.check") : t(`update.${update.kind}`)}
+    </button>
+  );
+}
+
 export interface SettingsScreenProps {
   settings: Settings;
   version: string;
@@ -32,6 +68,10 @@ export interface SettingsScreenProps {
   onOpenHotkeys: () => void;
   onSupport: () => void;
   onMeasure: () => void;
+  /** Update state for the footer; omitted in the gallery. */
+  update?: UpdateState;
+  onCheckUpdate?: () => void;
+  onInstallUpdate?: () => void;
   onBack: () => void;
   onMinimize: () => void;
   onClose: () => void;
@@ -231,6 +271,9 @@ export function SettingsScreen(props: SettingsScreenProps): ReactElement {
       </div>
       <div className="flex h-9 flex-none items-center justify-between border-t border-divider px-4 text-11 text-fg-3">
         <span>{t("settings.footer", { version: props.version || "0.1.0" })}</span>
+        {props.update && (
+          <UpdateAction update={props.update} onCheck={props.onCheckUpdate} onInstall={props.onInstallUpdate} />
+        )}
       </div>
     </div>
   );

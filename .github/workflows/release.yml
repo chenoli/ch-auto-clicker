@@ -1,0 +1,59 @@
+name: Release
+
+# Tag v* → every CI check → installers + updater manifest (latest.json) on GitHub Releases.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  checks:
+    uses: ./.github/workflows/ci.yml
+
+  release:
+    name: Build e publicação
+    needs: checks
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Tag igual à versão do app
+        shell: bash
+        run: |
+          version=$(node -p "require('./src-tauri/tauri.conf.json').version")
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "A tag $GITHUB_REF_NAME não bate com a versão $version do tauri.conf.json"; exit 1
+          fi
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Windows code signing (Authenticode) via SignPath Foundation, once the project is approved:
+      # set bundle.windows.signCommand in tauri.conf.json to a script that submits each file to
+      # SignPath and waits for the signed result. It must run inside the bundling step, before the
+      # updater signature below is computed, or the two signatures would not match.
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # minisign key of the updater (not the Windows certificate): see docs/release.md.
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: CH. Clicker ${{ github.ref_name }}
+          releaseBody: |
+            Instale com o `CH Clicker_*_x64-setup.exe` (por usuário, sem precisar de administrador).
+
+            **Aviso:** este build ainda não tem assinatura de código. O Windows mostra "Editor desconhecido":
+            clique em "Mais informações" → "Executar assim mesmo". Com o Controle Inteligente de Aplicativos
+            ligado, o Windows 11 bloqueia o app até a assinatura chegar.
+
+            Sistemas anti-cheat detectam entrada automatizada. Não use onde os termos de serviço proíbem automação.
+          releaseDraft: false
+          prerelease: false
+          includeUpdaterJson: true

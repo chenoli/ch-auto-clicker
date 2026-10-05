@@ -40,6 +40,8 @@ export interface AppState {
   commandError: string | null;
   /** Why the run is not going as asked (rate not met, screens changed), or null. */
   degraded: DegradedReason | null;
+  /** A newer published version, found by the 24 h check or "Verificar atualizações". */
+  update: string | null;
 }
 
 export const useAppStore = create<AppState>(() => ({
@@ -54,6 +56,7 @@ export const useAppStore = create<AppState>(() => ({
   hotkeys: [],
   commandError: null,
   degraded: null,
+  update: null,
 }));
 
 export function hydrate(b: Bootstrap): void {
@@ -91,6 +94,10 @@ export function applyDegraded(event: EngineDegraded): void {
   useAppStore.setState((s) => ({
     degraded: event.degraded ? event.reason : s.degraded === event.reason ? null : s.degraded,
   }));
+}
+
+export function applyUpdate(version: string | null): void {
+  useAppStore.setState({ update: version });
 }
 
 export function applySettings(settings: Settings): void {

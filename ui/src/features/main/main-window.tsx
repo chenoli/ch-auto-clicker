@@ -45,6 +45,7 @@ export function MainWindow(): ReactElement | null {
   const lastStatus = useAppStore((s) => s.lastStatus);
   const commandError = useAppStore((s) => s.commandError);
   const degraded = useAppStore((s) => s.degraded);
+  const update = useAppStore((s) => s.update);
   const hotkeys = useAppStore((s) => s.hotkeys);
   const profiles = useAppStore((s) => s.profiles);
   const [screen, setScreen] = useState<Screen>("main");
@@ -160,6 +161,8 @@ export function MainWindow(): ReactElement | null {
         errorCode={engine.state === "error" ? (lastStatus?.errorCode ?? null) : null}
         commandError={commandError}
         degraded={degraded}
+        update={update}
+        onOpenUpdate={() => go("settings")}
         hotkeyError={startStatus && !startStatus.ok ? hotkeyLabel(startStatus.combo) : null}
         onEdit={onEdit}
         onPrimary={() => void primaryAction(engine.state)}
