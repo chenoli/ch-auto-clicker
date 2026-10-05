@@ -1,6 +1,16 @@
 import { create } from "zustand";
 
-import type { Bootstrap, Capabilities, EngineStatus, EngineTick, HotkeyStatus, Profile, Settings } from "../ipc";
+import type {
+  Bootstrap,
+  Capabilities,
+  DegradedReason,
+  EngineDegraded,
+  EngineStatus,
+  EngineTick,
+  HotkeyStatus,
+  Profile,
+  Settings,
+} from "../ipc";
 
 export const IDLE_TICK: EngineTick = {
   state: "idle",
@@ -28,6 +38,8 @@ export interface AppState {
   hotkeys: HotkeyStatus[];
   /** Error code from the last failed command, shown until the next action. */
   commandError: string | null;
+  /** Why the run is not going as asked (rate not met, screens changed), or null. */
+  degraded: DegradedReason | null;
 }
 
 export const useAppStore = create<AppState>(() => ({
@@ -41,6 +53,7 @@ export const useAppStore = create<AppState>(() => ({
   capabilities: null,
   hotkeys: [],
   commandError: null,
+  degraded: null,
 }));
 
 export function hydrate(b: Bootstrap): void {
@@ -66,8 +79,17 @@ export function applyTick(tick: EngineTick): void {
 export function applyStatus(status: EngineStatus): void {
   useAppStore.setState((s) => ({
     lastStatus: status,
+    // A new start clears the warning from the previous run.
+    degraded: status.state === "countdown" ? null : s.degraded,
     engine: { ...s.engine, state: status.state },
     countdownTotalMs: status.countdownTotalMs ?? s.countdownTotalMs,
+  }));
+}
+
+/** `engine-degraded`: set the warning, or clear it when that reason recovered. */
+export function applyDegraded(event: EngineDegraded): void {
+  useAppStore.setState((s) => ({
+    degraded: event.degraded ? event.reason : s.degraded === event.reason ? null : s.degraded,
   }));
 }
 

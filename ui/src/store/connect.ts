@@ -2,6 +2,7 @@ import { commands, events, inTauri } from "../ipc";
 
 import {
   applyCapabilities,
+  applyDegraded,
   applyHotkeys,
   applySettings,
   applyStatus,
@@ -20,6 +21,7 @@ export async function connectStore(): Promise<() => void> {
     events.settingsChanged.listen((e) => applySettings(e.payload)),
     events.profilesChanged.listen((e) => applyProfilesChanged(e.payload)),
     events.capabilities.listen((e) => applyCapabilities(e.payload)),
+    events.engineDegraded.listen((e) => applyDegraded(e.payload)),
     events.hotkeyStatusChanged.listen((e) => applyHotkeys(e.payload)),
     events.hotkeyActionFailed.listen((e) => setCommandError(e.payload.code)),
   ]);

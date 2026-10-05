@@ -364,5 +364,9 @@
     "clicks": "clicks",
     "remaining": "Left",
     "hint": "Hold Ctrl to move"
+  },
+  "degraded": {
+    "timing": "This computer is not keeping up with the requested rate. Raise the interval or close heavy programs.",
+    "displayChanged": "The screens changed during the run, so it was paused. Check the points or the area before resuming."
   }
 }

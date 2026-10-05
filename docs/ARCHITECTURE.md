@@ -416,7 +416,7 @@ SendInput(MOUSEEVENTF_MOVE | ABSOLUTE | VIRTUALDESK | MOVE_NOCOALESCE, nx, ny)
 - Movimentos absolutos **não** sofrem aceleração do ponteiro ("Aprimorar precisão do ponteiro") nem a velocidade do mouse. Movimentos relativos sofrem, por isso nunca são usados.
 - `MOVE_NOCOALESCE` impede que o Windows funda movimentos seguidos (importante no wiggle e no scan).
 - Depois de cada movimento, `GetCursorPos` confere o pixel. Uma diferença de até 2 px é corrigida com `SetCursorPos` e contada como correção (diagnóstico). Uma diferença maior significa que o usuário mexeu o mouse, e o backend não briga com ele. O teste de integração `absolute_moves_land_on_the_exact_pixel_on_every_monitor` exige zero correções.
-- O layout é recalculado em `WM_DISPLAYCHANGE` e `WM_DPICHANGED`. Se ele mudar durante uma execução, o motor pausa e emite `engine-degraded {reason: "display_changed"}`.
+- O layout é recalculado em `WM_DISPLAYCHANGE` e `WM_DPICHANGED`. Se ele mudar durante uma execução, o motor pausa e emite `engine-degraded {reason: "displayChanged"}` (vigia por polling de 1 s em `display_watch.rs`, porque janelas message-only não recebem o broadcast de `WM_DISPLAYCHANGE`); na contagem, a execução é cancelada.
 
 ### 6.4 Mouse wiggle
 

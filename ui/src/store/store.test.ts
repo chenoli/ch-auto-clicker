@@ -35,6 +35,7 @@ vi.mock("../ipc", () => {
       capabilities: event("capabilities"),
       hotkeyStatusChanged: event("hotkeyStatusChanged"),
       hotkeyActionFailed: event("hotkeyActionFailed"),
+      engineDegraded: event("engineDegraded"),
     },
   };
 });
@@ -167,6 +168,17 @@ describe("connectStore", () => {
     ipc.listeners.capabilities?.({ payload: { minReliableIntervalMs: 2 } });
     ipc.listeners.hotkeyStatusChanged?.({ payload: [{ ok: false }] });
     expect(useAppStore.getState().hotkeys).toEqual([{ ok: false }]);
+    ipc.listeners.engineDegraded?.({ payload: { degraded: true, reason: "displayChanged" } });
+    expect(useAppStore.getState().degraded).toBe("displayChanged");
+    ipc.listeners.engineDegraded?.({ payload: { degraded: false, reason: "timing" } });
+    expect(useAppStore.getState().degraded).toBe("displayChanged");
+    ipc.listeners.engineStatus?.({
+      payload: { state: "countdown", prevState: "idle", reason: null, countdownTotalMs: 3000, errorCode: null },
+    });
+    expect(useAppStore.getState().degraded).toBeNull();
+    ipc.listeners.engineDegraded?.({ payload: { degraded: true, reason: "timing" } });
+    ipc.listeners.engineDegraded?.({ payload: { degraded: false, reason: "timing" } });
+    expect(useAppStore.getState().degraded).toBeNull();
     ipc.listeners.hotkeyActionFailed?.({ payload: { code: "NO_AREA" } });
     expect(useAppStore.getState().commandError).toBe("NO_AREA");
     expect(useAppStore.getState().capabilities?.minReliableIntervalMs).toBe(2);

@@ -176,7 +176,9 @@ export type ClickSettings = {
 
 export type CloseAction = "minimize" | "quit";
 
-export type DegradedReason = "timing";
+export type DegradedReason = "timing" | 
+/**  A monitor was unplugged, moved or rescaled during the run; it was paused. */
+"displayChanged";
 
 /**  The requested rate is not being met (or recovered); drives the warning callout. */
 export type EngineDegraded = {

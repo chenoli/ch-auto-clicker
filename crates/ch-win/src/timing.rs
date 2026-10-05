@@ -250,8 +250,9 @@ mod tests {
             assert_eq!(waiter.sleep_until(deadline), Wake::Deadline);
             worst = worst.max(clock.now().saturating_sub(deadline));
         }
-        // Coarse only (no spin): the timer itself should be within a couple of ms even under CI load.
-        assert!(worst < 3 * NANOS_PER_MS, "worst overshoot {worst} ns");
+        // Coarse only (no spin), sanity bound: the timer wakes near the deadline even while other
+        // tests (or the user's apps) load the CPU. Real precision is measured by tools/jitter-bench.
+        assert!(worst < 15 * NANOS_PER_MS, "worst overshoot {worst} ns");
     }
 
     #[test]

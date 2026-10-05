@@ -35,7 +35,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["nsis"],
+    "targets": ["nsis", "msi"],
     "publisher": "Chenoli Labs",
     "copyright": "© 2026 Chenoli Labs",
     "category": "Utility",
@@ -46,7 +46,12 @@
         "type": "downloadBootstrapper"
       },
       "nsis": {
-        "installMode": "currentUser"
+        "installMode": "currentUser",
+        "installerHooks": "./windows/hooks.nsh",
+        "languages": ["PortugueseBR", "English", "Spanish"]
+      },
+      "wix": {
+        "language": ["pt-BR", "en-US"]
       }
     }
   }

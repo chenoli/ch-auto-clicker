@@ -364,5 +364,9 @@
     "clicks": "clics",
     "remaining": "Resta",
     "hint": "Mantén Ctrl para mover"
+  },
+  "degraded": {
+    "timing": "Esta computadora no logra el ritmo pedido. Aumenta el intervalo o cierra programas pesados.",
+    "displayChanged": "Las pantallas cambiaron durante la ejecución, así que se pausó. Revisa los puntos o el área antes de reanudar."
   }
 }

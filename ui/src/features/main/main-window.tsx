@@ -44,6 +44,7 @@ export function MainWindow(): ReactElement | null {
   const countdownTotalMs = useAppStore((s) => s.countdownTotalMs);
   const lastStatus = useAppStore((s) => s.lastStatus);
   const commandError = useAppStore((s) => s.commandError);
+  const degraded = useAppStore((s) => s.degraded);
   const hotkeys = useAppStore((s) => s.hotkeys);
   const profiles = useAppStore((s) => s.profiles);
   const [screen, setScreen] = useState<Screen>("main");
@@ -158,6 +159,7 @@ export function MainWindow(): ReactElement | null {
         shortcut={hotkeyLabel(settings.hotkeys.startStop)}
         errorCode={engine.state === "error" ? (lastStatus?.errorCode ?? null) : null}
         commandError={commandError}
+        degraded={degraded}
         hotkeyError={startStatus && !startStatus.ok ? hotkeyLabel(startStatus.combo) : null}
         onEdit={onEdit}
         onPrimary={() => void primaryAction(engine.state)}

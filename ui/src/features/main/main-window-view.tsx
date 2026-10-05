@@ -14,7 +14,7 @@ import { MainButton, buttonStateFor } from "./main-button";
 import { ModeTabs } from "./mode-tabs";
 import { TitleBar } from "./title-bar";
 
-import type { EngineTick, Profile } from "../../ipc";
+import type { DegradedReason, EngineTick, Profile } from "../../ipc";
 import type { ReactElement } from "react";
 
 /** Bottom padding of the scrolling panel (handoff: `padding: 0 16px 8px`). */
@@ -30,6 +30,8 @@ export interface MainWindowViewProps {
   errorCode?: string | null;
   /** Error from the last command (e.g. a mode not available yet). */
   commandError?: string | null;
+  /** The run is not going as asked: the requested rate is not met, or the screens changed. */
+  degraded?: DegradedReason | null;
   onEdit: (mutate: (p: Profile) => Profile) => void;
   onPrimary: () => void;
   onOpenVariation: () => void;
@@ -62,6 +64,7 @@ export function MainWindowView({
   shortcut,
   errorCode,
   commandError,
+  degraded = null,
   onEdit,
   onPrimary,
   onOpenVariation,
@@ -95,7 +98,7 @@ export function MainWindowView({
   const active = engine.state === "countdown" || engine.state === "running" || engine.state === "paused";
   // A refused start shortcut shows the error state while idle; the engine itself is fine.
   const shortcutBroken = Boolean(hotkeyError) && engine.state === "idle";
-  const extraRows = `${String(active)}|${commandError ?? ""}|${String(shortcutBroken)}`;
+  const extraRows = `${String(active)}|${commandError ?? ""}|${String(shortcutBroken)}|${degraded ?? ""}`;
 
   useLayoutEffect(() => {
     const root = rootRef.current;
@@ -147,6 +150,11 @@ export function MainWindowView({
           <button type="button" className="link" onClick={onStartAnyway}>
             {t("button.startAnyway")}
           </button>
+        </div>
+      )}
+      {degraded && (
+        <div className="flex-none px-4 pb-3">
+          <Callout tone={degraded === "displayChanged" ? "danger" : "warn"}>{t(`degraded.${degraded}`)}</Callout>
         </div>
       )}
       {(commandError || active) && (

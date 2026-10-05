@@ -100,6 +100,8 @@ impl From<JitterStats> for EngineJitter {
 #[serde(rename_all = "camelCase")]
 pub enum DegradedReason {
     Timing,
+    /// A monitor was unplugged, moved or rescaled during the run; it was paused.
+    DisplayChanged,
 }
 
 /// The requested rate is not being met (or recovered); drives the warning callout.

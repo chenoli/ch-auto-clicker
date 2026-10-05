@@ -2,6 +2,7 @@
 
 mod capabilities;
 mod commands;
+mod display_watch;
 mod error;
 mod events;
 mod hotkeys;
@@ -92,6 +93,7 @@ pub fn run() {
             theme::apply(app.handle(), &state.data().settings);
             tray::install(app.handle())?;
             hud::create(app.handle())?;
+            display_watch::spawn(app.handle().clone());
             // Autostart passes --minimized: stay in the tray (T11.5).
             let minimized = std::env::args().any(|a| a == STARTED_MINIMIZED);
             if let Some(main) = app.get_webview_window("main") {

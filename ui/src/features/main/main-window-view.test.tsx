@@ -98,6 +98,16 @@ describe("MainWindowView", () => {
     expect(screen.getByText("Alterações valem ao reiniciar.")).toBeInTheDocument();
   });
 
+  it("warns when the rate is not met or the screens changed", () => {
+    setup({ degraded: "timing" });
+    expect(screen.getByRole("note")).toHaveTextContent("ritmo pedido");
+  });
+
+  it("explains a run paused by a screen change", () => {
+    setup({ degraded: "displayChanged" });
+    expect(screen.getByRole("alert")).toHaveTextContent("As telas mudaram");
+  });
+
   it("explains engine and command errors", () => {
     setup({ engine: tick({ state: "error" }), errorCode: "INPUT_BLOCKED", commandError: "NO_AREA" });
     expect(screen.getAllByText("Entrada bloqueada")).toHaveLength(2);

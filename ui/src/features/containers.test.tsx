@@ -55,6 +55,7 @@ vi.mock("../ipc", () => {
     events: {
       engineTick: event,
       engineStatus: event,
+      engineDegraded: event,
       settingsChanged: event,
       profilesChanged: event,
       capabilities: event,
