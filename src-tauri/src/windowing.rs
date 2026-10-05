@@ -115,7 +115,10 @@ pub fn open_variation<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
         VARIATION_LABEL,
         WebviewUrl::App("variation.html".into()),
     )
-    .title("CH. Clicker — Variação de intervalo")
+    .title(crate::native_text::text(
+        app.state::<crate::state::AppState>().data().settings.locale,
+        crate::native_text::Text::VariationTitle,
+    ))
     .inner_size(w, h)
     .position(x, y)
     .resizable(false)

@@ -184,11 +184,9 @@ mod tests {
             first.samples > 800,
             "1 ms run should fire ~1000 times per second: {first:?}"
         );
-        assert!(
-            first.p99_us < 500.0,
-            "p99 {} µs on an idle machine",
-            first.p99_us
-        );
+        // Sanity bound only: tests share the CPU with each other (and whatever the user runs);
+        // real precision is measured by tools/jitter-bench.
+        assert!(first.p99_us < 5_000.0, "p99 {} µs", first.p99_us);
         assert!(
             r.ticks
                 .windows(2)

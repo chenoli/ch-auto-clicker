@@ -237,7 +237,10 @@ fn open<R: Runtime>(app: &AppHandle<R>, mode: OverlayMode) -> AppResult<mpsc::Re
         }
         let url = WebviewUrl::App(format!("overlay.html?m={index}").into());
         let window = WebviewWindowBuilder::new(app, label(index), url)
-            .title("CH. Clicker — Captura")
+            .title(crate::native_text::text(
+                state.data().settings.locale,
+                crate::native_text::Text::CaptureTitle,
+            ))
             .decorations(false)
             .resizable(false)
             .always_on_top(true)

@@ -53,3 +53,24 @@ describe("time formats", () => {
     expect(countdownSeconds(0)).toBe(1);
   });
 });
+
+describe("the three UI locales", () => {
+  it("formats CPS, counts and decimals per locale (T10.4)", () => {
+    expect([formatCps(28.57, "pt-BR"), formatCps(28.57, "en-US"), formatCps(28.57, "es-419")]).toEqual([
+      "28,6",
+      "28.6",
+      "28.6",
+    ]);
+    expect([formatCount(12840, "pt-BR"), formatCount(12840, "en-US"), formatCount(12840, "es-419")]).toEqual([
+      "12.840",
+      "12,840",
+      "12,840",
+    ]);
+    expect(formatOneDecimal(0.96, "es-419")).toBe("1.0");
+  });
+
+  it("keeps the handoff clocks identical in every locale", () => {
+    expect(formatElapsed(128_400)).toBe("02:08.4");
+    expect(formatDuration(300)).toBe("00:05:00");
+  });
+});

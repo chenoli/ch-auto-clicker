@@ -1,0 +1,325 @@
+{
+  "appName": "Clicker",
+  "window": {
+    "minimize": "Minimize",
+    "close": "Close"
+  },
+  "header": {
+    "profile": "Profile",
+    "profiles": "Profiles",
+    "settings": "Settings",
+    "manageProfiles": "Manage profiles…"
+  },
+  "modes": {
+    "click": "Click",
+    "wiggle": "Wiggle",
+    "scan": "Scan"
+  },
+  "button": {
+    "shortcut": "shortcut",
+    "cancels": "cancels",
+    "stops": "stops",
+    "resumes": "resumes",
+    "review": "review",
+    "idle": {
+      "kicker": "Ready",
+      "label": "Start"
+    },
+    "countdown": {
+      "kicker": "Starting in"
+    },
+    "running": {
+      "kicker": "Running",
+      "label": "Stop"
+    },
+    "paused": {
+      "kicker": "Paused",
+      "label": "Resume"
+    },
+    "error": {
+      "label": "Start"
+    },
+    "hotkeyError": {
+      "kicker": "Shortcut conflict",
+      "label": "Review"
+    },
+    "startAnyway": "Start without shortcut"
+  },
+  "status": {
+    "idle": "Stopped",
+    "countdown": "Starting in {seconds} s",
+    "running": "Running",
+    "paused": "Paused",
+    "stopping": "Stopping",
+    "clicks": "Clicks",
+    "time": "Time",
+    "hotkeyUnavailable": "{combo} unavailable"
+  },
+  "click": {
+    "button": "Button",
+    "left": "Left",
+    "middle": "Middle",
+    "right": "Right",
+    "side": "Side",
+    "x1": "X1 · Back",
+    "x2": "X2 · Forward",
+    "clickType": "Click",
+    "single": "Single",
+    "double": "Double",
+    "interval": "Interval",
+    "cps": "CPS",
+    "variation": "Variation",
+    "variationSummary": "{blocks} ms in a cycle",
+    "variationOff": "Off · fixed {interval} ms",
+    "edit": "Edit ›",
+    "position": "Position",
+    "cursor": "Current cursor position",
+    "points": "Points on screen",
+    "pointsLink": "{count, plural, =0 {0 points ›} one {# point ›} other {# points ›}}",
+    "stop": "Stop",
+    "stopAfter": "Stop after",
+    "decrease": "Decrease",
+    "increase": "Increase",
+    "editsApplyOnRestart": "Changes apply on the next start."
+  },
+  "variation": {
+    "kicker": "Click mode · Interval",
+    "title": "Interval variation",
+    "sequence": "Sequence · repeats in a cycle",
+    "widthHint": "Width ∝ duration",
+    "back": "↺ back to B01",
+    "add": "Add block",
+    "block": "Block",
+    "moveLeft": "← Move",
+    "moveRight": "Move →",
+    "remove": "Remove",
+    "rhythm": "Rhythm preview · 600 ms",
+    "cycle": "Cycle",
+    "average": "Average",
+    "effective": "Effective",
+    "disable": "Turn variation off",
+    "apply": "Apply to profile",
+    "close": "Back",
+    "rhythmHint": "tall tick = start of the cycle",
+    "warningPrefix": "Intervals below",
+    "warningLimit": "{limit} ms",
+    "warningSuffix": "are not guaranteed by the Windows scheduler and may be grouped or delayed."
+  },
+  "errors": {
+    "INPUT_BLOCKED": "Input blocked",
+    "OUTSIDE_DESKTOP": "Point off screen",
+    "PROFILE_INVALID": "The profile has invalid values.",
+    "PROFILE_NOT_FOUND": "Profile not found.",
+    "STALE_PROFILE": "The profile was changed in another window. The latest version was reloaded.",
+    "generic": "Something went wrong: {code}",
+    "connect": "Could not load the app state.",
+    "HOTKEY_UNKNOWN_KEY": "This key cannot be used as a shortcut.",
+    "HOTKEY_PRIMARY_MOUSE": "The left and right mouse buttons cannot be shortcuts.",
+    "HOTKEY_EMERGENCY_REQUIRED": "The emergency stop needs a shortcut.",
+    "NO_POINTS": "Add at least one point before starting.",
+    "POINTS_OFFSCREEN": "Some points are outside the connected screens. Review the point list.",
+    "OVERLAY_OPEN": "Screen capture is already open.",
+    "CAPTURE_FAILED": "Could not capture the screen.",
+    "NO_AREA": "Select the scan area before starting.",
+    "AREA_OFFSCREEN": "The scan area left the connected screens. Select it again.",
+    "NAME_EMPTY": "The name cannot be empty.",
+    "NAME_TOO_LONG": "The name can have up to 48 characters.",
+    "NAME_TAKEN": "A profile with this name already exists.",
+    "LAST_PROFILE": "The last profile cannot be deleted.",
+    "ORDER_INVALID": "Could not reorder the profiles.",
+    "EXPORT_FAILED": "Could not save the file.",
+    "IMPORT_TOO_LARGE": "The file is too large to be a profile.",
+    "IMPORT_NOT_JSON": "The file is not a valid profile (not JSON).",
+    "IMPORT_NOT_CHPROFILE": "The file is not a .chprofile.",
+    "IMPORT_FUTURE_VERSION": "The file was made by a newer version of CH. Clicker.",
+    "IMPORT_INVALID": "The profile in the file has invalid values.",
+    "IMPORT_UNREADABLE": "Could not read the file."
+  },
+  "gallery": {
+    "title": "Screen gallery",
+    "tokens": "Tokens",
+    "theme": "Theme"
+  },
+  "units": {
+    "cps": "CPS",
+    "ms": "ms"
+  },
+  "debug": {
+    "clickOnce": "Test click in 2 s",
+    "clickScheduled": "Click scheduled. Place the cursor."
+  },
+  "hotkeys": {
+    "kicker": "Settings",
+    "title": "Shortcuts",
+    "reset": "Restore defaults",
+    "recording": "Press the keys…",
+    "footer": "Shortcuts are global and registered with Windows. The emergency stop cannot be turned off.",
+    "conflict": "{combo} is already used by “{name}”.",
+    "replace": "Replace",
+    "keep": "Keep the previous one",
+    "taken": "Another app already uses this shortcut. Close it or choose another combination.",
+    "retry": "Try again",
+    "profileShortcut": "Shortcut of profile {name}",
+    "actions": {
+      "startStop": {
+        "name": "Start / Stop",
+        "desc": "Global · works with the window minimized"
+      },
+      "pauseResume": {
+        "name": "Pause / Resume",
+        "desc": "Keeps the counter and the timer"
+      },
+      "capturePoint": {
+        "name": "Capture point",
+        "desc": "Adds the current position to the list"
+      },
+      "nextProfile": {
+        "name": "Next profile",
+        "desc": "Cycles through profiles"
+      },
+      "emergencyStop": {
+        "name": "Emergency stop",
+        "desc": "Stops everything, always on"
+      }
+    },
+    "conflictShort": "Already used by “{name}”."
+  },
+  "settings": {
+    "kicker": "App",
+    "title": "Settings",
+    "hotkeysLink": "Shortcuts ›",
+    "comingSoon": "More settings arrive in Phase 11.",
+    "theme": "Theme",
+    "followingSystem": "Following Windows · {name}",
+    "language": "Language"
+  },
+  "languages": {
+    "pt-BR": "Português",
+    "en-US": "English",
+    "es-419": "Español"
+  },
+  "common": {
+    "back": "Back",
+    "cancel": "Cancel"
+  },
+  "points": {
+    "kicker": "Click mode · Position",
+    "title": "Points on screen",
+    "count": "{count, plural, =0 {0 points} one {# point} other {# points}}",
+    "number": "#",
+    "x": "X",
+    "y": "Y",
+    "delay": "Delay",
+    "noDelay": "—",
+    "remove": "Remove point {n}",
+    "drag": "Move point {n} (drag or use ↑ ↓)",
+    "capture": "Capture on screen",
+    "manual": "+ Manual",
+    "footer": "Runs 01 → {last} and repeats. The delay is added to the interval.",
+    "empty": "No points yet. Capture them on screen or add them manually.",
+    "oneScreen": "screen 1 · {width} × {height}",
+    "manyScreens": "{count} screens · {width} × {height}",
+    "layoutChanged": "The screens changed since the capture. Check that the points are still in the right place."
+  },
+  "overlay": {
+    "addPoint": "Click to add point",
+    "arrows": "Arrows move 1 px",
+    "space": "Space adds",
+    "undo": "Ctrl Z undoes",
+    "finish": "to finish",
+    "mode": "Capture mode",
+    "modeArea": "Area",
+    "modePoint": "Point",
+    "dragToSelect": "Drag to select",
+    "cancel": "to cancel",
+    "confirm": "Confirm ↵"
+  },
+  "wiggle": {
+    "amplitude": "Amplitude · % of the width",
+    "amplitudeValue": "Amplitude in %",
+    "equivalent": "≈ {px} px on {width}",
+    "effective": "→ {px} px effective",
+    "preview": "Preview · screen width",
+    "previewScale": "Scale ×40 · time ×¼",
+    "speed": "Speed",
+    "slow": "Slow",
+    "medium": "Medium",
+    "fast": "Fast",
+    "clicks": "Clicks",
+    "clickWhile": "Click while wiggling",
+    "rateFromClick": "Rate and button set in the Click tab",
+    "adjust": "Adjust ›",
+    "double": "double",
+    "button": {
+      "left": "left",
+      "middle": "middle",
+      "right": "right",
+      "x1": "X1",
+      "x2": "X2"
+    }
+  },
+  "scan": {
+    "selectArea": "Select area",
+    "areaMeta": "{w} × {h} · X {x} Y {y}",
+    "noArea": "No area selected",
+    "thumbPlaceholder": "thumbnail of the captured area",
+    "selectHint": "Select an area to see the path",
+    "badge": "{rows, plural, one {# row} other {# rows}} · cycle {cycle} s",
+    "lines": "Rows",
+    "spacing": "Spacing",
+    "speed": "Speed",
+    "action": "Action",
+    "moveOnly": "Move only",
+    "moveClick": "Move and click",
+    "loop": "Loop",
+    "loopHint": "Restart from the top when done",
+    "decrease": "Decrease spacing",
+    "increase": "Increase spacing"
+  },
+  "profiles": {
+    "title": "Profiles",
+    "import": "Import",
+    "exportActive": "Export",
+    "search": "Search profiles",
+    "new": "+ New",
+    "defaultName": "New profile",
+    "noMatch": "No profile with that name.",
+    "footer": "{count, plural, =0 {0 profiles} one {# profile} other {# profiles}} · {path}",
+    "actions": "Actions for {name}",
+    "rename": "Rename",
+    "renameLabel": "Profile name",
+    "setHotkey": "Set shortcut…",
+    "clearHotkey": "Remove shortcut",
+    "duplicate": "Duplicate",
+    "export": "Export…",
+    "delete": "Delete",
+    "confirmDelete": "Delete this profile? This cannot be undone.",
+    "emptyCount": "00 profiles",
+    "emptyTitle1": "No profiles",
+    "emptyTitle2": "saved yet.",
+    "emptyText": "Set up a mode in the main window and save it as a profile, or import an existing file.",
+    "create": "Create profile",
+    "importFile": "Import .chprofile",
+    "dropHint": "or drag a file onto this area",
+    "dropNow": "Drop the .chprofile file to import it",
+    "imported": "Profile “{name}” imported.",
+    "exported": "Exported to {path}",
+    "notes": {
+      "renamed": "The name already existed: it is now “{to}”.",
+      "hotkeyDropped": "The shortcut {combo} was already in use and was dropped.",
+      "migrated": "The file was from an earlier version and was upgraded."
+    },
+    "summary": {
+      "clicks": "clicks",
+      "noArea": "no area",
+      "loop": "loop",
+      "once": "once",
+      "variation": "Variation {blocks} ms",
+      "points": "{count, plural, one {# point} other {# points}}"
+    }
+  },
+  "themes": {
+    "title": "Theme",
+    "followSystem": "Follow Windows"
+  }
+}

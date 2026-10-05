@@ -270,7 +270,9 @@ export type ImportResult = {
 
 export type InputBackendKind = "sendinput" | "interception";
 
-export type Locale = "pt-BR" | "en-US";
+export type Locale = "pt-BR" | "en-US" | 
+/**  Latin American Spanish, also used for every other Spanish variant. */
+"es-419";
 
 export type Mode = "click" | "wiggle" | "scan";
 

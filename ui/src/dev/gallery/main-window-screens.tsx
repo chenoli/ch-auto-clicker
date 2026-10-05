@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+import { useTranslation } from "react-i18next";
+
 import { HotkeysScreen } from "../../features/hotkeys/hotkeys-screen";
 import { MainWindowView } from "../../features/main/main-window-view";
 import { VariationEditorView } from "../../features/variation/variation-editor-view";
@@ -25,12 +27,13 @@ function Window({
 }) {
   // Editable in place, so toggles and tabs can be tried in the gallery.
   const [profile, setProfile] = useState(initialProfile);
+  const { i18n } = useTranslation();
   return (
     <WindowFrame width={420}>
       {(onDesiredHeight) => (
         <MainWindowView
           profile={profile}
-          locale="pt-BR"
+          locale={i18n.language}
           engine={engine}
           countdownTotalMs={countdownTotalMs}
           shortcut="F6"
@@ -102,13 +105,14 @@ export function MainStatesScreen(): ReactElement {
 
 /** Tela 02.B with the prototype's blocks and the handoff's provisional 4 ms limit. */
 export function VariationScreen(): ReactElement {
+  const { i18n } = useTranslation();
   return (
     <WindowFrame width={560} height={640}>
       {() => (
         <VariationEditorView
           initialBlocks={[1, 35, 70]}
           double={false}
-          locale="pt-BR"
+          locale={i18n.language}
           minReliableMs={4}
           onApply={noop}
           onDisable={noop}

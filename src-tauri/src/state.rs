@@ -4,7 +4,7 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Mutex, MutexGuard, OnceLock};
 
-use ch_core::model::{Locale, Profile, Settings};
+use ch_core::model::{Profile, Settings};
 use ch_engine::engine::Engine;
 use ch_engine::telemetry::Telemetry;
 use ch_storage::Store;
@@ -55,7 +55,7 @@ impl AppState {
         let store = Store::open(Store::default_root()).map_err(|e| e.to_string())?;
         let loaded = store
             .load_or_init(
-                || Settings::new_default(Locale::PtBr),
+                || Settings::new_default(ch_win::system::ui_locale()),
                 || {
                     Profile::new_default(
                         uuid::Uuid::new_v4().to_string(),
@@ -177,7 +177,7 @@ mod tests {
 
     #[test]
     fn finds_the_active_profile() {
-        let mut settings = Settings::new_default(Locale::PtBr);
+        let mut settings = Settings::new_default(ch_core::model::Locale::PtBr);
         let a = Profile::new_default("a", "A", "t");
         let b = Profile::new_default("b", "B", "t");
         settings.active_profile_id = Some("b".into());

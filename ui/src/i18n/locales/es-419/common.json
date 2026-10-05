@@ -1,0 +1,325 @@
+{
+  "appName": "Clicker",
+  "window": {
+    "minimize": "Minimizar",
+    "close": "Cerrar"
+  },
+  "header": {
+    "profile": "Perfil",
+    "profiles": "Perfiles",
+    "settings": "Configuración",
+    "manageProfiles": "Administrar perfiles…"
+  },
+  "modes": {
+    "click": "Click",
+    "wiggle": "Wiggle",
+    "scan": "Scan"
+  },
+  "button": {
+    "shortcut": "atajo",
+    "cancels": "cancela",
+    "stops": "detiene",
+    "resumes": "reanuda",
+    "review": "revisar",
+    "idle": {
+      "kicker": "Listo",
+      "label": "Iniciar"
+    },
+    "countdown": {
+      "kicker": "Inicia en"
+    },
+    "running": {
+      "kicker": "En ejecución",
+      "label": "Detener"
+    },
+    "paused": {
+      "kicker": "En pausa",
+      "label": "Reanudar"
+    },
+    "error": {
+      "label": "Iniciar"
+    },
+    "hotkeyError": {
+      "kicker": "Atajo en conflicto",
+      "label": "Revisar"
+    },
+    "startAnyway": "Iniciar sin atajo"
+  },
+  "status": {
+    "idle": "Detenido",
+    "countdown": "Inicia en {seconds} s",
+    "running": "En ejecución",
+    "paused": "En pausa",
+    "stopping": "Deteniendo",
+    "clicks": "Clics",
+    "time": "Tiempo",
+    "hotkeyUnavailable": "{combo} no disponible"
+  },
+  "click": {
+    "button": "Botón",
+    "left": "Izquierdo",
+    "middle": "Medio",
+    "right": "Derecho",
+    "side": "Lateral",
+    "x1": "X1 · Atrás",
+    "x2": "X2 · Adelante",
+    "clickType": "Clic",
+    "single": "Simple",
+    "double": "Doble",
+    "interval": "Intervalo",
+    "cps": "CPS",
+    "variation": "Variación",
+    "variationSummary": "{blocks} ms en ciclo",
+    "variationOff": "Desactivada · {interval} ms fijo",
+    "edit": "Editar ›",
+    "position": "Posición",
+    "cursor": "Posición actual del cursor",
+    "points": "Puntos en pantalla",
+    "pointsLink": "{count, plural, =0 {0 puntos ›} one {# punto ›} other {# puntos ›}}",
+    "stop": "Parada",
+    "stopAfter": "Detener tras",
+    "decrease": "Disminuir",
+    "increase": "Aumentar",
+    "editsApplyOnRestart": "Los cambios aplican al reiniciar."
+  },
+  "variation": {
+    "kicker": "Modo click · Intervalo",
+    "title": "Variación de intervalo",
+    "sequence": "Secuencia · se repite en ciclo",
+    "widthHint": "Ancho ∝ duración",
+    "back": "↺ vuelve a B01",
+    "add": "Agregar bloque",
+    "block": "Bloque",
+    "moveLeft": "← Mover",
+    "moveRight": "Mover →",
+    "remove": "Quitar",
+    "rhythm": "Vista previa del ritmo · 600 ms",
+    "cycle": "Ciclo",
+    "average": "Promedio",
+    "effective": "Efectivo",
+    "disable": "Desactivar variación",
+    "apply": "Aplicar al perfil",
+    "close": "Volver",
+    "rhythmHint": "marca alta = inicio del ciclo",
+    "warningPrefix": "Los intervalos por debajo de",
+    "warningLimit": "{limit} ms",
+    "warningSuffix": "no están garantizados por el programador de Windows y pueden agruparse o retrasarse."
+  },
+  "errors": {
+    "INPUT_BLOCKED": "Entrada bloqueada",
+    "OUTSIDE_DESKTOP": "Punto fuera de la pantalla",
+    "PROFILE_INVALID": "El perfil tiene valores inválidos.",
+    "PROFILE_NOT_FOUND": "Perfil no encontrado.",
+    "STALE_PROFILE": "El perfil cambió en otra ventana. Se recargó la versión más reciente.",
+    "generic": "Algo salió mal: {code}",
+    "connect": "No se pudo cargar el estado de la aplicación.",
+    "HOTKEY_UNKNOWN_KEY": "Esta tecla no se puede usar como atajo.",
+    "HOTKEY_PRIMARY_MOUSE": "Los botones izquierdo y derecho del mouse no pueden ser atajos.",
+    "HOTKEY_EMERGENCY_REQUIRED": "La parada de emergencia necesita un atajo.",
+    "NO_POINTS": "Agrega al menos un punto antes de iniciar.",
+    "POINTS_OFFSCREEN": "Hay puntos fuera de las pantallas conectadas. Revisa la lista de puntos.",
+    "OVERLAY_OPEN": "La captura de pantalla ya está abierta.",
+    "CAPTURE_FAILED": "No se pudo capturar la pantalla.",
+    "NO_AREA": "Selecciona el área del scan antes de iniciar.",
+    "AREA_OFFSCREEN": "El área del scan quedó fuera de las pantallas conectadas. Selecciónala de nuevo.",
+    "NAME_EMPTY": "El nombre no puede quedar vacío.",
+    "NAME_TOO_LONG": "El nombre puede tener hasta 48 caracteres.",
+    "NAME_TAKEN": "Ya existe un perfil con ese nombre.",
+    "LAST_PROFILE": "No se puede eliminar el último perfil.",
+    "ORDER_INVALID": "No se pudieron reordenar los perfiles.",
+    "EXPORT_FAILED": "No se pudo guardar el archivo.",
+    "IMPORT_TOO_LARGE": "El archivo es demasiado grande para ser un perfil.",
+    "IMPORT_NOT_JSON": "El archivo no es un perfil válido (no es JSON).",
+    "IMPORT_NOT_CHPROFILE": "El archivo no es un .chprofile.",
+    "IMPORT_FUTURE_VERSION": "El archivo fue creado por una versión más nueva de CH. Clicker.",
+    "IMPORT_INVALID": "El perfil del archivo tiene valores inválidos.",
+    "IMPORT_UNREADABLE": "No se pudo leer el archivo."
+  },
+  "gallery": {
+    "title": "Galería de pantallas",
+    "tokens": "Tokens",
+    "theme": "Tema"
+  },
+  "units": {
+    "cps": "CPS",
+    "ms": "ms"
+  },
+  "debug": {
+    "clickOnce": "Clic de prueba en 2 s",
+    "clickScheduled": "Clic programado. Coloca el cursor."
+  },
+  "hotkeys": {
+    "kicker": "Configuración",
+    "title": "Atajos",
+    "reset": "Restaurar predeterminados",
+    "recording": "Presiona las teclas…",
+    "footer": "Los atajos son globales y se registran en Windows. La parada de emergencia no se puede desactivar.",
+    "conflict": "{combo} ya está en uso por “{name}”.",
+    "replace": "Reemplazar",
+    "keep": "Mantener el anterior",
+    "taken": "Otra aplicación ya usa este atajo. Ciérrala o elige otra combinación.",
+    "retry": "Reintentar",
+    "profileShortcut": "Atajo del perfil {name}",
+    "actions": {
+      "startStop": {
+        "name": "Iniciar / Detener",
+        "desc": "Global · funciona con la ventana minimizada"
+      },
+      "pauseResume": {
+        "name": "Pausar / Reanudar",
+        "desc": "Conserva el contador y el temporizador"
+      },
+      "capturePoint": {
+        "name": "Capturar punto",
+        "desc": "Agrega la posición actual a la lista"
+      },
+      "nextProfile": {
+        "name": "Siguiente perfil",
+        "desc": "Recorre los perfiles"
+      },
+      "emergencyStop": {
+        "name": "Parada de emergencia",
+        "desc": "Detiene todo, siempre activa"
+      }
+    },
+    "conflictShort": "Ya usado por “{name}”."
+  },
+  "settings": {
+    "kicker": "Aplicación",
+    "title": "Configuración",
+    "hotkeysLink": "Atajos ›",
+    "comingSoon": "Las demás opciones llegan en la Fase 11.",
+    "theme": "Tema",
+    "followingSystem": "Siguiendo a Windows · {name}",
+    "language": "Idioma"
+  },
+  "languages": {
+    "pt-BR": "Português",
+    "en-US": "English",
+    "es-419": "Español"
+  },
+  "common": {
+    "back": "Volver",
+    "cancel": "Cancelar"
+  },
+  "points": {
+    "kicker": "Modo click · Posición",
+    "title": "Puntos en pantalla",
+    "count": "{count, plural, =0 {0 puntos} one {# punto} other {# puntos}}",
+    "number": "#",
+    "x": "X",
+    "y": "Y",
+    "delay": "Retardo",
+    "noDelay": "—",
+    "remove": "Quitar punto {n}",
+    "drag": "Mover punto {n} (arrastra o usa ↑ ↓)",
+    "capture": "Capturar en pantalla",
+    "manual": "+ Manual",
+    "footer": "Ejecuta 01 → {last} y repite. El retardo se suma al intervalo.",
+    "empty": "Aún no hay puntos. Captúralos en pantalla o agrégalos manualmente.",
+    "oneScreen": "pantalla 1 · {width} × {height}",
+    "manyScreens": "{count} pantallas · {width} × {height}",
+    "layoutChanged": "Las pantallas cambiaron desde la captura. Verifica que los puntos sigan en su lugar."
+  },
+  "overlay": {
+    "addPoint": "Haz clic para agregar el punto",
+    "arrows": "Las flechas mueven 1 px",
+    "space": "Espacio agrega",
+    "undo": "Ctrl Z deshace",
+    "finish": "para terminar",
+    "mode": "Modo de captura",
+    "modeArea": "Área",
+    "modePoint": "Punto",
+    "dragToSelect": "Arrastra para seleccionar",
+    "cancel": "para cancelar",
+    "confirm": "Confirmar ↵"
+  },
+  "wiggle": {
+    "amplitude": "Amplitud · % del ancho",
+    "amplitudeValue": "Amplitud en %",
+    "equivalent": "≈ {px} px en {width}",
+    "effective": "→ {px} px efectivo",
+    "preview": "Vista previa · ancho de pantalla",
+    "previewScale": "Escala ×40 · tiempo ×¼",
+    "speed": "Velocidad",
+    "slow": "Lenta",
+    "medium": "Media",
+    "fast": "Rápida",
+    "clicks": "Clics",
+    "clickWhile": "Hacer clic mientras oscila",
+    "rateFromClick": "Ritmo y botón definidos en la pestaña Click",
+    "adjust": "Ajustar ›",
+    "double": "doble",
+    "button": {
+      "left": "izquierdo",
+      "middle": "medio",
+      "right": "derecho",
+      "x1": "X1",
+      "x2": "X2"
+    }
+  },
+  "scan": {
+    "selectArea": "Seleccionar área",
+    "areaMeta": "{w} × {h} · X {x} Y {y}",
+    "noArea": "Ninguna área seleccionada",
+    "thumbPlaceholder": "miniatura del área capturada",
+    "selectHint": "Selecciona un área para ver el recorrido",
+    "badge": "{rows, plural, one {# línea} other {# líneas}} · ciclo {cycle} s",
+    "lines": "Líneas",
+    "spacing": "Espaciado",
+    "speed": "Velocidad",
+    "action": "Acción",
+    "moveOnly": "Solo mover",
+    "moveClick": "Mover y hacer clic",
+    "loop": "Bucle",
+    "loopHint": "Volver a empezar desde arriba al terminar",
+    "decrease": "Disminuir espaciado",
+    "increase": "Aumentar espaciado"
+  },
+  "profiles": {
+    "title": "Perfiles",
+    "import": "Importar",
+    "exportActive": "Exportar",
+    "search": "Buscar perfil",
+    "new": "+ Nuevo",
+    "defaultName": "Nuevo perfil",
+    "noMatch": "Ningún perfil con ese nombre.",
+    "footer": "{count, plural, =0 {0 perfiles} one {# perfil} other {# perfiles}} · {path}",
+    "actions": "Acciones de {name}",
+    "rename": "Renombrar",
+    "renameLabel": "Nombre del perfil",
+    "setHotkey": "Definir atajo…",
+    "clearHotkey": "Quitar atajo",
+    "duplicate": "Duplicar",
+    "export": "Exportar…",
+    "delete": "Eliminar",
+    "confirmDelete": "¿Eliminar este perfil? No se puede deshacer.",
+    "emptyCount": "00 perfiles",
+    "emptyTitle1": "Ningún perfil",
+    "emptyTitle2": "guardado aún.",
+    "emptyText": "Ajusta un modo en la ventana principal y guárdalo como perfil, o importa un archivo existente.",
+    "create": "Crear perfil",
+    "importFile": "Importar .chprofile",
+    "dropHint": "o arrastra un archivo a esta área",
+    "dropNow": "Suelta el archivo .chprofile para importarlo",
+    "imported": "Perfil “{name}” importado.",
+    "exported": "Exportado a {path}",
+    "notes": {
+      "renamed": "El nombre ya existía: quedó “{to}”.",
+      "hotkeyDropped": "El atajo {combo} ya estaba en uso y se descartó.",
+      "migrated": "El archivo era de una versión anterior y se actualizó."
+    },
+    "summary": {
+      "clicks": "hace clic",
+      "noArea": "sin área",
+      "loop": "bucle",
+      "once": "una vez",
+      "variation": "Variación {blocks} ms",
+      "points": "{count, plural, one {# punto} other {# puntos}}"
+    }
+  },
+  "themes": {
+    "title": "Tema",
+    "followSystem": "Seguir a Windows"
+  }
+}

@@ -7,12 +7,17 @@ import { Gallery, parseGalleryHash } from "./gallery";
 
 describe("parseGalleryHash", () => {
   it("reads screen and theme", () => {
-    expect(parseGalleryHash("#/tokens?theme=papel")).toEqual({ screen: "tokens", theme: "papel" });
+    expect(parseGalleryHash("#/tokens?theme=papel")).toEqual({ screen: "tokens", theme: "papel", lang: "pt-BR" });
+    expect(parseGalleryHash("#/tokens?lang=es-419").lang).toBe("es-419");
   });
 
   it("falls back to the default theme and the index", () => {
-    expect(parseGalleryHash("")).toEqual({ screen: null, theme: "grafite" });
-    expect(parseGalleryHash("#/tokens?theme=neon")).toEqual({ screen: "tokens", theme: "grafite" });
+    expect(parseGalleryHash("")).toEqual({ screen: null, theme: "grafite", lang: "pt-BR" });
+    expect(parseGalleryHash("#/tokens?theme=neon&lang=xx")).toEqual({
+      screen: "tokens",
+      theme: "grafite",
+      lang: "pt-BR",
+    });
   });
 });
 

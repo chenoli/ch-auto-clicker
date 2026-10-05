@@ -33,6 +33,13 @@ pub struct ImportResult {
     pub notes: Vec<ImportNote>,
 }
 
+fn file_type(state: &AppState) -> &'static str {
+    crate::native_text::text(
+        state.data().settings.locale,
+        crate::native_text::Text::ProfileFileType,
+    )
+}
+
 fn new_id() -> String {
     uuid::Uuid::new_v4().to_string()
 }
@@ -194,6 +201,7 @@ pub fn profile_activate(app: AppHandle, state: State<'_, AppState>, id: String) 
 #[specta::specta]
 pub async fn profile_export(app: AppHandle, id: String) -> AppResult<Option<String>> {
     let state = app.state::<AppState>();
+    let file_type = file_type(&state);
     let profile = state
         .data()
         .profile(&id)
@@ -202,7 +210,7 @@ pub async fn profile_export(app: AppHandle, id: String) -> AppResult<Option<Stri
     let Some(path) = app
         .dialog()
         .file()
-        .add_filter("CH. Clicker", &[chprofile::EXTENSION])
+        .add_filter(file_type, &[chprofile::EXTENSION])
         .set_file_name(chprofile::file_name(&profile))
         .blocking_save_file()
         .and_then(|p| p.into_path().ok())
@@ -219,10 +227,11 @@ pub async fn profile_export(app: AppHandle, id: String) -> AppResult<Option<Stri
 #[tauri::command]
 #[specta::specta]
 pub async fn profile_import(app: AppHandle) -> AppResult<Option<ImportResult>> {
+    let file_type = file_type(&app.state::<AppState>());
     let Some(path) = app
         .dialog()
         .file()
-        .add_filter("CH. Clicker", &[chprofile::EXTENSION])
+        .add_filter(file_type, &[chprofile::EXTENSION])
         .blocking_pick_file()
         .and_then(|p| p.into_path().ok())
     else {

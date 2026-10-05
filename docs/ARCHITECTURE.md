@@ -556,12 +556,13 @@ O tauri-specta nomeia cada evento em kebab-case a partir do tipo (`EngineTick` �
 
 ### 8.3 i18n
 
-- **i18next**, namespaces por feature (`common`, `click`, `wiggle`, `scan`, `points`, `variation`, `profiles`, `hotkeys`, `themes`, `settings`, `hud`, `overlay`, `errors`, `native`). Os arquivos ficam em `ui/src/i18n/locales/{locale}/{ns}.json`.
-- Chaves tipadas (declaração de resources em TS), então uma chave inexistente é erro de compilação. Um script de CI compara os conjuntos de chaves entre os locales.
-- Números e tempos via `Intl.NumberFormat`/`Intl.DateTimeFormat` do locale ativo ("10,0" em pt-BR, "10.0" em en-US). Os formatos `mm:ss.d` e `hh:mm:ss` saem de um formatador próprio com o separador decimal do locale.
-- O namespace `native` (tray, notificações, diálogos) é embutido no binário Rust (`include_str!`) a partir dos mesmos JSONs. Uma única fonte.
-- Locale inicial: `GetUserDefaultUILanguage` (`pt*` → pt-BR, senão en-US). Adicionar idioma = adicionar pasta + entrada no enum `Locale` + opção no segmented da tela 08.
-- **Toda string de UI usa i18n desde a fase 0**, para não haver retrabalho. A fase de i18n só adiciona en-US, a troca de idioma e o lado nativo.
+- Idiomas: **pt-BR** (padrão), **en-US** e **es-419** (espanhol latino-americano, também usado para as demais variantes do espanhol; incluído a pedido do usuário em 2026-10-05).
+- **i18next** + ICU com um catálogo `common` por idioma em `ui/src/i18n/locales/{locale}/common.json`, agrupado por feature nas chaves (`click.*`, `profiles.*`, `errors.*`…). Um catálogo por idioma se mostrou suficiente para o tamanho do app.
+- Chaves tipadas (declaração de resources em TS), então uma chave inexistente é erro de compilação. O teste `ui/src/i18n/locales.test.ts` (roda no CI com o Vitest) exige as mesmas chaves e os mesmos placeholders ICU nos três idiomas e nenhum texto vazio.
+- Números via `Intl.NumberFormat` do locale ativo ("10,0" em pt-BR, "10.0" em en-US e es-419). Os relógios `mm:ss.d` e `hh:mm:ss` seguem o handoff e são iguais em todos os idiomas.
+- Textos desenhados pelo Rust (títulos de janela, tipo de arquivo nos diálogos; a bandeja na Fase 11) ficam em `src-tauri/src/native_text.rs`, uma tabela por idioma coberta por teste.
+- Locale inicial: `GetUserDefaultUILanguage` (português → pt-BR, espanhol → es-419, senão en-US). Troca ao vivo pelo segmented da Tela 08; toda janela aplica o idioma das configurações no boot e a cada `settings-changed`. Adicionar idioma = pasta de catálogo + variante no enum `Locale` + textos nativos.
+- **Toda string de UI usa i18n desde a fase 0**, para não haver retrabalho.
 
 ---
 

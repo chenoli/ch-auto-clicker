@@ -249,6 +249,21 @@ pub enum Locale {
     PtBr,
     #[serde(rename = "en-US")]
     EnUs,
+    /// Latin American Spanish, also used for every other Spanish variant.
+    #[serde(rename = "es-419")]
+    Es419,
+}
+
+impl Locale {
+    /// The UI language for a Windows primary language id (`PRIMARYLANGID` of the UI language):
+    /// Portuguese → pt-BR, Spanish → es-419, anything else → en-US.
+    pub fn from_primary_language(primary: u16) -> Self {
+        match primary {
+            0x16 => Self::PtBr,
+            0x0A => Self::Es419,
+            _ => Self::EnUs,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -390,6 +405,11 @@ mod tests {
             "move_click"
         );
         assert_eq!(serde_json::to_value(Locale::PtBr).expect("json"), "pt-BR");
+        assert_eq!(serde_json::to_value(Locale::Es419).expect("json"), "es-419");
+        assert_eq!(Locale::from_primary_language(0x16), Locale::PtBr);
+        assert_eq!(Locale::from_primary_language(0x0A), Locale::Es419);
+        assert_eq!(Locale::from_primary_language(0x09), Locale::EnUs);
+        assert_eq!(Locale::from_primary_language(0x07), Locale::EnUs);
     }
 
     #[test]

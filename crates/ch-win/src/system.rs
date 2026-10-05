@@ -73,6 +73,13 @@ pub fn on_battery() -> Option<bool> {
     }
 }
 
+/// Windows UI language as a CH. Clicker locale (first run only; the user can change it later).
+pub fn ui_locale() -> ch_core::model::Locale {
+    // SAFETY: no arguments; returns the current user's UI language id.
+    let langid = unsafe { windows::Win32::Globalization::GetUserDefaultUILanguage() };
+    ch_core::model::Locale::from_primary_language(langid & 0x3FF)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

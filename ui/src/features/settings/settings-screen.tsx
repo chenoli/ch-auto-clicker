@@ -1,13 +1,20 @@
 import { useTranslation } from "react-i18next";
 
+import { Segmented } from "../../components/segmented";
+
+import { DEFAULT_LOCALE, LOCALES, isLocale } from "../../i18n";
+
 import { TitleBar } from "../main/title-bar";
 import { SubScreenHeader } from "../shell/sub-screen-header";
 
+import type { Locale } from "../../i18n";
 import type { ReactElement } from "react";
 
 interface SettingsScreenProps {
   /** Name shown on the Tema row ("Grafite", or "Seguindo o Windows · Papel"). */
   themeLabel: string;
+  locale: string;
+  onLocale: (locale: Locale) => void;
   onOpenThemes: () => void;
   onOpenHotkeys: () => void;
   onBack: () => void;
@@ -18,6 +25,8 @@ interface SettingsScreenProps {
 /** Tela 08, for now only the way to Atalhos (the full screen arrives in Phase 11). */
 export function SettingsScreen({
   themeLabel,
+  locale,
+  onLocale,
   onOpenThemes,
   onOpenHotkeys,
   onBack,
@@ -30,6 +39,16 @@ export function SettingsScreen({
       <TitleBar onMinimize={onMinimize} onClose={onClose} />
       <SubScreenHeader kicker={t("settings.kicker")} title={t("settings.title")} onBack={onBack} />
       <div className="flex min-h-0 flex-1 flex-col px-4">
+        <div className="settings-row min-h-14">
+          <span className="row-label">{t("settings.language")}</span>
+          <Segmented<Locale>
+            label={t("settings.language")}
+            variant="compact"
+            value={isLocale(locale) ? locale : DEFAULT_LOCALE}
+            onChange={onLocale}
+            options={LOCALES.map((l) => ({ value: l, label: t(`languages.${l}`) }))}
+          />
+        </div>
         <button
           type="button"
           className="flex min-h-14 items-center justify-between border-t border-divider text-left"

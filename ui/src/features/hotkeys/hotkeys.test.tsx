@@ -126,9 +126,12 @@ describe("SettingsScreen", () => {
     const onOpenHotkeys = vi.fn();
     const onBack = vi.fn();
     const onOpenThemes = vi.fn();
+    const onLocale = vi.fn();
     render(
       <SettingsScreen
         themeLabel="Grafite"
+        locale="pt-BR"
+        onLocale={onLocale}
         onOpenThemes={onOpenThemes}
         onOpenHotkeys={onOpenHotkeys}
         onBack={onBack}
@@ -138,6 +141,8 @@ describe("SettingsScreen", () => {
     );
     fireEvent.click(screen.getByRole("button", { name: /Grafite ›/ }));
     expect(onOpenThemes).toHaveBeenCalledOnce();
+    fireEvent.click(screen.getByRole("radio", { name: "Español" }));
+    expect(onLocale).toHaveBeenCalledWith("es-419");
     fireEvent.click(screen.getByRole("button", { name: /Atalhos ›/ }));
     fireEvent.click(screen.getByRole("button", { name: "Voltar" }));
     expect(onOpenHotkeys).toHaveBeenCalledOnce();

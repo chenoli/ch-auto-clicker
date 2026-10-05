@@ -7,6 +7,7 @@ mod events;
 mod hotkeys;
 mod ipc;
 mod logging;
+mod native_text;
 mod overlay;
 mod paths;
 mod persist;

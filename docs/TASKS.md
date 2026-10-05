@@ -218,4 +218,5 @@ As fases 9 e 10 podem correr em paralelo com 5–8, porque a infra de tokens e d
 
 - **Fase 8 (Perfis):** commitada só com testes automatizados; o teste ao vivo foi interrompido (havia um jogo na tela 1). Testar: dropdown do cabeçalho, criar, duplicar, renomear (F2), excluir com confirmação, definir/remover atalho do perfil e disparo dele, exportar/importar pelo diálogo nativo e soltar um `.chprofile` na tela.
 - **Fase 9 (Temas):** sem teste ao vivo pelo mesmo motivo. Testar: trocar o tema muda todas as janelas abertas sem piscar (inclusive o fundo nativo no Papel), "Seguir o Windows" acompanha a troca claro/escuro do Windows em menos de 1 s.
+- **Fase 10 (i18n):** sem teste ao vivo. Testar: trocar o idioma na Tela 08 atualiza todas as janelas abertas (inclusive o editor de variação e os títulos das janelas novas); primeira execução abre no idioma do Windows (pt → pt-BR, es → es-419, outros → en-US).
 - **Teclas físicas** (desde a Fase 4): F6, F7, parada de emergência, Ctrl Shift P e Esc/Enter nos overlays.

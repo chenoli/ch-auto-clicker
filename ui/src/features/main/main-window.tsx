@@ -91,6 +91,13 @@ export function MainWindow(): ReactElement | null {
     return (
       <SettingsScreen
         themeLabel={themeLabel(settings, t)}
+        locale={settings.locale}
+        onLocale={(locale) => {
+          setCommandError(null);
+          void commands.settingsUpdate({ ...settings, locale }).then((r) => {
+            if (r.status === "error") setCommandError(r.error.code);
+          });
+        }}
         onOpenThemes={() => go("themes")}
         onOpenHotkeys={() => go("hotkeys")}
         onBack={() => go("main")}

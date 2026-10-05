@@ -190,7 +190,13 @@
     "hotkeysLink": "Atalhos ›",
     "comingSoon": "As demais configurações chegam na Fase 11.",
     "theme": "Tema",
-    "followingSystem": "Seguindo o Windows · {name}"
+    "followingSystem": "Seguindo o Windows · {name}",
+    "language": "Idioma"
+  },
+  "languages": {
+    "pt-BR": "Português",
+    "en-US": "English",
+    "es-419": "Español"
   },
   "common": {
     "back": "Voltar",

@@ -2,24 +2,30 @@ import { useEffect, useState } from "react";
 
 import { useTranslation } from "react-i18next";
 
+import { DEFAULT_LOCALE, applyLocale, isLocale } from "../../i18n";
+
 import { THEMES } from "../../styles/tokens";
 
 import { SCREENS } from "./screens";
 
+import type { Locale } from "../../i18n";
 import type { ThemeId } from "../../styles/tokens";
 import type { ReactElement } from "react";
 
 export interface GalleryRoute {
   screen: string | null;
   theme: ThemeId;
+  lang: Locale;
 }
 
-/** Parses `#/<screen>?theme=<id>`; unknown themes fall back to the default. */
+/** Parses `#/<screen>?theme=<id>&lang=<locale>`; unknown values fall back to the defaults. */
 export function parseGalleryHash(hash: string): GalleryRoute {
   const [path = "", query = ""] = hash.replace(/^#\/?/, "").split("?");
-  const theme = new URLSearchParams(query).get("theme");
+  const params = new URLSearchParams(query);
+  const theme = params.get("theme");
+  const lang = params.get("lang");
   const known = THEMES.find((t) => t.id === theme);
-  return { screen: path || null, theme: known ? known.id : "grafite" };
+  return { screen: path || null, theme: known ? known.id : "grafite", lang: isLocale(lang) ? lang : DEFAULT_LOCALE };
 }
 
 export function Gallery(): ReactElement {
@@ -36,6 +42,8 @@ export function Gallery(): ReactElement {
     document.documentElement.dataset.theme = route.theme;
   }, [route.theme]);
 
+  useEffect(() => applyLocale(route.lang), [route.lang]);
+
   const visible = route.screen ? SCREENS.filter((s) => s.id === route.screen) : SCREENS;
 
   return (
@@ -48,7 +56,7 @@ export function Gallery(): ReactElement {
           <figure key={screen.id} className="m-0 flex flex-col gap-3">
             {!route.screen && (
               <figcaption className="text-10 font-bold tracking-label text-fg-3 uppercase">
-                <a href={`#/${screen.id}?theme=${route.theme}`}>{screen.title}</a>
+                <a href={`#/${screen.id}?theme=${route.theme}&lang=${route.lang}`}>{screen.title}</a>
               </figcaption>
             )}
             {/* Fixed frame size so screenshots are comparable run to run. */}
