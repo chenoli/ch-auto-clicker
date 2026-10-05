@@ -25,7 +25,6 @@ function Window({
   countdownTotalMs?: number;
   initialProfile?: Profile;
 }) {
-  // Editable in place, so toggles and tabs can be tried in the gallery.
   const [profile, setProfile] = useState(initialProfile);
   const { i18n } = useTranslation();
   return (
@@ -52,7 +51,6 @@ function Window({
   );
 }
 
-/** Tela 01.A in the idle state, with the prototype's profile. */
 export function MainIdleScreen(): ReactElement {
   return <Window engine={tick()} />;
 }
@@ -62,7 +60,6 @@ function wiggleProfile(clickWhileWiggling: boolean): Profile {
   return { ...p, mode: "wiggle", modes: { ...p.modes, wiggle: { ...p.modes.wiggle, clickWhileWiggling } } };
 }
 
-/** Tela 01.B: the wiggle panel, without and with clicks. */
 export function MainWiggleScreen(): ReactElement {
   return (
     <div className="flex gap-10">
@@ -81,7 +78,6 @@ function scanProfile(action: "move" | "move_click"): Profile {
   };
 }
 
-/** Tela 01.C: the scan panel, moving only and moving with clicks. */
 export function MainScanScreen(): ReactElement {
   return (
     <div className="flex gap-10">
@@ -91,7 +87,6 @@ export function MainScanScreen(): ReactElement {
   );
 }
 
-/** Tela 10: every state of the main button and footer. */
 export function MainStatesScreen(): ReactElement {
   return (
     <div className="flex gap-10">
@@ -103,7 +98,6 @@ export function MainStatesScreen(): ReactElement {
   );
 }
 
-/** Tela 02.B with the prototype's blocks and the handoff's provisional 4 ms limit. */
 export function VariationScreen(): ReactElement {
   const { i18n } = useTranslation();
   return (
@@ -157,12 +151,10 @@ function Hotkeys(props: Partial<Parameters<typeof HotkeysScreen>[0]>) {
   );
 }
 
-/** Tela 06 with the default shortcuts. */
 export function HotkeysScreenDemo(): ReactElement {
   return <Hotkeys />;
 }
 
-/** Tela 06 recording one field and showing a conflict on another. */
 export function HotkeysStatesDemo(): ReactElement {
   return (
     <Hotkeys

@@ -13,7 +13,6 @@ import type { AppError, ImportResult } from "../../ipc";
 import type { HotkeyRecordingApi } from "../hotkeys/use-hotkey-recording";
 import type { ReactNode } from "react";
 
-/** Same limit as Rust (`chprofile::MAX_BYTES`): checked before reading a dropped file. */
 const MAX_IMPORT_BYTES = 1024 * 1024;
 export const DATA_PATH = "%APPDATA%\\Chenoli\\CH Clicker";
 
@@ -26,7 +25,6 @@ interface ProfilesRouteProps {
   onClose: () => void;
 }
 
-/** Tela 05 connected to Rust: every action is a command; the list comes back as `profiles-changed`. */
 export function ProfilesRoute({ recording, onBack, onMinimize, onClose }: ProfilesRouteProps) {
   const { t } = useTranslation();
   const profiles = useAppStore((s) => s.profiles);

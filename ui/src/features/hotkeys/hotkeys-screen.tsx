@@ -45,7 +45,6 @@ function bindingOf(bindings: HotkeyBindings, action: HotkeyAction): Hotkey | nul
   return bindings[action];
 }
 
-/** Tela 06: global shortcuts with capture, conflict and registration failures. */
 export function HotkeysScreen({
   bindings,
   statuses,

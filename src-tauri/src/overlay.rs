@@ -1,11 +1,3 @@
-//! Capture overlays (TASKS T5.2–T5.5 and T7.3–T7.4, Telas 03.A/03.B): one always-on-top window
-//! per monitor over a frozen capture of that monitor.
-//!
-//! - Ponto (D6): every click adds a point to the active profile right away; Enter or Esc ends the
-//!   session, Ctrl+Z removes the last point.
-//! - Área (D7): drag a rectangle inside one monitor; Enter saves it as the scan area (with a
-//!   thumbnail), Esc cancels.
-
 use std::sync::{Mutex, MutexGuard, mpsc};
 
 use ch_core::geometry::{DisplayLayout, Monitor};
@@ -23,7 +15,6 @@ use crate::thumbs;
 
 pub const SCHEME: &str = "chcap";
 
-/// A monitor as the overlay page needs it (physical pixels).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct OverlayMonitor {
@@ -50,20 +41,16 @@ pub enum OverlayMode {
     Area,
 }
 
-/// Everything one overlay window renders.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct OverlayState {
     pub monitor: OverlayMonitor,
     pub mode: OverlayMode,
     pub points: Vec<OverlayPoint>,
-    /// Number the next click will get ("Clique para adicionar o ponto 05").
     pub next_number: u32,
-    /// The profile's scan area (desktop pixels), shown pre-selected in area mode.
     pub area: Option<Area>,
 }
 
-/// The overlay mode changed (Área ↔ Ponto); every overlay window re-reads its state.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, specta::Type, tauri_specta::Event)]
 #[serde(rename_all = "camelCase")]
 pub struct OverlayChanged {
@@ -93,7 +80,6 @@ fn label(index: usize) -> String {
     format!("overlay-{index}")
 }
 
-/// Physical desktop pixel for a CSS position inside overlay `monitor`.
 pub fn to_physical(monitor: &Monitor, css_x: f64, css_y: f64) -> (i32, i32) {
     let scale = f64::from(monitor.scale);
     (
@@ -107,7 +93,6 @@ impl OverlayManager {
         lock(&self.session).is_some()
     }
 
-    /// BMP bytes of a monitor's capture, served through the `chcap` protocol.
     pub fn capture(&self, index: usize) -> Option<Vec<u8>> {
         lock(&self.session).as_ref()?.captures.get(index).cloned()
     }
@@ -155,7 +140,6 @@ impl OverlayManager {
     }
 }
 
-/// The monitors and the arrangement fingerprint, for the points minimap.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct ScreenLayout {
@@ -183,8 +167,6 @@ pub fn screen_layout() -> ScreenLayout {
     }
 }
 
-/// Opens the overlays in `mode` and waits until the user finishes. Results are saved to the
-/// profile as they happen (points) or on confirm (area), so the caller only learns that it ended.
 pub async fn pick<R: Runtime>(app: AppHandle<R>, mode: OverlayMode) -> AppResult<()> {
     let rx = open(&app, mode)?;
     tauri::async_runtime::spawn_blocking(move || rx.recv().unwrap_or_default())
@@ -200,7 +182,6 @@ fn open<R: Runtime>(app: &AppHandle<R>, mode: OverlayMode) -> AppResult<mpsc::Re
             "a capture session is already open",
         ));
     }
-    // Picking points while the engine clicks would be chaos; the overlay always starts idle.
     if state.engine.shared().state().is_active() {
         state.engine.stop();
         let _ = state
@@ -267,8 +248,6 @@ fn open<R: Runtime>(app: &AppHandle<R>, mode: OverlayMode) -> AppResult<mpsc::Re
     Ok(rx)
 }
 
-/// Debug builds honour `CH_TEST_MONITORS` (`primary` or a comma list of device names), so a
-/// developer with games on other screens can try the overlay without covering them.
 fn overlay_allowed(monitor: &Monitor) -> bool {
     if !cfg!(debug_assertions) {
         return true;
@@ -286,7 +265,6 @@ fn monitor_filter_allows(filter: Option<&str>, monitor: &Monitor) -> bool {
     }
 }
 
-/// Closes every overlay window, drops the captures and resolves the waiting command.
 pub fn finish<R: Runtime>(app: &AppHandle<R>) {
     let state = app.state::<AppState>();
     let Some(mut session) = lock(&state.overlays().session).take() else {
@@ -302,7 +280,6 @@ pub fn finish<R: Runtime>(app: &AppHandle<R>) {
     }
 }
 
-/// Área ↔ Ponto from the overlay's top bar.
 pub fn set_mode<R: Runtime>(app: &AppHandle<R>, mode: OverlayMode) -> AppResult<()> {
     let state = app.state::<AppState>();
     lock(&state.overlays().session)
@@ -313,7 +290,6 @@ pub fn set_mode<R: Runtime>(app: &AppHandle<R>, mode: OverlayMode) -> AppResult<
     Ok(())
 }
 
-/// Desktop rectangle for two CSS corners inside `monitor`, kept on that monitor (D7).
 pub fn area_from_css(monitor: &Monitor, x: f64, y: f64, w: f64, h: f64) -> Option<Area> {
     let r = monitor.rect;
     let (left, top) = to_physical(monitor, x.min(x + w), y.min(y + h));
@@ -331,8 +307,6 @@ pub fn area_from_css(monitor: &Monitor, x: f64, y: f64, w: f64, h: f64) -> Optio
     (area.w >= SCAN_AREA_MIN && area.h >= SCAN_AREA_MIN).then_some(area)
 }
 
-/// Saves the rectangle drawn on overlay `index` as the scan area, writes its thumbnail and closes
-/// the overlays.
 pub fn confirm_area<R: Runtime>(
     app: &AppHandle<R>,
     index: usize,
@@ -367,7 +341,6 @@ pub fn confirm_area<R: Runtime>(
         });
         (session.profile_id.clone(), area, thumb)
     };
-    // The thumbnail is a nicety: the area is saved even if it cannot be written.
     if let Some(bytes) = thumb
         && let Err(e) = thumbs::save(&profile_id, &bytes)
     {
@@ -385,7 +358,6 @@ pub fn overlay_state<R: Runtime>(app: &AppHandle<R>, index: usize) -> AppResult<
     state.overlays().state_for(&state, index)
 }
 
-/// Adds a point at a CSS position of overlay `index`, saves the profile and refreshes every window.
 pub fn add_point<R: Runtime>(
     app: &AppHandle<R>,
     index: usize,
@@ -428,7 +400,6 @@ pub fn add_point<R: Runtime>(
     state.overlays().state_for(&state, index)
 }
 
-/// Removes the last point added in this session (Ctrl+Z).
 pub fn undo<R: Runtime>(app: &AppHandle<R>) -> AppResult<()> {
     let state = app.state::<AppState>();
     let (profile_id, last) = {
@@ -481,8 +452,6 @@ fn update_profile<R: Runtime>(
     Ok(())
 }
 
-/// Serves `chcap://localhost/<monitor>.bmp` from the open session and
-/// `chcap://localhost/thumb/<profile>.bmp` from the thumbnail cache.
 pub fn handle_protocol<R: Runtime>(app: &AppHandle<R>, path: &str) -> Response<Vec<u8>> {
     let path = path.trim_start_matches('/');
     let body = if let Some(id) = path
@@ -496,7 +465,6 @@ pub fn handle_protocol<R: Runtime>(app: &AppHandle<R>, path: &str) -> Response<V
             .and_then(|i| app.state::<AppState>().overlays().capture(i))
     };
     let builder = Response::builder()
-        // The loupe reads pixels through a canvas; the page origin differs from this scheme's.
         .header("Access-Control-Allow-Origin", "*")
         .header("Cache-Control", "no-store");
     match body {
@@ -596,10 +564,8 @@ mod tests {
         let m = monitor(1920, 1.5);
         let a = area_from_css(&m, 100.0, 50.0, 200.0, 100.0).expect("area");
         assert_eq!((a.x, a.y, a.w, a.h), (2070, 75, 300, 150));
-        // Dragged up-left: corners are normalised.
         let b = area_from_css(&m, 300.0, 150.0, -200.0, -100.0).expect("area");
         assert_eq!(a, b);
-        // Past the right edge: clamped to the monitor.
         let c = area_from_css(&m, 1200.0, 0.0, 400.0, 100.0).expect("area");
         assert_eq!(c.x + c.w as i32, 1920 + 1920);
         assert!(

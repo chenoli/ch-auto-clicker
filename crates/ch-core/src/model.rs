@@ -1,6 +1,3 @@
-//! Profile and settings model (ARCHITECTURE §4). Field names serialize in camelCase so the JSON on
-//! disk and over IPC matches the documented schema.
-
 use serde::{Deserialize, Serialize};
 
 use crate::input::{ClickKind, MouseButton};
@@ -18,9 +15,7 @@ pub const DELAY_MS_MAX: u32 = 60_000;
 pub const LINE_SPACING_MIN: u32 = 8;
 pub const LINE_SPACING_MAX: u32 = 130;
 pub const SCAN_AREA_MIN: u32 = 16;
-/// Larger than any virtual desktop Windows supports; bounds imported or hand-edited areas.
 pub const SCAN_AREA_MAX: u32 = 32_768;
-/// Bound for point and area coordinates (virtual desktop pixels).
 pub const COORD_MAX: i32 = 100_000;
 pub const NAME_MAX_CHARS: usize = 48;
 
@@ -63,7 +58,6 @@ pub enum Modifier {
 #[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct Hotkey {
     pub mods: Vec<Modifier>,
-    /// Canonical virtual-key name (`F6`, `Escape`, `Right`, `P`) or `MouseMiddle`/`MouseX1`/`MouseX2`.
     pub key: String,
 }
 
@@ -87,7 +81,6 @@ pub struct Variation {
     pub blocks_ms: Vec<u32>,
 }
 
-/// Shared by every mode (design decision 1): Wiggle and Scan click with these settings too.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
@@ -99,7 +92,6 @@ pub struct ClickSettings {
 }
 
 impl ClickSettings {
-    /// Gap sequence for the click timeline: the variation cycle when enabled, else the fixed interval.
     pub fn intervals_ms(&self) -> Vec<u32> {
         if self.variation.enabled && !self.variation.blocks_ms.is_empty() {
             self.variation.blocks_ms.clone()
@@ -108,7 +100,6 @@ impl ClickSettings {
         }
     }
 
-    /// Shortest gap the run will ask the scheduler for.
     pub fn min_interval_ms(&self) -> u32 {
         self.intervals_ms()
             .into_iter()
@@ -199,7 +190,6 @@ pub struct Profile {
 }
 
 impl Profile {
-    /// A fresh profile with the prototype's defaults (100 ms, left, single, cursor position).
     pub fn new_default(id: impl Into<String>, name: impl Into<String>, now_iso: &str) -> Self {
         Self {
             schema_version: PROFILE_SCHEMA_VERSION,
@@ -253,13 +243,11 @@ pub enum Locale {
     PtBr,
     #[serde(rename = "en-US")]
     EnUs,
-    /// Latin American Spanish, also used for every other Spanish variant.
     #[serde(rename = "es-419")]
     Es419,
 }
 
 impl Locale {
-    /// `pt-BR`, `en-US` or `es-419` (as stored in settings and written by the installer).
     pub fn from_tag(tag: &str) -> Option<Self> {
         match tag.trim() {
             "pt-BR" => Some(Self::PtBr),
@@ -269,8 +257,6 @@ impl Locale {
         }
     }
 
-    /// The UI language for a Windows primary language id (`PRIMARYLANGID` of the UI language):
-    /// Portuguese → pt-BR, Spanish → es-419, anything else → en-US.
     pub fn from_primary_language(primary: u16) -> Self {
         match primary {
             0x16 => Self::PtBr,
@@ -316,7 +302,6 @@ pub struct HotkeyBindings {
     pub pause_resume: Option<Hotkey>,
     pub capture_point: Option<Hotkey>,
     pub next_profile: Option<Hotkey>,
-    /// Never optional: the emergency stop cannot be disabled (ARCHITECTURE §10.1).
     pub emergency_stop: Hotkey,
 }
 
@@ -359,19 +344,13 @@ pub struct Settings {
     pub hotkeys: HotkeyBindings,
     pub hud: WindowPosition,
     pub window: WindowPosition,
-    /// The one-time anti-cheat warning was accepted (TASKS T11.3). Missing in older files.
     #[serde(default)]
     pub anti_cheat_acknowledged: bool,
-    /// How many times the "Segure Ctrl para mover" hint was shown on the HUD (D5: first 3).
     #[serde(default)]
     pub hud_hints_shown: u8,
 }
 
 impl Settings {
-    /// Applies a settings edit from the UI. The UI always sends the whole object, possibly built
-    /// from a stale copy, so fields owned by Rust keep their current values: profile bookkeeping,
-    /// shortcuts (changed only through the hotkey commands), window and HUD positions, the
-    /// anti-cheat acknowledgement (never revoked) and the HUD hint counter (never decreases).
     pub fn merge_user_edit(&self, incoming: Self) -> Self {
         Self {
             active_profile_id: self.active_profile_id.clone(),

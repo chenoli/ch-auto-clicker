@@ -28,14 +28,12 @@ type Edit = (mutate: (p: Profile) => Profile) => void;
 interface ScanPanelProps {
   profile: Profile;
   locale: string;
-  /** Thumbnail of the selected area, or null for the striped placeholder. */
   thumbnailUrl: string | null;
   onChange: Edit;
   onSelectArea: () => void;
   onAdjustClick: () => void;
 }
 
-/** Tela 01.C: the scan area, its zigzag preview and how it is walked. */
 export function ScanPanel({
   profile,
   locale,

@@ -1,7 +1,6 @@
 import type { Profile } from "../../ipc";
 import type { TFunction } from "i18next";
 
-/** One line that says what a profile does, as on the Tela 05 cards. */
 export function profileSummary(profile: Profile, locale: string, t: TFunction): string {
   const { click, modes } = profile;
   if (profile.mode === "wiggle") {
@@ -31,7 +30,6 @@ export function profileSummary(profile: Profile, locale: string, t: TFunction): 
   ].join(" · ");
 }
 
-/** Case- and accent-insensitive name search. */
 export function matchesSearch(name: string, query: string): boolean {
   const fold = (s: string) =>
     s

@@ -12,7 +12,6 @@ for (const screen of SCREEN_META) {
   });
 }
 
-// T9.4: the main window in all six themes, reviewed by eye when a token changes.
 for (const theme of THEMES) {
   test(`main-idle in ${theme.id}`, async ({ page }) => {
     await page.goto(`/gallery.html#/main-idle?theme=${theme.id}`);

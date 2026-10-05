@@ -1,14 +1,8 @@
-//! Tray icon artwork (TASKS T11.6, Tela 09.A): the "CH" monogram on the app's dark tile with a
-//! state dot, drawn in code at each size so it stays crisp from 100 % to 200 % scaling.
-
-/// Supersampling factor: every pixel averages 4 × 4 samples.
 const SS: u32 = 4;
 
-/// Monogram colors, fixed like the app icon (taskbars are dark or light whatever the theme).
 const TILE: [u8; 3] = [0x14, 0x14, 0x12];
 const INK: [u8; 3] = [0xF0, 0xED, 0xE5];
 
-/// Coverage of a sample at `(x, y)` in the unit square: tile, glyph or dot.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Paint {
     Clear,
@@ -26,7 +20,6 @@ fn in_rounded_rect(x: f64, y: f64, r: f64) -> bool {
 fn in_c(x: f64, y: f64) -> bool {
     let (dx, dy) = (x - 0.34, y - 0.5);
     let d = dx.hypot(dy);
-    // Open towards the right: drop the 90° wedge centred on the positive x axis.
     (0.105..=0.21).contains(&d) && !(dx > 0.0 && dy.abs() < dx)
 }
 
@@ -44,7 +37,6 @@ fn paint_at(x: f64, y: f64, dot: bool) -> Paint {
     if dot && d <= 0.125 {
         return Paint::Dot;
     }
-    // A tile-colored ring keeps the dot readable over the glyph.
     if dot && d <= 0.18 {
         return Paint::Tile;
     }
@@ -58,7 +50,6 @@ fn paint_at(x: f64, y: f64, dot: bool) -> Paint {
     }
 }
 
-/// RGBA pixels of a `size × size` icon; `dot` is the state color, or `None` (pulse off).
 pub fn render(size: u32, dot: Option<[u8; 3]>) -> Vec<u8> {
     let mut out = Vec::with_capacity((size * size * 4) as usize);
     let n = f64::from(size * SS);
@@ -85,7 +76,6 @@ pub fn render(size: u32, dot: Option<[u8; 3]>) -> Vec<u8> {
             if covered == 0 {
                 out.extend_from_slice(&[0, 0, 0, 0]);
             } else {
-                // Straight (not premultiplied) alpha, as Windows expects for icons.
                 out.extend(sum[..3].iter().map(|v| (v / covered) as u8));
                 out.push((covered * 255 / (SS * SS)) as u8);
             }
@@ -94,7 +84,6 @@ pub fn render(size: u32, dot: Option<[u8; 3]>) -> Vec<u8> {
     out
 }
 
-/// `#RRGGBB` → RGB, or `None` for anything else.
 pub fn rgb(hex: &str) -> Option<[u8; 3]> {
     let byte = |i: usize| {
         hex.get(i..i + 2)
@@ -138,14 +127,11 @@ mod tests {
     fn the_monogram_is_ink_on_the_tile() {
         let size = 32;
         let img = render(size, None);
-        // Left stroke of the C and left bar of the H.
         assert_eq!(pixel(&img, size, 6, 16), [0xF0, 0xED, 0xE5, 255]);
         assert_eq!(pixel(&img, size, 19, 12), [0xF0, 0xED, 0xE5, 255]);
-        // Inside the C is tile.
         assert_eq!(pixel(&img, size, 11, 16), [0x14, 0x14, 0x12, 255]);
     }
 
-    /// Writes raw RGBA previews to `CH_TRAY_PREVIEW_DIR` for a visual check.
     #[test]
     #[ignore = "writes files; run on demand"]
     fn dump_previews() {

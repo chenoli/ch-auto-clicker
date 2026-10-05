@@ -1,10 +1,3 @@
-//! Real input injection. Ignored by default: these move the real cursor and click, so they only run
-//! on request with games and sensitive apps closed (CLAUDE.md §6):
-//!
-//!   cargo test -p ch-win --test injection -- --ignored --test-threads=1
-//!
-//! `CH_TEST_MONITORS=primary` (or a comma list of device names like `\\.\DISPLAY1`) keeps the
-//! cursor off the other monitors, e.g. when games are open there.
 #![cfg(windows)]
 
 use std::sync::atomic::{AtomicU32, Ordering};
@@ -54,7 +47,6 @@ unsafe extern "system" fn wnd_proc(
             } else if which == XBUTTON2 {
                 bump(&X2_DOWN);
             }
-            // Handled here so DefWindowProc never turns it into a global "browser back" APPCOMMAND.
             return LRESULT(1);
         }
         WM_XBUTTONUP => return LRESULT(1),
@@ -134,7 +126,6 @@ impl Drop for TestWindow {
     }
 }
 
-/// Restores the user's cursor position even if an assertion fails.
 struct CursorGuard(Option<Point>);
 
 impl CursorGuard {
@@ -171,7 +162,7 @@ fn clicks_reach_a_window_with_every_button() {
     backend
         .click(MouseButton::Left, ClickKind::Single)
         .expect("left");
-    window.pump(Duration::from_millis(600)); // past the double-click time, so the next is fresh
+    window.pump(Duration::from_millis(600));
     backend
         .click(MouseButton::Left, ClickKind::Double)
         .expect("double");
@@ -188,7 +179,6 @@ fn clicks_reach_a_window_with_every_button() {
     window.pump(Duration::from_millis(200));
 
     let load = |c: &AtomicU32| c.load(Ordering::SeqCst);
-    // Single + double: 2 plain downs (the double's second down arrives as DBLCLK) and 3 ups.
     assert_eq!(load(&LEFT_DOWN), 2, "left down");
     assert_eq!(load(&LEFT_DBL), 1, "double-click");
     assert_eq!(load(&LEFT_UP), 3, "left up");
@@ -218,7 +208,6 @@ fn absolute_moves_land_on_the_exact_pixel_on_every_monitor() {
         let r = monitor.rect;
         for fx in [0, 1, 2, 3, 4] {
             for fy in [0, 1, 2, 3, 4] {
-                // Includes both edges of each monitor (offset 0 and width - 1).
                 let target = Point::new(
                     r.left + (r.width - 1) * fx / 4,
                     r.top + (r.height - 1) * fy / 4,

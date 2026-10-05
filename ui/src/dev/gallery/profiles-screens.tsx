@@ -11,7 +11,6 @@ import type { ReactElement } from "react";
 
 const noop = () => {};
 
-/** The four profiles of the handoff (Tela 05.A). */
 function handoffProfiles(): Profile[] {
   const base = prototypeProfile();
   const coleta: Profile = {
@@ -80,17 +79,14 @@ function Screen(props: Partial<ProfilesScreenProps>) {
   );
 }
 
-/** Tela 05.A with the "⋯" menu open on the second card, as in the handoff. */
 export function ProfilesScreenDemo(): ReactElement {
   return <Screen initialMenuFor="leitura" />;
 }
 
-/** Tela 05.B: the empty state with its drop area. */
 export function ProfilesEmptyDemo(): ReactElement {
   return <Screen profiles={[]} activeId={null} />;
 }
 
-/** Tela 07 with Grafite selected. */
 export function ThemesScreenDemo(): ReactElement {
   return (
     <WindowFrame width={420} height={640}>

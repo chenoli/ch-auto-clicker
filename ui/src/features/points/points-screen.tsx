@@ -14,17 +14,14 @@ import type { OverlayMonitor, ScreenPoint } from "../../ipc";
 import type { ReactElement } from "react";
 
 export const DELAY_MAX = 60_000;
-/** Same limit as `ch_core::model::POINTS_MAX`. */
 export const POINTS_MAX = 64;
 const COORD_LIMIT = 100_000;
 
 export interface PointsScreenProps {
   points: readonly ScreenPoint[];
   monitors: readonly OverlayMonitor[];
-  /** Captured on a different monitor arrangement than the current one. */
   layoutChanged: boolean;
   captureShortcut: string;
-  /** Last failed command (`errors.<code>`). */
   errorCode?: string | null;
   onChange: (points: ScreenPoint[]) => void;
   onCapture: () => void;
@@ -36,13 +33,11 @@ export interface PointsScreenProps {
 
 const two = (n: number) => String(n).padStart(2, "0");
 
-/** Integer within ±100000, or null when the text is not a number. */
 export function parseCoordinate(raw: string): number | null {
   const n = Number(raw.trim());
   return raw.trim() !== "" && Number.isInteger(n) && Math.abs(n) <= COORD_LIMIT ? n : null;
 }
 
-/** Delay in ms: empty or "—" means 0, otherwise 0–60000. */
 export function parseDelay(raw: string): number | null {
   const text = raw.replace(/[+\s]|ms|—/g, "");
   if (text === "") return 0;
@@ -50,7 +45,6 @@ export function parseDelay(raw: string): number | null {
   return Number.isInteger(n) && n >= 0 ? Math.min(DELAY_MAX, n) : null;
 }
 
-/** Moves the item at `from` to the position of `to` (drag and drop). */
 export function reorder<T>(items: readonly T[], from: number, to: number): T[] {
   const next = [...items];
   const [moved] = next.splice(from, 1);
@@ -91,7 +85,6 @@ function CellInput({
   );
 }
 
-/** Tela 02.A: the multi-click points, their order, position and delay. */
 export function PointsScreen({
   points,
   monitors,
@@ -108,7 +101,6 @@ export function PointsScreen({
   const { t } = useTranslation();
   const [dragging, setDragging] = useState<number | null>(null);
   const [over, setOver] = useState<number | null>(null);
-  // Only the handle starts a drag, so selecting text in a cell never moves the row.
   const [armed, setArmed] = useState<number | null>(null);
 
   const desktop = desktopBounds(monitors);
@@ -219,7 +211,6 @@ export function PointsScreen({
               setArmed(null);
             }}
           >
-            {/* Drag with the mouse; with the keyboard, ↑ and ↓ move the point in the order. */}
             <button
               type="button"
               className="drag-handle"

@@ -5,38 +5,30 @@ export const SPACING_MAX = 130;
 export const SPACING_STEP = 4;
 export const SPEEDS = [600, 1200, 2400] as const;
 
-/** Thumbnail box of the Scan panel and the inset of the path drawn over it. */
 export const THUMB = { width: 388, height: 130, inset: 4 };
 
-/** Rows of the zigzag; same rule as `ch_core::scan` (rows never go below the bottom edge). */
 export function scanRows(area: Area, spacing: number): number {
   return Math.floor((Math.max(1, area.h) - 1) / Math.max(1, spacing)) + 1;
 }
 
-/** Path length in px, including the straight return to the start when looping (ARCHITECTURE §6.5). */
 export function scanLength(area: Area, spacing: number, loop: boolean): number {
   const rows = scanRows(area, spacing);
   const span = Math.max(1, area.w) - 1;
   const open = rows * span + (rows - 1) * spacing;
   if (!loop) return open;
-  // An odd number of rows ends on the right edge, an even number back on the left.
   const endX = rows % 2 === 1 ? span : 0;
   return open + Math.hypot(endX, (rows - 1) * spacing);
 }
 
-/** Seconds for one pass: the "ciclo" in the badge. */
 export function scanCycleSecs(area: Area, spacing: number, speed: number, loop: boolean): number {
   return scanLength(area, spacing, loop) / Math.max(1, speed);
 }
 
-/** More rows than this cannot be told apart in a 130 px box; caps the work for odd areas. */
 const THUMB_ROWS_MAX = 130;
 
-/** The zigzag's vertices mapped into the thumbnail box (SVG `points`). */
 export function thumbPolyline(area: Area, spacing: number): string {
   const total = scanRows(area, spacing);
   const rows = Math.min(total, THUMB_ROWS_MAX);
-  // Past the cap, rows are sampled evenly so the drawing still spans the whole area.
   const rowAt = (i: number) => (rows === total ? i : Math.round((i * (total - 1)) / (rows - 1)));
   const innerW = THUMB.width - 2 * THUMB.inset;
   const innerH = THUMB.height - 2 * THUMB.inset;

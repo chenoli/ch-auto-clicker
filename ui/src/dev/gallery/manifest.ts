@@ -1,4 +1,3 @@
-// Kept free of JSX so Playwright can import it. `reference` is the prototype anchor used for parity.
 export interface ScreenMeta {
   id: string;
   title: string;

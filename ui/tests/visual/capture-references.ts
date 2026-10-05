@@ -1,6 +1,4 @@
 import { chromium } from "@playwright/test";
-// Captures the prototype screens (refs/design/CH Clicker.dc.html) by anchor as visual parity references.
-// Needs internet: the prototype loads its fonts from Google. Usage: pnpm visual:refs
 import { mkdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";

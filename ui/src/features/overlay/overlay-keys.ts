@@ -1,4 +1,3 @@
-/** What a key press does in the capture overlay (Tela 03.B). */
 export type OverlayKeyAction =
   | { kind: "nudge"; dx: number; dy: number }
   | { kind: "add" }
@@ -16,7 +15,6 @@ const NUDGES: Record<string, [number, number]> = {
 export function overlayKeyAction(e: { key: string; ctrlKey: boolean; shiftKey: boolean }): OverlayKeyAction {
   const nudge = NUDGES[e.key];
   if (nudge) {
-    // Shift moves 10 px, for long trips without the mouse.
     const step = e.shiftKey ? 10 : 1;
     return { kind: "nudge", dx: nudge[0] * step, dy: nudge[1] * step };
   }
@@ -26,7 +24,6 @@ export function overlayKeyAction(e: { key: string; ctrlKey: boolean; shiftKey: b
   return { kind: "none" };
 }
 
-/** Keeps a physical pixel position inside the monitor. */
 export function clampToMonitor(
   pos: { x: number; y: number },
   size: { width: number; height: number },
@@ -37,12 +34,10 @@ export function clampToMonitor(
   };
 }
 
-/** URL of a `chcap` resource; WebView2 serves custom schemes as `http://<scheme>.localhost`. */
 export function chcapUrl(path: string, userAgent: string = navigator.userAgent): string {
   return userAgent.includes("Windows") ? `http://chcap.localhost/${path}` : `chcap://localhost/${path}`;
 }
 
-/** Frozen capture of monitor `index` during an overlay session. */
 export function captureUrl(index: number, userAgent: string = navigator.userAgent): string {
   return chcapUrl(`${index}.bmp`, userAgent);
 }

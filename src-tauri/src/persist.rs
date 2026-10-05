@@ -1,6 +1,3 @@
-//! Debounced writer (ARCHITECTURE §4): edits coalesce for 300 ms (2 s at most while the user keeps
-//! typing or dragging) and go to disk on a background thread, so the UI never waits on I/O.
-
 use std::collections::BTreeMap;
 use std::sync::mpsc;
 use std::thread::JoinHandle;
@@ -23,7 +20,6 @@ enum Save {
 #[derive(Default)]
 struct Pending {
     settings: Option<Settings>,
-    /// `None` marks a deletion.
     profiles: BTreeMap<String, Option<Profile>>,
     since: Option<Instant>,
 }
@@ -135,7 +131,6 @@ impl Persister {
         let _ = self.tx.send(Save::Delete(id.to_owned()));
     }
 
-    /// Writes everything pending now and waits for it (used on exit).
     pub fn flush(&self) {
         let (ack, done) = mpsc::channel();
         if self.tx.send(Save::Flush(ack)).is_ok() {
@@ -147,7 +142,6 @@ impl Persister {
 impl Drop for Persister {
     fn drop(&mut self) {
         self.flush();
-        // Replacing the sender closes the channel so the thread writes and exits.
         let (dead, _) = mpsc::channel();
         drop(std::mem::replace(&mut self.tx, dead));
         if let Some(thread) = self.thread.take() {

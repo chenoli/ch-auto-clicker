@@ -16,7 +16,6 @@ export interface VariationEditorViewProps {
   initialBlocks: readonly number[];
   double: boolean;
   locale: string;
-  /** Shortest interval this machine sustains; shorter blocks get the warning. */
   minReliableMs: number;
   error?: string | null;
   busy?: boolean;
@@ -29,7 +28,6 @@ export interface VariationEditorViewProps {
 const blockId = (i: number) => `B${String(i + 1).padStart(2, "0")}`;
 const SCALE = [0, 100, 200, 300, 400, 500];
 
-/** Tela 02.B: edits the interval cycle as blocks whose width follows their duration. */
 export function VariationEditorView({
   initialBlocks,
   double,

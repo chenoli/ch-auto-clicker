@@ -4,7 +4,6 @@ interface RadioCardProps {
   checked: boolean;
   onSelect: () => void;
   label: string;
-  /** Extra content on the right (e.g. the "4 pontos ›" link). */
   trailing?: ReactNode;
 }
 

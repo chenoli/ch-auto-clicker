@@ -17,7 +17,6 @@ import { TitleBar } from "./title-bar";
 import type { DegradedReason, EngineTick, Profile } from "../../ipc";
 import type { ReactElement } from "react";
 
-/** Bottom padding of the scrolling panel (handoff: `padding: 0 16px 8px`). */
 const PANEL_PADDING_BOTTOM = 8;
 
 export interface MainWindowViewProps {
@@ -26,33 +25,24 @@ export interface MainWindowViewProps {
   engine: EngineTick;
   countdownTotalMs: number;
   shortcut: string;
-  /** Engine error code while in the error state. */
   errorCode?: string | null;
-  /** Error from the last command (e.g. a mode not available yet). */
   commandError?: string | null;
-  /** The run is not going as asked: the requested rate is not met, or the screens changed. */
   degraded?: DegradedReason | null;
-  /** A newer version is published (it is installed from Configurações). */
   update?: string | null;
   onOpenUpdate?: () => void;
   onEdit: (mutate: (p: Profile) => Profile) => void;
   onPrimary: () => void;
   onOpenVariation: () => void;
   onOpenPoints?: () => void;
-  /** Fixed monitor width (gallery); the window measures its own monitor otherwise. */
   monitorWidth?: number;
-  /** Every profile in display order, for the header dropdown. */
   profiles?: readonly { id: string; name: string }[];
   onSelectProfile?: (id: string) => void;
   onOpenProfiles?: () => void;
-  /** Scan area thumbnail (served by Rust), or null for the placeholder. */
   thumbnailUrl?: string | null;
   onSelectArea?: () => void;
   onMinimize: () => void;
   onClose: () => void;
-  /** Height the window needs to show the whole panel without scrolling. */
   onDesiredHeight?: (px: number) => void;
-  /** Label of the start shortcut when Windows refused to register it (Tela 10, "Erro"). */
   hotkeyError?: string | null;
   onReviewHotkeys?: () => void;
   onStartAnyway?: () => void;
@@ -101,7 +91,6 @@ export function MainWindowView({
     (profile.mode === "wiggle" && !profile.modes.wiggle.clickWhileWiggling) ||
     (profile.mode === "scan" && profile.modes.scan.action === "move");
   const active = engine.state === "countdown" || engine.state === "running" || engine.state === "paused";
-  // A refused start shortcut shows the error state while idle; the engine itself is fine.
   const shortcutBroken = Boolean(hotkeyError) && engine.state === "idle";
   const extraRows = `${String(active)}|${commandError ?? ""}|${String(shortcutBroken)}|${degraded ?? ""}|${update ?? ""}`;
 
@@ -118,10 +107,8 @@ export function MainWindowView({
       }
     };
     measure();
-    // Web fonts change line heights once they load.
     void document.fonts?.ready.then(measure);
     if (typeof ResizeObserver === "undefined") return;
-    // Every block counts: rows above the panel (notes, callouts) change the height it needs too.
     const observer = new ResizeObserver(measure);
     for (const child of Array.from(root.children)) observer.observe(child);
     observer.observe(inner);

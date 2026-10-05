@@ -1,6 +1,3 @@
-//! Versioned JSON documents (ARCHITECTURE §4): migrations run on raw JSON before deserializing,
-//! so old files keep loading after the model changes.
-
 use serde_json::{Map, Value, json};
 
 use crate::model::{PROFILE_SCHEMA_VERSION, Profile, SETTINGS_SCHEMA_VERSION, Settings};
@@ -29,7 +26,6 @@ impl SchemaError {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Loaded<T> {
     pub value: T,
-    /// Schema version found on disk; lower than current means the caller should back up and rewrite.
     pub from_version: u32,
 }
 
@@ -45,7 +41,6 @@ fn version_of(doc: &Value) -> u32 {
         .map_or(0, |v| v as u32)
 }
 
-/// v0 (pre-release) kept the click settings at the top level; v1 groups them under `click`.
 fn profile_v0_to_v1(mut doc: Map<String, Value>) -> Map<String, Value> {
     let take = |doc: &mut Map<String, Value>, key: &str, default: Value| {
         doc.remove(key).unwrap_or(default)
@@ -63,7 +58,6 @@ fn profile_v0_to_v1(mut doc: Map<String, Value>) -> Map<String, Value> {
 
 type Migration = fn(Map<String, Value>) -> Map<String, Value>;
 
-/// Each step upgrades one version; index `n` migrates from `n` to `n + 1`.
 const PROFILE_MIGRATIONS: [Migration; 1] = [profile_v0_to_v1];
 
 pub fn load_profile(doc: Value) -> Result<Loaded<Profile>, SchemaError> {

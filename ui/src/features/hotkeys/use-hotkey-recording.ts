@@ -10,22 +10,18 @@ import type { Hotkey, HotkeyAction, HotkeyTarget, Modifier } from "../../ipc";
 import type { PendingConflict } from "./hotkeys-screen";
 
 export interface HotkeyRecordingApi {
-  /** The action being recorded (Tela 06), or null. */
   recording: HotkeyAction | null;
-  /** The profile whose shortcut is being recorded (Tela 05, decision D4), or null. */
   recordingProfile: string | null;
   heldMods: Modifier[];
   conflict: PendingConflict | null;
   record: (action: HotkeyAction) => void;
   recordProfile: (id: string) => void;
-  /** Removes a profile's shortcut. */
   clearProfile: (id: string) => void;
   cancel: () => void;
   replace: () => void;
   keep: () => void;
 }
 
-/** Drives the capture field: Rust records through its keyboard hook and reports each step. */
 export function useHotkeyRecording(): HotkeyRecordingApi {
   const { t } = useTranslation();
   const profiles = useAppStore((s) => s.profiles);

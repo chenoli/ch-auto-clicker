@@ -1,6 +1,3 @@
-//! "Never click our own window" (ARCHITECTURE §6.6). The HUD is WS_EX_TRANSPARENT, so hit-testing
-//! goes through it and it never counts as ours here.
-
 use ch_core::geometry::Point;
 use ch_core::input::TargetGuard;
 use windows::Win32::Foundation::POINT;
@@ -23,7 +20,6 @@ impl OwnWindowGuard {
         Self { pid }
     }
 
-    /// Whether the top-level window under `p` belongs to this process.
     pub fn is_own_window_at(&self, p: Point) -> bool {
         // SAFETY: plain value arguments; handles are only compared, never dereferenced.
         unsafe {
@@ -72,8 +68,6 @@ mod tests {
             primary.left + primary.width / 2 - 60,
             primary.top + primary.height / 2 - 60,
         );
-        // A built-in BUTTON as a top-level popup: no class registration, no focus steal. (STATIC would
-        // not work: it answers HTTRANSPARENT, so WindowFromPoint looks through it.)
         // SAFETY: valid class name and styles; the window is destroyed before the test returns.
         let hwnd = unsafe {
             CreateWindowExW(

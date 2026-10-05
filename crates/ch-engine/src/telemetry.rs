@@ -1,6 +1,3 @@
-//! Telemetry thread (ARCHITECTURE §5.3, §7.2): turns the engine's atomics into 10 Hz ticks, 1 Hz
-//! jitter summaries and degraded-timing transitions for the UI.
-
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread::JoinHandle;
@@ -16,7 +13,6 @@ pub const TICK_PERIOD: Duration = Duration::from_millis(100);
 const TICKS_PER_JITTER: u32 = 10;
 
 pub trait TelemetrySink: Send {
-    /// 10 Hz during countdown, running and pause, plus one final tick when the run ends.
     fn tick(&mut self, snapshot: Snapshot);
     fn jitter(&mut self, stats: JitterStats);
     fn degraded(&mut self, degraded: bool);
@@ -184,8 +180,6 @@ mod tests {
             first.samples > 800,
             "1 ms run should fire ~1000 times per second: {first:?}"
         );
-        // Sanity bound only: tests share the CPU with each other (and whatever the user runs);
-        // real precision is measured by tools/jitter-bench.
         assert!(first.p99_us < 5_000.0, "p99 {} µs", first.p99_us);
         assert!(
             r.ticks

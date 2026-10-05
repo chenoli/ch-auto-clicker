@@ -1,6 +1,3 @@
-//! Profile library commands (TASKS T8.1–T8.2, T8.7): every change goes through
-//! `ch_core::profiles`, is persisted, re-applies shortcuts when needed and notifies every window.
-
 use ch_core::chprofile::{self, ImportNote};
 use ch_core::model::Profile;
 use ch_core::profiles::{self as library, ProfileError};
@@ -25,7 +22,6 @@ impl From<chprofile::ChprofileError> for AppError {
     }
 }
 
-/// An imported profile and what had to change to fit this library.
 #[derive(Debug, Clone, PartialEq, Serialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct ImportResult {
@@ -44,8 +40,6 @@ fn new_id() -> String {
     uuid::Uuid::new_v4().to_string()
 }
 
-/// Persists what changed and tells every window; shortcuts are re-registered when profiles that
-/// own one appear or disappear.
 fn publish<R: Runtime>(
     app: &AppHandle<R>,
     state: &AppState,
@@ -68,7 +62,6 @@ fn publish<R: Runtime>(
     }
 }
 
-/// "+ Novo": a default profile at the end of the list.
 #[tauri::command]
 #[specta::specta]
 pub fn profile_create(
@@ -109,7 +102,6 @@ pub fn profile_duplicate(
         )?;
         Ok::<_, AppError>((p, data.clone()))
     })?;
-    // The scan thumbnail belongs to the area, which the copy keeps.
     if let (Some(from), Some(to)) = (thumbs::path_for(&id), thumbs::path_for(&new))
         && from.exists()
     {
@@ -135,7 +127,6 @@ pub fn profile_rename(
     Ok(profile)
 }
 
-/// Deletes a profile (and its thumbnail). Deleting the one that is running stops the run first.
 #[tauri::command]
 #[specta::specta]
 pub fn profile_delete(app: AppHandle, state: State<'_, AppState>, id: String) -> AppResult<()> {
@@ -180,7 +171,6 @@ pub fn profile_reorder(
     Ok(())
 }
 
-/// Makes a profile active. Switching while a run is going stops it (decision D12).
 #[tauri::command]
 #[specta::specta]
 pub fn profile_activate(app: AppHandle, state: State<'_, AppState>, id: String) -> AppResult<()> {
@@ -196,7 +186,6 @@ pub fn profile_activate(app: AppHandle, state: State<'_, AppState>, id: String) 
     Ok(())
 }
 
-/// Asks where to save and writes the `.chprofile`. Resolves with the path, or null if cancelled.
 #[tauri::command]
 #[specta::specta]
 pub async fn profile_export(app: AppHandle, id: String) -> AppResult<Option<String>> {
@@ -223,7 +212,6 @@ pub async fn profile_export(app: AppHandle, id: String) -> AppResult<Option<Stri
     Ok(Some(path.display().to_string()))
 }
 
-/// Asks for a `.chprofile` and imports it. Resolves with null if cancelled.
 #[tauri::command]
 #[specta::specta]
 pub async fn profile_import(app: AppHandle) -> AppResult<Option<ImportResult>> {
@@ -237,7 +225,6 @@ pub async fn profile_import(app: AppHandle) -> AppResult<Option<ImportResult>> {
     else {
         return Ok(None);
     };
-    // Check the size before reading: the dialog lets any file through.
     let size = std::fs::metadata(&path)
         .map(|m| m.len())
         .unwrap_or(u64::MAX);
@@ -251,7 +238,6 @@ pub async fn profile_import(app: AppHandle) -> AppResult<Option<ImportResult>> {
     import_text(&app, &text).map(Some)
 }
 
-/// Imports the text of a dropped file (Tela 05.B).
 #[tauri::command]
 #[specta::specta]
 pub fn profile_import_text(app: AppHandle, text: String) -> AppResult<ImportResult> {

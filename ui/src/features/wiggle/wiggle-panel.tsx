@@ -23,16 +23,13 @@ const SPEEDS = [
 interface WigglePanelProps {
   profile: Profile;
   locale: string;
-  /** Physical width of the monitor the window is on ("≈ 0,96 px em 1920"). */
   monitorWidth: number;
   onChange: Edit;
-  /** "Ajustar ›": switches to the Click tab, where rate and button live. */
   onAdjustClick: () => void;
 }
 
 function AmplitudeRow({ profile, locale, monitorWidth, onChange }: Omit<WigglePanelProps, "onAdjustClick">) {
   const { t } = useTranslation();
-  // specta types f64 as nullable; Rust always sends a number.
   const pct = profile.modes.wiggle.amplitudePct ?? 0;
   const [draft, setDraft] = useState<string | null>(null);
   const set = (amplitudePct: number) =>
@@ -120,7 +117,6 @@ function Preview({ pct, hz }: { pct: number; hz: number }) {
   );
 }
 
-/** Tela 01.B: the wiggle settings. Clicking reuses the Click tab's rate and button. */
 export function WigglePanel({
   profile,
   locale,

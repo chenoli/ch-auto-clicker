@@ -6,7 +6,6 @@ import { defineConfig } from "vite";
 
 const uiRoot = resolve(import.meta.dirname, "ui");
 
-// One page per native window (ARCHITECTURE §2); gallery.html is served by the dev server only.
 const pages = ["index", "variation", "hud", "overlay"];
 
 export default defineConfig({

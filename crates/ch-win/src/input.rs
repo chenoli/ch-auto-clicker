@@ -1,5 +1,3 @@
-//! `SendInput` backend (ARCHITECTURE §10.2): user-mode injection, events flagged as injected.
-
 use ch_core::geometry::{self, Point, Rect};
 use ch_core::input::{ClickKind, InputBackend, InputError, MouseButton};
 use windows::Win32::Foundation::POINT;
@@ -14,13 +12,9 @@ use windows::Win32::UI::WindowsAndMessaging::{
     SM_YVIRTUALSCREEN, SetCursorPos, XBUTTON1, XBUTTON2,
 };
 
-/// Larger cursor offsets after a move mean the user moved the mouse, not a rounding error, so
-/// the backend leaves the cursor alone instead of fighting them.
 const MAX_CORRECTION_PX: i32 = 2;
 
-/// The OS surface the backend talks to; faked in tests so nothing is really injected.
 pub trait InputSink {
-    /// Returns how many events the OS accepted.
     fn send(&self, inputs: &[INPUT]) -> u32;
     fn cursor_pos(&self) -> Option<Point>;
     fn set_cursor_pos(&self, p: Point) -> bool;
@@ -81,7 +75,6 @@ impl<S: InputSink> SendInputBackend<S> {
         }
     }
 
-    /// Moves that needed a ±1–2 px fix-up after the absolute move (diagnostics).
     pub fn corrections(&self) -> u64 {
         self.corrections
     }
@@ -150,7 +143,6 @@ impl<S: InputSink> InputBackend for SendInputBackend<S> {
     }
 }
 
-/// Down/up pairs for one tick, in a single batch so `SendInput` delivers them atomically.
 pub fn click_inputs(button: MouseButton, kind: ClickKind) -> Vec<INPUT> {
     let (down, up, data) = button_flags(button);
     (0..kind.clicks())
@@ -158,7 +150,6 @@ pub fn click_inputs(button: MouseButton, kind: ClickKind) -> Vec<INPUT> {
         .collect()
 }
 
-/// (down flag, up flag, mouseData) for a button. X buttons share flags and differ in mouseData.
 fn button_flags(button: MouseButton) -> (MOUSE_EVENT_FLAGS, MOUSE_EVENT_FLAGS, u32) {
     match button {
         MouseButton::Left => (MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_LEFTUP, 0),
@@ -371,7 +362,6 @@ mod tests {
 
     #[test]
     fn system_sink_reads_the_real_virtual_desktop() {
-        // Read-only queries: safe to run anywhere, injects nothing.
         let sink = SystemSink;
         let desk = sink.virtual_desktop();
         assert!(!desk.is_empty());

@@ -6,7 +6,6 @@ import type { ReactElement } from "react";
 
 interface HeaderProps {
   profileName: string;
-  /** Every profile in display order, for the dropdown. */
   profiles?: readonly { id: string; name: string }[];
   activeProfileId?: string | null;
   onSelectProfile?: ((id: string) => void) | undefined;

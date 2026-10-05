@@ -14,22 +14,18 @@ export function formatCps(cps: number, locale: string): string {
   return numberFormat(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(cps);
 }
 
-/** CPS = 1000 / interval × (double ? 2 : 1) — handoff README, Click panel. */
 export function cpsFromInterval(intervalMs: number, double: boolean): number {
   return (1000 / intervalMs) * (double ? 2 : 1);
 }
 
-/** Grouped integer ("1.284" in pt-BR). */
 export function formatCount(n: number, locale: string): string {
   return numberFormat(locale, { maximumFractionDigits: 0 }).format(n);
 }
 
-/** One decimal in the locale's separator ("2,4"). */
 export function formatOneDecimal(n: number, locale: string): string {
   return numberFormat(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(n);
 }
 
-/** Footer clock: `mm:ss.d`, decimal separator fixed to "." as in the handoff. */
 export function formatElapsed(ms: number): string {
   const tenths = Math.floor(Math.max(0, ms) / 100);
   const minutes = Math.floor(tenths / 600);
@@ -37,7 +33,6 @@ export function formatElapsed(ms: number): string {
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}.${tenths % 10}`;
 }
 
-/** Stop timer and HUD remaining: `hh:mm:ss`. */
 export function formatDuration(totalSeconds: number): string {
   const s = Math.max(0, Math.floor(totalSeconds));
   const hh = Math.floor(s / 3600);
@@ -46,7 +41,6 @@ export function formatDuration(totalSeconds: number): string {
   return [hh, mm, ss].map((v) => String(v).padStart(2, "0")).join(":");
 }
 
-/** Countdown label on the main button: whole seconds rounded up, never below 1. */
 export function countdownSeconds(remainingMs: number): number {
   return Math.max(1, Math.ceil(remainingMs / 1000));
 }

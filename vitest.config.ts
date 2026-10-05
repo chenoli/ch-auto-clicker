@@ -14,10 +14,8 @@ export default defineConfig({
       exclude: [
         "**/*.test.{ts,tsx}",
         "ui/src/test-setup.ts",
-        // Generated files: covered by the generator's own tests and by the bindings check in CI.
         "ui/src/ipc/bindings.ts",
         "ui/src/styles/tokens.ts",
-        // Thin entry points that only mount React or run a CLI; their logic lives in tested modules.
         "ui/src/entries/**",
         "tools/gen-tokens/gen-tokens.ts",
         "tools/eslint/**",

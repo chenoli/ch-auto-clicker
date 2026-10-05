@@ -1,5 +1,3 @@
-//! Rotating file log in `%LOCALAPPDATA%\Chenoli\CH Clicker\logs` (5 MB x 5) and panic capture.
-
 use tauri::Runtime;
 use tauri::plugin::TauriPlugin;
 use tauri_plugin_log::{RotationStrategy, Target, TargetKind};
@@ -25,7 +23,6 @@ pub fn plugin<R: Runtime>() -> TauriPlugin<R> {
         .build()
 }
 
-/// Logs panics with a backtrace before running the default hook.
 pub fn install_panic_hook() {
     let default_hook = std::panic::take_hook();
     std::panic::set_hook(Box::new(move |info| {

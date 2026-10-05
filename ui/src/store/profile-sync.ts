@@ -4,9 +4,7 @@ import { replaceProfile, setCommandError, useAppStore } from "./app-store";
 
 import type { Profile, ProfilesChanged } from "../ipc";
 
-/** Last version Rust confirmed for each profile; every save is based on it. */
 const serverVersion = new Map<string, string>();
-/** Newest local edit not yet sent. */
 const queued = new Map<string, Profile>();
 const inflight = new Set<string>();
 
@@ -34,18 +32,14 @@ async function flush(id: string): Promise<void> {
     }
     return;
   }
-  // The edit was refused (another window saved first, or invalid): drop newer local edits too and
-  // show the latest confirmed version, which the ProfilesChanged event already delivered.
   queued.delete(id);
   setCommandError(result.error.code);
   const confirmed = lastConfirmed.get(id);
   if (confirmed) replaceProfile(confirmed);
 }
 
-/** Server copies from the last ProfilesChanged, to roll back a refused edit. */
 const lastConfirmed = new Map<string, Profile>();
 
-/** Applies an edit locally right away and saves it in the background, one request at a time. */
 export function editProfile(id: string, mutate: (p: Profile) => Profile): void {
   const current = useAppStore.getState().profiles.find((p) => p.id === id);
   if (!current) return;
@@ -56,7 +50,6 @@ export function editProfile(id: string, mutate: (p: Profile) => Profile): void {
   if (!inflight.has(id)) void flush(id);
 }
 
-/** Merges an event from Rust: profiles with local edits in flight keep the local copy. */
 export function applyProfilesChanged(event: ProfilesChanged): void {
   for (const p of event.profiles) lastConfirmed.set(p.id, p);
   rememberServerVersions(event.profiles);
@@ -70,7 +63,6 @@ export function applyProfilesChanged(event: ProfilesChanged): void {
   });
 }
 
-/** Test helper: forget all sync state. */
 export function resetProfileSync(): void {
   serverVersion.clear();
   queued.clear();

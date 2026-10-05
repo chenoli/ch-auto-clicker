@@ -3,7 +3,6 @@ import type { ReactElement, ReactNode } from "react";
 interface KbdProps {
   children: ReactNode;
   size?: "default" | "large";
-  /** Struck-through and dashed: the shortcut could not be registered. */
   broken?: boolean;
 }
 

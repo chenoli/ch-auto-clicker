@@ -36,7 +36,6 @@ describe("gen-tokens", () => {
   it("generates a themes.css equivalent to the handoff reference", () => {
     const reference = declarations(readFileSync(resolve(root, "design/themes.reference.css"), "utf8"));
     const generated = declarations(buildThemesCss(tokens));
-    // The generator repeats derived tokens on [data-theme] (nested themes); everything else is identical.
     const nested = generated.get("[data-theme]");
     generated.delete("[data-theme]");
     expect(generated).toEqual(reference);

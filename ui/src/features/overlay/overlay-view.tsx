@@ -8,7 +8,6 @@ import { OverlayBar } from "./overlay-bar";
 import type { OverlayMode, OverlayState } from "../../ipc";
 import type { ReactElement } from "react";
 
-/** Physical pixels shown by the loupe (11 × 11) and the size of each cell. */
 export const LOUPE_PIXELS = 11;
 export const LOUPE_CELL = 12;
 const LOUPE_SIZE = LOUPE_PIXELS * LOUPE_CELL;
@@ -17,13 +16,10 @@ export interface OverlayViewProps {
   state: OverlayState;
   onFinish?: () => void;
   onMode?: (mode: OverlayMode) => void;
-  /** The frozen capture of this monitor, or null while it loads (gallery: none). */
   image: CanvasImageSource | null;
   imageUrl: string | null;
-  /** Crosshair in physical pixels relative to the monitor, or null when the pointer is elsewhere. */
   cursor: { x: number; y: number } | null;
   viewport: { width: number; height: number };
-  /** Gallery stand-in for the colour under the cursor when there is no capture. */
   fallbackColor?: string;
 }
 
@@ -42,14 +38,12 @@ function useLoupe(image: CanvasImageSource | null, cursor: { x: number; y: numbe
       const [r = 0, g = 0, b = 0] = ctx.getImageData(half * LOUPE_CELL + 1, half * LOUPE_CELL + 1, 1, 1).data;
       setColor(hexColor(r, g, b));
     } catch {
-      // A tainted canvas (capture without CORS) still shows the loupe, only without the colour.
       setColor(null);
     }
   }, [image, cursor]);
   return { canvasRef, color };
 }
 
-/** Tela 03.B: frozen screen, crosshair, existing points and the 11 × 11 loupe. */
 export function OverlayView({
   state,
   image,

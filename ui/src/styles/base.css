@@ -4,11 +4,9 @@
 @import "@fontsource/space-grotesk/600.css";
 @import "@fontsource/space-grotesk/700.css";
 @import "tailwindcss";
-/* Unlayered on purpose: unlayered declarations beat the variables @theme mirrors into the theme layer. */
 @import "./themes.css";
 @import "./components.css";
 
-/* Tailwind defaults are reset so only design-system colors and measures exist as utilities. */
 @theme inline {
   --color-*: initial;
   --color-bg: var(--bg);
@@ -54,7 +52,6 @@
   --ease-out: var(--ease-out);
 }
 
-/* Type scale and letter-spacing from the handoff README ("Escala tipográfica", "Microtipografia"). */
 @theme {
   --text-*: initial;
   --text-9: 9px;
@@ -85,14 +82,12 @@
   --leading-none: 1;
   --leading-label: 1.15;
   --leading-body: 1.5;
-  /* Handoff: display titles 1.05, compact help text 1.45, empty-state copy 1.7. */
   --leading-display: 1.05;
   --leading-snug: 1.45;
   --leading-relaxed: 1.7;
 }
 
 @layer base {
-  /* Every window fills its native frame; the panel takes the free space (handoff: panel flex 1). */
   html,
   body,
   #root {
@@ -102,7 +97,6 @@
   html,
   body {
     margin: 0;
-    /* The prototype relies on the browser's default line height, not Tailwind's 1.5. */
     line-height: normal;
     background: var(--bg);
     color: var(--fg);
@@ -132,7 +126,6 @@
     outline-offset: 2px;
   }
 
-  /* 10px track with a 3px transparent border leaves a 4px thumb (handoff README). */
   * {
     scrollbar-width: thin;
     scrollbar-color: color-mix(in oklch, var(--fg) 14%, transparent) transparent;

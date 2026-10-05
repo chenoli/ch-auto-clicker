@@ -32,7 +32,6 @@ all = { level = "warn", priority = -1 }
 undocumented_unsafe_blocks = "warn"
 
 [profile.release]
-# Timing engine: optimize for speed, not size.
 opt-level = 3
 lto = "fat"
 codegen-units = 1

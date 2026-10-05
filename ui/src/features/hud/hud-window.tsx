@@ -12,10 +12,8 @@ import { HudView } from "./hud-view";
 
 import type { ReactElement } from "react";
 
-/** Extra room around the pill for its shadow and the hint line. */
 const PAD = 12;
 
-/** The HUD window: engine ticks from the store, hover/drag state from Rust (T11.11–T11.12). */
 export function HudWindow(): ReactElement | null {
   const engine = useAppStore((s) => s.engine);
   const settings = useAppStore((s) => s.settings);
@@ -32,8 +30,6 @@ export function HudWindow(): ReactElement | null {
     };
   }, []);
 
-  // The window hugs the pill so its transparent area never covers anything. Re-run once the
-  // settings arrive: before that the component renders nothing and there is no element to watch.
   const ready = settings !== null;
   useEffect(() => {
     const root = rootRef.current;

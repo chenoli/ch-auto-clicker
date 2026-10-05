@@ -1,6 +1,3 @@
-//! Screen capture for the overlays (ARCHITECTURE §10.3): a frozen GDI copy of each monitor, like the
-//! Snipping Tool, used as the overlay background and for the 11×11 loupe. Kept in memory only.
-
 use ch_core::geometry::Rect;
 use windows::Win32::Graphics::Gdi::{
     BI_RGB, BITMAPINFO, BITMAPINFOHEADER, BitBlt, CAPTUREBLT, CreateCompatibleBitmap,
@@ -11,7 +8,6 @@ use windows::Win32::Graphics::Gdi::{
 const FILE_HEADER: usize = 14;
 const INFO_HEADER: usize = 40;
 
-/// Captures `rect` (physical pixels on the virtual desktop) as a 32-bit top-down BMP file.
 pub fn capture_bmp(rect: Rect) -> windows::core::Result<Vec<u8>> {
     let (w, h) = (rect.width, rect.height);
     if w <= 0 || h <= 0 {
@@ -66,7 +62,6 @@ pub fn capture_bmp(rect: Rect) -> windows::core::Result<Vec<u8>> {
             return Err(windows::core::Error::from_thread());
         }
     }
-    // GDI leaves the alpha byte at 0; make every pixel opaque.
     for px in pixels.as_chunks_mut::<4>().0 {
         px[3] = 0xFF;
     }

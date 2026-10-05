@@ -26,7 +26,6 @@ describe("Gallery", () => {
     window.location.hash = "";
   });
 
-  // Renders every gallery screen at once, so it gets more time than the default under coverage.
   it("lists every screen on the index", { timeout: 20_000 }, () => {
     render(<Gallery />);
     expect(screen.getByRole("heading", { name: "Galeria de telas" })).toBeInTheDocument();

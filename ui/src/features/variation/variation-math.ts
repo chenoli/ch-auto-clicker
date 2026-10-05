@@ -18,15 +18,11 @@ export function variationStats(blocks: readonly number[], double: boolean): Vari
 }
 
 export interface RhythmTick {
-  /** Position in the 600 ms preview, 0–100%. */
   xPct: number;
-  /** First click of a cycle: drawn taller and in --fg. */
   cycleStart: boolean;
-  /** Gap shorter than the reliable minimum: drawn in --warn. */
   low: boolean;
 }
 
-/** Click marks over the first 600 ms of the rhythm (handoff 02.B "Prévia do ritmo"). */
 export function rhythmTicks(blocks: readonly number[], minReliableMs: number): RhythmTick[] {
   const ticks: RhythmTick[] = [];
   if (!blocks.length) return ticks;
@@ -44,7 +40,6 @@ export function clampBlock(ms: number): number {
   return Math.min(BLOCK_MS_MAX, Math.max(BLOCK_MS_MIN, Math.round(ms)));
 }
 
-/** Moves the block at `index` by `delta` positions; returns the new list and selected index. */
 export function moveBlock(blocks: readonly number[], index: number, delta: -1 | 1): [number[], number] {
   const target = index + delta;
   if (target < 0 || target >= blocks.length) return [[...blocks], index];

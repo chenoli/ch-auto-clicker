@@ -1,8 +1,3 @@
-//! Scheduler jitter benchmark (TASKS T2.8, ARCHITECTURE §9.3). Injects no input: every fire runs
-//! a no-op action.
-//!
-//!   cargo run -p jitter-bench --release -- [--seconds 10] [--out docs/bench]
-
 use std::fmt::Write as _;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -39,7 +34,6 @@ fn parse_args() -> Args {
     args
 }
 
-/// Keeps every logical CPU busy at normal priority until dropped.
 struct CpuStress {
     stop: Arc<AtomicBool>,
     threads: Vec<std::thread::JoinHandle<()>>,
@@ -75,7 +69,6 @@ impl Drop for CpuStress {
     }
 }
 
-/// UTC civil date from days since 1970-01-01 (Howard Hinnant's algorithm).
 fn civil_date(days: i64) -> (i64, u32, u32) {
     let z = days + 719_468;
     let era = z.div_euclid(146_097);

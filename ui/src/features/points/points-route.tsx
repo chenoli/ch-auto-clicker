@@ -20,7 +20,6 @@ interface PointsRouteProps {
 
 const EMPTY_LAYOUT: ScreenLayout = { monitors: [], fingerprint: "" };
 
-/** Where "+ Manual" puts a new point: next to the last one, or the middle of the primary screen. */
 export function manualPoint(points: readonly ScreenPoint[], layout: ScreenLayout, id: string): ScreenPoint {
   const last = points.at(-1);
   if (last) return { id, x: last.x + 40, y: last.y, delayMs: 0 };
@@ -34,7 +33,6 @@ export function manualPoint(points: readonly ScreenPoint[], layout: ScreenLayout
   };
 }
 
-/** Points editor connected to Rust: screen layout, capture overlay and profile edits. */
 export function PointsRoute({ profile, captureHotkey, onBack, onMinimize, onClose }: PointsRouteProps): ReactElement {
   const [layout, setLayout] = useState<ScreenLayout>(EMPTY_LAYOUT);
   const [error, setError] = useState<string | null>(null);
@@ -52,7 +50,6 @@ export function PointsRoute({ profile, captureHotkey, onBack, onMinimize, onClos
 
   const setPoints = (points: ScreenPoint[]) => {
     setError(null);
-    // Hand-edited coordinates belong to the arrangement the user is looking at now.
     const fingerprint = layout.fingerprint || click.layoutFingerprint;
     editProfile(profile.id, (p) => ({
       ...p,

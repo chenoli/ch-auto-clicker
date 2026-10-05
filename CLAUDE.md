@@ -15,7 +15,7 @@ Decisões de trade-off (custo, segurança, mudança de escopo) ainda vão para o
 
 - Padrão: Conventional Commits (`feat:`, `fix:`, `chore:`, `test:`, `docs:`, `refactor:`), com escopo da fase quando útil (`feat(engine): ...`).
 - Granularidade: um commit por fase, com corpo em tópicos explicando o quê e o porquê, mais as limitações aceitas.
-- Idioma das mensagens: português.
+- Idioma das mensagens: inglês (projeto open source; decidido pelo usuário em 2026-10-05).
 - Branches: direto na `main` (projeto solo, sem remote por enquanto).
 - Nunca push, PR, `--amend` ou `--no-verify` sem pedido explícito.
 
@@ -30,13 +30,13 @@ Rodar `pnpm lint:fix`, `pnpm format` e `cargo fmt --all` como parte da revisão.
 - Formato do repo: app único. Workspace Cargo (`crates/*` + `src-tauri`) e frontend em `ui/` com pnpm.
 - Stack: Tauri 2 + Rust (`windows-rs`) no núcleo; React 19 + TypeScript 6 + Vite 8 + Tailwind v4 na UI. Arquitetura completa em `docs/ARCHITECTURE.md`; backlog em `docs/TASKS.md`.
 - Design system: handoff de alta fidelidade em `refs/` (`refs/README.md`, `refs/design/CH Clicker.dc.html`). Tokens versionados em `design/tokens.json` (fonte da verdade, gera `themes.css`, `tokens.ts` e `tokens.rs` via `pnpm tokens`). Ler a spec da tela no README do handoff antes de construí-la.
-- Idiomas: conversa, UI, commits e documentos (`docs/`, `refs/`) em pt-BR; comentários de código, mensagens internas de erro e nomes no código em inglês; i18n da UI: pt-BR e en-US (i18next, chaves tipadas).
+- Idiomas: conversa com o usuário e `refs/` em pt-BR; commits, documentação pública (`README`, `docs/`, arquivos da comunidade em `.github/`), mensagens internas de erro e nomes no código em inglês; i18n da UI: pt-BR, en-US e es-419 (i18next, chaves tipadas).
 
 ## 5. Convenções de código
 
 - Nomes de arquivo: kebab-case, forçado por lint (`eslint-plugin-check-file`). Rust segue snake_case.
 - Formatação: Prettier (aspas duplas, ponto e vírgula, 120 colunas); `rustfmt` no Rust.
-- Comentários: só quando explicam um porquê não óbvio, em inglês. Blocos `unsafe` sempre com `// SAFETY:`.
+- Comentários: nenhum no código (nem doc comments, nem nos arquivos gerados). Única exceção: blocos `unsafe` sempre com `// SAFETY:` (exigido pelo clippy `undocumented_unsafe_blocks`).
 - Lint: estrito. `react-hooks` como error, sem `any`, sem `console` fora de `tools/` e `ui/tests/`, `import type` separado, ordem de imports forçada (perfectionist). Clippy com `-D warnings`.
 - Ordem de imports: side-effects → react → externos → contextos do app (`components`, `dev`, `features`, `i18n`, `ipc`, `store`, `styles`) → relativos → `import type` por último.
 - Tokens de design: nunca valores arbitrários do Tailwind (`text-[12px]`). Cores vêm de `design/tokens.json`; escala tipográfica e tracking ficam no `@theme` de `ui/src/styles/base.css`. Misturas pontuais do README usam `color-mix()` local, sem criar nome de token novo.

@@ -4,7 +4,6 @@ import { setCommandError, useAppStore } from "./app-store";
 
 import type { EngineState } from "../ipc";
 
-/** What the main button does in each engine state (Tela 10). */
 export async function primaryAction(state: EngineState): Promise<void> {
   setCommandError(null);
   switch (state) {

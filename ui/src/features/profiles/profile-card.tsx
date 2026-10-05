@@ -21,9 +21,7 @@ export interface ProfileCardProps {
   menuOpen: boolean;
   canDelete: boolean;
   heldMods?: readonly Modifier[];
-  /** Translated reason the last rename was refused. */
   renameError?: string | null;
-  /** "Já usado por X" while a recorded shortcut waits for Substituir/Manter. */
   conflictText?: string | null;
   onActivate: () => void;
   onMenu: (open: boolean) => void;
@@ -40,7 +38,6 @@ export interface ProfileCardProps {
   onKeepHotkey: () => void;
 }
 
-/** Miniature of what the mode does: points, the wiggle band or the zigzag (Tela 05.A). */
 function ModeThumb({ profile }: { profile: Profile }) {
   return (
     <div className="profile-thumb" aria-hidden="true">
@@ -105,7 +102,6 @@ function RenameField({
   );
 }
 
-/** One profile in Tela 05.A, with its "⋯" menu and the inline rename, shortcut and delete states. */
 export function ProfileCard(props: ProfileCardProps): ReactElement {
   const { t } = useTranslation();
   const { profile, mode, menuOpen } = props;

@@ -1,9 +1,5 @@
-//! Scan area thumbnails (TASKS T7.4): the selected area cropped from the overlay's frozen capture,
-//! scaled down and kept in `cache/thumbs/<profile>.bmp` for the Scan panel (Tela 01.C).
-
 use std::path::PathBuf;
 
-/// Twice the panel's 388 × 130 box, so the thumbnail stays sharp at 200 % scaling.
 pub const MAX_W: u32 = 776;
 pub const MAX_H: u32 = 260;
 
@@ -14,7 +10,6 @@ pub fn dir() -> PathBuf {
     crate::paths::cache_dir().join("thumbs")
 }
 
-/// Thumbnail path for a profile, or `None` for ids that are not safe file names.
 pub fn path_for(profile_id: &str) -> Option<PathBuf> {
     let safe = !profile_id.is_empty()
         && profile_id.len() <= 64
@@ -24,7 +19,6 @@ pub fn path_for(profile_id: &str) -> Option<PathBuf> {
     safe.then(|| dir().join(format!("{profile_id}.bmp")))
 }
 
-/// Writes a profile's thumbnail (temp file + rename, so the panel never reads half a file).
 pub fn save(profile_id: &str, bytes: &[u8]) -> std::io::Result<()> {
     let path = path_for(profile_id).ok_or_else(|| std::io::Error::other("unsafe profile id"))?;
     save_to(&path, bytes)
@@ -39,7 +33,6 @@ fn save_to(path: &std::path::Path, bytes: &[u8]) -> std::io::Result<()> {
     std::fs::rename(&tmp, path)
 }
 
-/// A decoded 32-bit top-down BMP, as written by `ch_win::capture`.
 struct Image<'a> {
     width: u32,
     height: u32,
@@ -56,7 +49,6 @@ fn decode(bmp: &[u8]) -> Option<Image<'_>> {
     }
     let offset = usize::try_from(read_i32(bmp, 10)?).ok()?;
     let width = u32::try_from(read_i32(bmp, 18)?).ok()?;
-    // Top-down bitmaps have a negative height.
     let height = read_i32(bmp, 22)?
         .checked_neg()
         .and_then(|h| u32::try_from(h).ok())?;
@@ -86,8 +78,6 @@ fn encode(width: u32, height: u32, pixels: &[u8]) -> Vec<u8> {
     out
 }
 
-/// Crops `(x, y, w, h)` (pixels inside the capture) and scales it to fit `max_w × max_h` by
-/// averaging each block of source pixels. `None` when the BMP or the rectangle is unusable.
 pub fn crop_scaled(
     bmp: &[u8],
     x: u32,
@@ -135,7 +125,6 @@ pub fn crop_scaled(
 mod tests {
     use super::*;
 
-    /// 4 × 2 image: left half red, right half blue (BGRA).
     fn sample() -> Vec<u8> {
         let mut px = Vec::new();
         for _ in 0..2 {
@@ -158,7 +147,6 @@ mod tests {
         assert_eq!((img.width, img.height), (2, 1));
         assert_eq!(&img.pixels[0..4], &[0, 0, 255, 255]);
         assert_eq!(&img.pixels[4..8], &[255, 0, 0, 255]);
-        // Mixed block: one red and one blue column average to purple.
         let mixed = crop_scaled(&bmp, 1, 0, 2, 2, 1, 1).expect("thumb");
         assert_eq!(
             &decode(&mixed).expect("decode").pixels[0..4],

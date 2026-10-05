@@ -1,6 +1,3 @@
-//! Input injection contract (ARCHITECTURE §10.2). Implemented by `ch-win` (SendInput) and by a
-//! recording fake for tests.
-
 use crate::geometry::Point;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
@@ -27,7 +24,6 @@ pub enum ClickKind {
 }
 
 impl ClickKind {
-    /// Clicks delivered per tick; the UI counts and shows CPS with this factor.
     pub const fn clicks(self) -> u32 {
         match self {
             Self::Single => 1,
@@ -38,7 +34,6 @@ impl ClickKind {
 
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum InputError {
-    /// The OS accepted fewer events than sent (UIPI, secure desktop, another app blocking input).
     #[error("input blocked: {sent} of {expected} events were accepted")]
     Blocked { sent: u32, expected: u32 },
     #[error("target ({x}, {y}) is outside the virtual desktop")]
@@ -46,30 +41,23 @@ pub enum InputError {
 }
 
 pub trait InputBackend {
-    /// Moves the cursor to an absolute physical pixel on the virtual desktop.
     fn move_to(&mut self, target: Point) -> Result<(), InputError>;
 
-    /// Clicks at the current cursor position. Down and up go out together, so a stop between
-    /// them can never leave a button held.
     fn click(&mut self, button: MouseButton, kind: ClickKind) -> Result<(), InputError>;
 
     fn button_down(&mut self, button: MouseButton) -> Result<(), InputError>;
 
     fn button_up(&mut self, button: MouseButton) -> Result<(), InputError>;
 
-    /// Real cursor position, when the backend can read it (wiggle re-anchoring, decision D16).
     fn cursor_pos(&mut self) -> Option<Point> {
         None
     }
 }
 
-/// Decides whether a click right now must be skipped because it would land on one of the app's
-/// own windows (ARCHITECTURE §6.6).
 pub trait TargetGuard: Send {
     fn blocks_click(&self) -> bool;
 }
 
-/// Never blocks; for tests and the benchmark.
 #[derive(Debug, Default, Clone, Copy)]
 pub struct AllowAll;
 
@@ -79,7 +67,6 @@ impl TargetGuard for AllowAll {
     }
 }
 
-/// Accepts every call and does nothing; the timing benchmark measures the scheduler with it.
 #[derive(Debug, Default, Clone, Copy)]
 pub struct NoopBackend;
 
@@ -101,7 +88,6 @@ impl InputBackend for NoopBackend {
     }
 }
 
-/// Records calls instead of injecting input. For engine tests in any crate.
 #[cfg(any(test, feature = "test-util"))]
 pub mod fake {
     use super::*;
@@ -117,9 +103,7 @@ pub mod fake {
     #[derive(Debug, Default)]
     pub struct RecordingBackend {
         pub calls: Vec<Call>,
-        /// When set, every call fails with this error (and is still recorded).
         pub fail_with: Option<InputError>,
-        /// Simulated cursor: `None` means the backend cannot read it. `move_to` updates it.
         pub cursor: Option<Point>,
     }
 

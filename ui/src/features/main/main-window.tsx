@@ -27,15 +27,12 @@ import type { ReactElement } from "react";
 type Screen = "main" | "settings" | "hotkeys" | "points" | "profiles" | "themes";
 
 const MIN_HEIGHT = 640;
-/** Rust refuses the first start until the anti-cheat notice is accepted (T11.3). */
 const ANTI_CHEAT_ACK = "ANTI_CHEAT_ACK";
 
-/** The scan thumbnail; `updatedAt` busts the webview cache when a new area is saved. */
 function thumbnailUrl(profile: Profile): string {
   return `${chcapUrl(`thumb/${profile.id}.bmp`)}?v=${encodeURIComponent(profile.updatedAt)}`;
 }
 
-/** The main window (Tela 01) and its sub-screens, connected to the Rust state. */
 export function MainWindow(): ReactElement | null {
   const ready = useAppStore((s) => s.ready);
   const profile = useAppStore(selectActiveProfile);
@@ -53,7 +50,6 @@ export function MainWindow(): ReactElement | null {
   const { cancel: cancelRecording } = recordingApi;
   const [connectError, setConnectError] = useState<string | null>(null);
 
-  // "Configurações" in the tray menu opens that screen here.
   useEffect(() => {
     if (!inTauri) return;
     const unlisten = events.navigateRequested.listen((e) => {
@@ -79,7 +75,6 @@ export function MainWindow(): ReactElement | null {
     (next: Screen) => {
       cancelRecording();
       setScreen(next);
-      // Sub-screens scroll inside the minimum height; the main screen re-measures on its own.
       if (next !== "main") onDesiredHeight(MIN_HEIGHT);
     },
     [cancelRecording, onDesiredHeight],

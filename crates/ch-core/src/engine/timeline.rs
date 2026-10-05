@@ -1,41 +1,27 @@
 use crate::input::{InputBackend, InputError};
 
-/// One stream of timed actions (clicks, cursor motion, the stop timer). The scheduler always
-/// fires the timeline with the earliest deadline.
 pub trait Timeline: Send {
-    /// Next due time in clock ns, or `None` once finished.
     fn deadline(&self) -> Option<u64>;
 
-    /// Gap between the previous deadline and the current one; drives the spin window and the
-    /// skip policy.
     fn interval(&self) -> u64;
 
-    /// Runs the due action and moves the deadline forward from the previous deadline (not from
-    /// "now"), so jitter never accumulates into drift.
     fn fire(&mut self, backend: &mut dyn InputBackend) -> Result<(), InputError>;
 
-    /// Drops the backlog after a long stall: the next deadline becomes `now + interval`.
     fn rebase(&mut self, now: u64);
 
-    /// Pushes every future deadline back by `delta` (resume after pause).
     fn shift(&mut self, delta: u64);
 
-    /// Firing this timeline ends the run (the stop-after timer).
     fn ends_run(&self) -> bool {
         false
     }
 
-    /// Checked after firing: this timeline has finished and its end completes the run (a scan
-    /// without loop), even if other timelines (its clicks) could go on.
     fn completes_run(&self) -> bool {
         false
     }
 
-    /// The run pauses or ends: undo anything visible (the wiggle returns the cursor to its origin).
     fn halt(&mut self, _backend: &mut dyn InputBackend) {}
 }
 
-/// Fires once at `deadline` and ends the run ("Parar após").
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct StopTimeline {
     deadline: Option<u64>,
@@ -54,7 +40,6 @@ impl Timeline for StopTimeline {
         self.deadline
     }
 
-    /// Long enough that the scheduler only spins briefly before it.
     fn interval(&self) -> u64 {
         u64::MAX / 4
     }
@@ -64,7 +49,6 @@ impl Timeline for StopTimeline {
         Ok(())
     }
 
-    /// The timer is absolute: a stall never moves it.
     fn rebase(&mut self, _now: u64) {}
 
     fn shift(&mut self, delta: u64) {
@@ -80,7 +64,6 @@ impl Timeline for StopTimeline {
 
 pub type Action = Box<dyn FnMut(&mut dyn InputBackend) -> Result<(), InputError> + Send>;
 
-/// Fires `action` at `start`, then after each interval yielded by the iterator.
 pub struct IntervalTimeline {
     deadline: Option<u64>,
     last_gap: u64,
@@ -112,12 +95,10 @@ impl IntervalTimeline {
         Self::new(start, std::iter::repeat(interval), action)
     }
 
-    /// A timeline that does nothing when it fires; used by the timing benchmark.
     pub fn noop(start: u64, interval: u64) -> Self {
         Self::fixed(start, interval, Box::new(|_| Ok(())))
     }
 
-    /// Finishes after `fires` actions.
     pub fn with_limit(mut self, fires: u64) -> Self {
         self.remaining = Some(fires);
         if fires == 0 {

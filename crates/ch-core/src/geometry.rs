@@ -1,8 +1,3 @@
-//! Physical-pixel geometry on the Windows virtual desktop (ARCHITECTURE §6.3).
-//!
-//! Coordinates can be negative: monitors left of or above the primary one live at negative x/y.
-
-/// Upper bound of the normalized absolute range used by `SendInput`.
 pub const NORMALIZED_MAX: i32 = 65535;
 const NORMALIZED_SPAN: i64 = 65536;
 
@@ -36,17 +31,14 @@ impl Rect {
         }
     }
 
-    /// Builds a rect from Win32-style edges, where `right`/`bottom` are exclusive.
     pub const fn from_edges(left: i32, top: i32, right: i32, bottom: i32) -> Self {
         Self::new(left, top, right - left, bottom - top)
     }
 
-    /// Exclusive right edge.
     pub const fn right(&self) -> i32 {
         self.left + self.width
     }
 
-    /// Exclusive bottom edge.
     pub const fn bottom(&self) -> i32 {
         self.top + self.height
     }
@@ -67,7 +59,6 @@ impl Rect {
     }
 }
 
-/// Normalized absolute coordinates for `MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_VIRTUALDESK`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Normalized {
     pub x: i32,
@@ -82,11 +73,6 @@ pub enum GeometryError {
     InvalidDesktop,
 }
 
-/// Maps a physical pixel to the normalized range.
-///
-/// Windows converts back with `pixel = origin + floor(n * size / 65536)`. Rounding up here is the
-/// exact inverse of that: `ceil(d * 65536 / size)` lands inside pixel `d`'s bucket for any size
-/// up to 65536, so the round trip never drifts by a pixel.
 pub fn normalize(p: Point, desktop: Rect) -> Result<Normalized, GeometryError> {
     if desktop.is_empty()
         || i64::from(desktop.width) > NORMALIZED_SPAN
@@ -103,7 +89,6 @@ pub fn normalize(p: Point, desktop: Rect) -> Result<Normalized, GeometryError> {
     })
 }
 
-/// Inverse of [`normalize`], following the conversion Windows applies.
 pub fn denormalize(n: Normalized, desktop: Rect) -> Point {
     Point {
         x: desktop.left + denormalize_axis(n.x, desktop.width),
@@ -115,7 +100,6 @@ fn normalize_axis(offset: i32, size: i32) -> i32 {
     let scaled = i64::from(offset) * NORMALIZED_SPAN;
     let size = i64::from(size);
     let value = (scaled + size - 1) / size;
-    // Bounded by NORMALIZED_MAX because offset < size <= 65536.
     value as i32
 }
 
@@ -123,14 +107,11 @@ fn denormalize_axis(value: i32, size: i32) -> i32 {
     ((i64::from(value) * i64::from(size)) / NORMALIZED_SPAN) as i32
 }
 
-/// A display as reported by the OS, in physical pixels.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Monitor {
-    /// Stable device name, e.g. `\\.\DISPLAY1`.
     pub id: String,
     pub rect: Rect,
     pub work_area: Rect,
-    /// Effective DPI / 96 (1.0 = 100%, 1.5 = 150%).
     pub scale: f32,
     pub primary: bool,
 }
@@ -150,8 +131,6 @@ impl DisplayLayout {
         self.monitors.iter().find(|m| m.primary)
     }
 
-    /// Stable description of the monitor arrangement, saved with captured points so a later run can
-    /// tell the screens moved: `2mon:1920x1080@0,0;1920x1080@1920,0`.
     pub fn fingerprint(&self) -> String {
         let mut rects: Vec<Rect> = self.monitors.iter().map(|m| m.rect).collect();
         rects.sort_by_key(|r| (r.left, r.top));

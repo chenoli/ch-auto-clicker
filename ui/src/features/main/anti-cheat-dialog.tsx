@@ -11,7 +11,6 @@ interface AntiCheatDialogProps {
   onCancel: () => void;
 }
 
-/** One-time warning before the first start (TASKS T11.3); accepting is remembered. */
 export function AntiCheatDialog({ onAccept, onCancel }: AntiCheatDialogProps): ReactElement {
   const { t } = useTranslation();
   const acceptRef = useRef<HTMLButtonElement>(null);

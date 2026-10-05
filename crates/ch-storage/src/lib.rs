@@ -1,7 +1,3 @@
-//! Persistence (ARCHITECTURE §4): `%APPDATA%\Chenoli\CH Clicker` with `settings.json` and one
-//! file per profile, atomic writes, a `.bak` of the previous version, pre-migration backups and
-//! quarantine for unreadable files.
-
 use std::fs::{self, File};
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -44,7 +40,6 @@ fn io_err(path: &Path) -> impl FnOnce(std::io::Error) -> StorageError + '_ {
     }
 }
 
-/// A file that could not be loaded; it was moved to `backups/` so it never blocks startup.
 #[derive(Debug)]
 pub struct LoadIssue {
     pub file: PathBuf,
@@ -57,7 +52,6 @@ pub struct LoadedState {
     pub settings: Settings,
     pub profiles: Vec<Profile>,
     pub issues: Vec<LoadIssue>,
-    /// True when nothing existed and defaults were written.
     pub first_run: bool,
 }
 
@@ -67,7 +61,6 @@ pub struct Store {
 }
 
 impl Store {
-    /// `%APPDATA%\Chenoli\CH Clicker`.
     pub fn default_root() -> PathBuf {
         std::env::var_os("APPDATA")
             .map_or_else(std::env::temp_dir, PathBuf::from)
@@ -108,8 +101,6 @@ impl Store {
             .join(format!("{}.json", sanitize_id(id)))
     }
 
-    /// Loads everything, creating defaults on first run. Unreadable files are quarantined and
-    /// reported instead of failing the whole load; migrated files are backed up and rewritten.
     pub fn load_or_init(
         &self,
         default_settings: impl FnOnce() -> Settings,
@@ -206,7 +197,6 @@ impl Store {
         write_atomic(&self.profile_path(&profile.id), &json)
     }
 
-    /// Deletes a profile file, keeping its last version as a backup.
     pub fn delete_profile(&self, id: &str) -> Result<(), StorageError> {
         let path = self.profile_path(id);
         if !path.exists() {
@@ -255,8 +245,6 @@ impl Store {
     }
 }
 
-/// Keeps `active_profile_id` and `profile_order` consistent with the profiles that exist.
-/// Returns whether anything changed.
 pub fn reconcile(settings: &mut Settings, profiles: &[Profile]) -> bool {
     let before = (
         settings.active_profile_id.clone(),
@@ -284,7 +272,6 @@ pub fn reconcile(settings: &mut Settings, profiles: &[Profile]) -> bool {
         )
 }
 
-/// Ids come from our own UUIDs, but a hand-edited or imported file must never escape the folder.
 fn sanitize_id(id: &str) -> String {
     id.chars()
         .map(|c| {
@@ -297,8 +284,6 @@ fn sanitize_id(id: &str) -> String {
         .collect()
 }
 
-/// Writes to a temp file, flushes it to disk, keeps the previous version as `.bak` and renames
-/// over the target, so a crash at any point leaves either the old or the new file intact.
 pub fn write_atomic(path: &Path, bytes: &[u8]) -> Result<(), StorageError> {
     let tmp = path.with_extension("json.tmp");
     {
@@ -484,7 +469,6 @@ mod tests {
         let dir = TempDir::new("crash");
         let store = Store::open(&dir.0).expect("open");
         store.save_profile(&profile("p")).expect("save");
-        // Simulates dying after the temp write but before the rename.
         fs::write(store.profile_path("p").with_extension("json.tmp"), "{ half").expect("write");
         let state = init(&store);
         assert!(state.issues.is_empty(), "temp files are not profiles");

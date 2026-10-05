@@ -1,6 +1,3 @@
-//! Timing capability benchmark (ARCHITECTURE §5.3): runs the real scheduler with a no-op action at
-//! several intervals and finds the shortest one this machine sustains reliably.
-
 use ch_core::engine::clock::{Clock, NANOS_PER_MS, NANOS_PER_US};
 use ch_core::engine::run::{Poll, RunControl, run};
 use ch_core::engine::scheduler::{FireReport, Scheduler};
@@ -10,9 +7,7 @@ use ch_core::input::NoopBackend;
 use ch_core::stats::{Histogram, JitterStats};
 
 pub const BENCH_INTERVALS_MS: [u64; 5] = [1, 2, 4, 8, 16];
-/// Used until a measurement exists (the handoff's provisional limit).
 pub const DEFAULT_MIN_RELIABLE_MS: u64 = 4;
-/// p99 lateness must stay under this fraction of the interval.
 const MAX_P99_FRACTION: f64 = 0.25;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -41,7 +36,6 @@ impl RunControl for Collect {
     }
 }
 
-/// Runs a no-op timeline at `interval_ms` for about `duration_ns` on the calling thread.
 pub fn measure<C: Clock + ?Sized, W: CoarseWaiter + ?Sized>(
     clock: &C,
     waiter: &mut W,
@@ -66,8 +60,6 @@ pub fn measure<C: Clock + ?Sized, W: CoarseWaiter + ?Sized>(
     }
 }
 
-/// Shortest interval that passes, provided every longer interval measured also passes (a lucky
-/// short run between two failures does not count).
 pub fn min_reliable_interval_ms(results: &[IntervalResult]) -> Option<u64> {
     let mut sorted: Vec<_> = results.to_vec();
     sorted.sort_by_key(|r| r.interval_ms);
@@ -93,7 +85,6 @@ pub struct BenchmarkReport {
     pub min_reliable_ms: Option<u64>,
 }
 
-/// Measures every interval in `intervals_ms` on a dedicated real-time thread.
 #[cfg(windows)]
 pub fn run_system_benchmark(
     intervals_ms: &[u64],

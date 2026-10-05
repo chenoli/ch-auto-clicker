@@ -1,10 +1,3 @@
-//! `.chprofile` import/export (ARCHITECTURE §4, TASKS T8.2):
-//! `{ "format": "chprofile", "schemaVersion": 1, "exportedBy": "...", "profile": { ... } }`.
-//!
-//! Imports are judged by their content, never by the file name: the envelope, the profile's schema
-//! version (migrated when older) and every validation rule. The imported profile gets a new id, a
-//! free name and loses a shortcut that another action or profile already uses.
-
 use serde::Serialize;
 use serde_json::{Value, json};
 
@@ -16,7 +9,6 @@ use crate::schema::{SchemaError, load_profile};
 pub const FORMAT: &str = "chprofile";
 pub const ENVELOPE_VERSION: u32 = 1;
 pub const EXTENSION: &str = "chprofile";
-/// Real profiles are a few KB; anything this big is not one.
 pub const MAX_BYTES: usize = 1024 * 1024;
 
 #[derive(Debug, Clone, PartialEq, thiserror::Error)]
@@ -46,16 +38,12 @@ impl ChprofileError {
     }
 }
 
-/// What the import had to change, so the UI can tell the user.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase", tag = "kind")]
 pub enum ImportNote {
-    /// The name was taken; the profile was renamed.
     Renamed { from: String, to: String },
-    /// The shortcut was already used and was dropped.
     HotkeyDropped { combo: Hotkey },
-    /// The file came from an older schema and was upgraded.
     Migrated { from_version: u32 },
 }
 
@@ -65,7 +53,6 @@ pub struct Imported {
     pub notes: Vec<ImportNote>,
 }
 
-/// The `.chprofile` text for a profile (pretty JSON, so people can read and diff it).
 pub fn export(profile: &Profile, exported_by: &str) -> String {
     let doc = json!({
         "format": FORMAT,
@@ -78,7 +65,6 @@ pub fn export(profile: &Profile, exported_by: &str) -> String {
     text
 }
 
-/// A safe file name for the save dialog: the profile name without characters Windows forbids.
 pub fn file_name(profile: &Profile) -> String {
     let stem: String = profile
         .name
@@ -98,7 +84,6 @@ pub fn file_name(profile: &Profile) -> String {
     )
 }
 
-/// Parses and adapts an imported profile for this library.
 pub fn import(
     text: &str,
     new_id: &str,
@@ -139,7 +124,6 @@ pub fn import(
     profile.created_at = now.to_owned();
     profile.updated_at = now.to_owned();
 
-    // Files come from anywhere: tabs and control characters would break menus and lists.
     if let Ok(clean) = normalize_name(&profile.name) {
         profile.name = clean;
     }
@@ -194,7 +178,7 @@ mod tests {
     #[test]
     fn duplicated_names_and_taken_shortcuts_are_adjusted() {
         let mut p = sample();
-        p.hotkey = Some(Hotkey::new(&[], "F6")); // the default Iniciar / Parar
+        p.hotkey = Some(Hotkey::new(&[], "F6"));
         let text = export(&p, "x");
         let existing = [sample()];
         let imported =
@@ -288,7 +272,6 @@ mod tests {
         invalid["profile"]["click"]["intervalMs"] = json!(0);
         assert_eq!(err(&invalid.to_string()), "IMPORT_INVALID");
         assert_eq!(err(&" ".repeat(MAX_BYTES + 1)), "IMPORT_TOO_LARGE");
-        // A UTF-8 BOM (Notepad) is fine.
         assert!(
             import(
                 &format!("\u{feff}{}", export(&sample(), "x")),

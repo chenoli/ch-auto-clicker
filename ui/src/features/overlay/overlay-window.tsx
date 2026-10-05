@@ -14,11 +14,9 @@ import type { OverlayMode, OverlayState } from "../../ipc";
 import type { AreaRect, Handle } from "./area-geometry";
 import type { PointerEvent as ReactPointerEvent, ReactElement } from "react";
 
-// overlay.html?m=<monitor>: every overlay window is fixed to one monitor for its whole life.
 const INDEX = Number(new URLSearchParams(window.location.search).get("m") ?? 0);
 const CAPTURE_URL = captureUrl(INDEX);
 
-/** A press must travel this far before it starts a new rectangle, so a stray click keeps the old one. */
 const DRAW_THRESHOLD = 4;
 
 type Drag =
@@ -32,7 +30,6 @@ function refresh(setState: (s: OverlayState) => void) {
   });
 }
 
-/** The profile's saved area, when it lies on this monitor, in this overlay's CSS pixels. */
 export function savedRect(state: OverlayState): AreaRect | null {
   const { area, monitor } = state;
   if (!area) return null;
@@ -47,7 +44,6 @@ export function savedRect(state: OverlayState): AreaRect | null {
   return { x: a.x, y: a.y, w: area.w / scale, h: area.h / scale };
 }
 
-/** One capture overlay window, connected to the Rust session (Ponto or Área). */
 export function OverlayWindow(): ReactElement | null {
   const [state, setState] = useState<OverlayState | null>(null);
   const [image, setImage] = useState<HTMLImageElement | null>(null);
@@ -64,7 +60,6 @@ export function OverlayWindow(): ReactElement | null {
     img.src = CAPTURE_URL;
     const onResize = () => setViewport({ width: window.innerWidth, height: window.innerHeight });
     window.addEventListener("resize", onResize);
-    // Points added in another monitor's overlay renumber this one too; the mode is shared.
     const unlisten = [
       events.profilesChanged.listen(() => refresh(setState)),
       events.overlayChanged.listen(() => refresh(setState)),

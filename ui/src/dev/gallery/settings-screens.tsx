@@ -34,7 +34,6 @@ const SETTINGS = {
 
 const CAPABILITIES = { minReliableIntervalMs: 4, measured: false, results: [] } as unknown as Capabilities;
 
-/** Tela 08, editable in place. */
 export function SettingsScreenDemo(): ReactElement {
   const { i18n } = useTranslation();
   const [settings, setSettings] = useState({ ...SETTINGS, locale: i18n.language } as Settings);
@@ -61,7 +60,6 @@ export function SettingsScreenDemo(): ReactElement {
   );
 }
 
-/** Tela 04: countdown, running and paused over the striped desktop stand-in. */
 export function HudStatesDemo(): ReactElement {
   const { i18n } = useTranslation();
   const common = {

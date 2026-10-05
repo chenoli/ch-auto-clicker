@@ -1,21 +1,13 @@
-//! Mouse wiggle pattern (ARCHITECTURE §6.4): a horizontal cosine between `L` and `R` around the
-//! origin, computed absolutely from the origin so nothing drifts.
-
 use crate::engine::timeline::Timeline;
 use crate::geometry::{Point, Rect};
 use crate::input::{InputBackend, InputError};
 
-/// Motion updates per second; positions are only sent when the integer pixel changes.
 pub const MOTION_HZ: u64 = 250;
 
-/// Distance between the commanded and the real cursor that counts as the user moving the mouse.
 pub const REANCHOR_PX: i32 = 4;
 
-/// Effective peak-to-peak amplitude in pixels: `max(1, round(pct/100 × width))` (decision: the
-/// cursor only exists in whole pixels, and < 1 px would break the chosen frequency).
 pub fn effective_amplitude(amplitude_pct: f64, monitor_width: i32) -> i32 {
     let raw = amplitude_pct / 100.0 * f64::from(monitor_width);
-    // `as` saturates; widths are at most a few thousand pixels.
     (raw.round() as i32).max(1)
 }
 
@@ -28,11 +20,9 @@ pub struct WigglePattern {
 }
 
 impl WigglePattern {
-    /// `monitor` is the screen the origin is on; the band never leaves it.
     pub fn new(origin: Point, amplitude_pct: f64, speed_hz: u8, monitor: Rect) -> Self {
         let amplitude = effective_amplitude(amplitude_pct, monitor.width).min(monitor.width - 1);
         let mut left = origin.x - amplitude / 2;
-        // Shift [L, R] inside the monitor instead of crossing into the neighbour.
         left = left.clamp(monitor.left, monitor.right() - 1 - amplitude);
         Self {
             origin,
@@ -50,14 +40,11 @@ impl WigglePattern {
         self.amplitude
     }
 
-    /// `[L, R]`, both inclusive.
     pub const fn band(&self) -> (i32, i32) {
         (self.left, self.left + self.amplitude)
     }
 
-    /// Position `elapsed_ns` after the start. One cycle is L → R → L.
     pub fn position(&self, elapsed_ns: u64) -> Point {
-        // Phase from integer math first, so long runs keep full precision.
         let cycle_ns = 1_000_000_000 / u64::from(self.speed_hz.max(1));
         let phase = (elapsed_ns % cycle_ns) as f64 / cycle_ns as f64;
         let offset =
@@ -66,25 +53,20 @@ impl WigglePattern {
     }
 }
 
-/// Gap between motion updates (4 ms at 250 Hz).
 pub const MOTION_INTERVAL_NS: u64 = 1_000_000_000 / MOTION_HZ;
 
 const fn far(a: Point, b: Point) -> bool {
     (a.x - b.x).abs() > REANCHOR_PX || (a.y - b.y).abs() > REANCHOR_PX
 }
 
-/// The wiggle as a scheduler timeline. The origin is read on the first update (after the
-/// countdown), and moves to wherever the user leaves the cursor (decision D16).
 #[derive(Debug, Clone)]
 pub struct WiggleTimeline {
     deadline: u64,
-    /// Time the current pattern started; positions are absolute from here.
     anchor: u64,
     monitors: Vec<Rect>,
     amplitude_pct: f64,
     speed_hz: u8,
     pattern: Option<WigglePattern>,
-    /// Last two commanded positions: the real cursor may still lag one update behind.
     last: Option<Point>,
     previous: Option<Point>,
 }
@@ -181,7 +163,6 @@ impl Timeline for WiggleTimeline {
         self.anchor += delta;
     }
 
-    /// Returns the cursor exactly to the origin, unless the user has taken it somewhere else.
     fn halt(&mut self, backend: &mut dyn InputBackend) {
         let Some(pattern) = self.pattern else {
             return;
@@ -220,7 +201,6 @@ mod tests {
     fn oscillates_from_left_to_right_and_back() {
         let p = WigglePattern::new(Point::new(960, 500), 1.0, 8, MON);
         assert_eq!(p.band(), (951, 970));
-        // 8 Hz: one cycle is 125 ms.
         assert_eq!(p.position(0), Point::new(951, 500));
         assert_eq!(p.position(62_500_000), Point::new(970, 500));
         assert_eq!(p.position(125 * MS), Point::new(951, 500));
@@ -279,7 +259,6 @@ mod tests {
                 .iter()
                 .all(|c| matches!(c, Call::MoveTo(p) if p.y == 500))
         );
-        // Only integer changes are sent.
         assert!(b.calls.windows(2).all(|w| w[0] != w[1]));
         t.halt(&mut b);
         assert_eq!(b.cursor, Some(Point::new(960, 500)));
@@ -314,7 +293,6 @@ mod tests {
         let mut b = backend_at(960, 500);
         fire_n(&mut t, &mut b, 3);
         let origin = t.pattern().map(WigglePattern::origin);
-        // The OS still reports the previous commanded position.
         let Some(Call::MoveTo(prev)) = b.calls.get(b.calls.len() - 2).cloned() else {
             panic!("expected two moves");
         };
@@ -353,7 +331,6 @@ mod tests {
         let pattern = t.pattern().copied().expect("pattern");
         t.shift(1_000 * MS);
         assert_eq!(t.deadline(), Some(1_040 * MS));
-        // After a pause the motion continues at the phase it had, not at the wall-clock phase.
         b.cursor = None;
         b.calls.clear();
         fire_n(&mut t, &mut b, 1);

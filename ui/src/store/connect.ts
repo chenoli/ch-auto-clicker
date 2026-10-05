@@ -13,7 +13,6 @@ import {
 } from "./app-store";
 import { applyProfilesChanged, rememberServerVersions } from "./profile-sync";
 
-/** Loads the initial state and keeps the store in sync with Rust. Returns a disposer. */
 export async function connectStore(): Promise<() => void> {
   if (!inTauri) return () => {};
   const unlisten = await Promise.all([
@@ -40,10 +39,6 @@ export async function connectStore(): Promise<() => void> {
   return dispose;
 }
 
-/**
- * `connectStore` for a component effect: the returned cleanup also works when the component
- * unmounts before the connection finishes (React StrictMode does exactly that in development).
- */
 export function connectStoreEffect(onError?: (error: unknown) => void): () => void {
   let disposed = false;
   let dispose: (() => void) | undefined;

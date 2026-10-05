@@ -2,12 +2,9 @@ use super::clock::NANOS_PER_MS;
 use super::timeline::Timeline;
 use crate::input::{InputBackend, InputError};
 
-/// Busy-wait stretch before each deadline.
 pub const SPIN_WINDOW_NS: u64 = NANOS_PER_MS;
-/// Shorter spin for long intervals, where sub-millisecond precision matters less than CPU use.
 pub const SPIN_WINDOW_LONG_NS: u64 = 300_000;
 pub const LONG_INTERVAL_NS: u64 = 20 * NANOS_PER_MS;
-/// Lateness below this never triggers a skip, whatever the interval.
 pub const SKIP_GRACE_NS: u64 = 50 * NANOS_PER_MS;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -20,11 +17,8 @@ pub struct Due {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct FireReport {
     pub lateness_ns: u64,
-    /// Events dropped by the skip policy after a stall.
     pub missed: u64,
-    /// The fired timeline ends the run (stop-after timer).
     pub end_run: bool,
-    /// The fired timeline finished and that completes the run (scan without loop).
     pub complete_run: bool,
 }
 
@@ -46,7 +40,6 @@ impl Scheduler {
         Self { timelines }
     }
 
-    /// Earliest deadline across timelines; ties go to the first timeline.
     pub fn next_due(&self) -> Option<Due> {
         self.timelines
             .iter()
@@ -69,10 +62,6 @@ impl Scheduler {
         }
     }
 
-    /// Fires the due timeline at `now`.
-    ///
-    /// After a stall longer than `max(2 × interval, 50 ms)` the backlog is dropped instead of
-    /// replayed as a burst of clicks; the dropped events are reported as missed.
     pub fn fire(
         &mut self,
         due: Due,
@@ -107,7 +96,6 @@ impl Scheduler {
         }
     }
 
-    /// Pause or end of the run (see [`Timeline::halt`]).
     pub fn halt_all(&mut self, backend: &mut dyn InputBackend) {
         for t in &mut self.timelines {
             t.halt(backend);

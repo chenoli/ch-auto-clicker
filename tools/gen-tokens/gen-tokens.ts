@@ -1,4 +1,3 @@
-// Generates theme artifacts from design/tokens.json (ARCHITECTURE §8.1). `--check` writes nothing and fails if stale.
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
@@ -15,11 +14,11 @@ let stale = 0;
 
 for (const [rel, content] of Object.entries(outputs)) {
   const path = resolve(root, rel);
-  let current: string | null = null;
+  let current: string | null;
   try {
     current = readFileSync(path, "utf8");
   } catch {
-    // Not generated yet.
+    current = null;
   }
   if (current === content) continue;
   if (check) {

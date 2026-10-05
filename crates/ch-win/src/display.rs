@@ -1,5 +1,3 @@
-//! Monitors, virtual desktop and DPI.
-
 use ch_core::geometry::{DisplayLayout, Monitor, Rect};
 use windows::Win32::Foundation::{LPARAM, RECT};
 use windows::Win32::Graphics::Gdi::{
@@ -42,7 +40,6 @@ impl DpiAwareness {
     }
 }
 
-/// On the main thread this reflects the process-wide mode.
 pub fn current_dpi_awareness() -> DpiAwareness {
     // SAFETY: no preconditions; reads the calling thread's context.
     let current = unsafe { GetThreadDpiAwarenessContext() };
@@ -72,15 +69,12 @@ pub fn current_dpi_awareness() -> DpiAwareness {
         .map_or(DpiAwareness::Unknown, |(_, mode)| mode)
 }
 
-/// Opts the process into per-monitor v2 DPI when no manifest did it (tests, CLI tools). The app
-/// itself gets it from its manifest; calling this again there is a harmless no-op.
 pub fn ensure_per_monitor_v2() -> DpiAwareness {
     // SAFETY: plain value argument; fails harmlessly with ACCESS_DENIED once a mode is set.
     let _ = unsafe { SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2) };
     current_dpi_awareness()
 }
 
-/// Bounding box of every monitor, in physical pixels when the process is per-monitor aware.
 pub fn virtual_desktop() -> Rect {
     // SAFETY: GetSystemMetrics only reads system state.
     unsafe {
@@ -174,7 +168,6 @@ mod tests {
 
     #[test]
     fn enumerates_the_real_monitors() {
-        // Read-only: lists displays, injects nothing.
         ensure_per_monitor_v2();
         let layout = display_layout();
         assert!(!layout.monitors.is_empty(), "at least one monitor");

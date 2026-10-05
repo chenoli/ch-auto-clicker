@@ -1,7 +1,3 @@
-//! Profile library operations (TASKS T8.1): create, duplicate, rename, delete, reorder and
-//! activate. Every operation keeps `profile_order` a permutation of the profiles and
-//! `active_profile_id` pointing at an existing profile.
-
 use crate::model::{NAME_MAX_CHARS, Profile, Settings};
 
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
@@ -33,7 +29,6 @@ impl ProfileError {
     }
 }
 
-/// Trimmed name with inner whitespace collapsed and control characters dropped, 1–48 characters.
 pub fn normalize_name(raw: &str) -> Result<String, ProfileError> {
     let printable: String = raw
         .chars()
@@ -59,7 +54,6 @@ fn taken(profiles: &[Profile], name: &str, except: Option<&str>) -> bool {
         .any(|p| Some(p.id.as_str()) != except && same_name(&p.name, name))
 }
 
-/// Strips a trailing " (n)" so duplicating "Coleta (2)" gives "Coleta (3)", not "Coleta (2) (2)".
 fn base_of(name: &str) -> &str {
     if let Some(open) = name.rfind(" (")
         && let Some(n) = name[open + 2..].strip_suffix(')')
@@ -71,7 +65,6 @@ fn base_of(name: &str) -> &str {
     name
 }
 
-/// `base`, or "base (2)", "base (3)"… whichever is free; always within 48 characters.
 pub fn unique_name(base: &str, profiles: &[Profile], except: Option<&str>) -> String {
     if !taken(profiles, base, except) {
         return base.to_owned();
@@ -95,7 +88,6 @@ fn index_of(profiles: &[Profile], id: &str) -> Result<usize, ProfileError> {
         .ok_or_else(|| ProfileError::NotFound(id.to_owned()))
 }
 
-/// Puts `id` right after `after` in the display order (or at the end).
 fn insert_order(settings: &mut Settings, id: &str, after: Option<&str>) {
     let at = after
         .and_then(|a| settings.profile_order.iter().position(|o| o == a))
@@ -103,7 +95,6 @@ fn insert_order(settings: &mut Settings, id: &str, after: Option<&str>) {
     settings.profile_order.insert(at, id.to_owned());
 }
 
-/// A fresh profile at the end of the list ("+ Novo"). It does not become active.
 pub fn create(
     settings: &mut Settings,
     profiles: &mut Vec<Profile>,
@@ -118,8 +109,6 @@ pub fn create(
     Ok(profile)
 }
 
-/// A copy right below the original, named "Nome (2)". The copy has no shortcut: one combo can
-/// only start one profile.
 pub fn duplicate(
     settings: &mut Settings,
     profiles: &mut Vec<Profile>,
@@ -139,7 +128,6 @@ pub fn duplicate(
     Ok(copy)
 }
 
-/// Renames, refusing a name another profile already has (case-insensitive).
 pub fn rename(
     profiles: &mut [Profile],
     id: &str,
@@ -157,8 +145,6 @@ pub fn rename(
     Ok(profile.clone())
 }
 
-/// Deletes a profile. If it was active, the next one in the list (or the previous, at the end)
-/// becomes active. The last profile cannot be deleted: the app always has one to run.
 pub fn delete(
     settings: &mut Settings,
     profiles: &mut Vec<Profile>,
@@ -186,7 +172,6 @@ pub fn delete(
     Ok(removed)
 }
 
-/// Replaces the display order; `order` must list every profile exactly once.
 pub fn reorder(
     settings: &mut Settings,
     profiles: &[Profile],
@@ -214,7 +199,6 @@ pub fn activate(
     Ok(())
 }
 
-/// Profiles in display order (`profile_order`), unknown ones last.
 pub fn ordered(settings: &Settings, profiles: &[Profile]) -> Vec<Profile> {
     let mut out: Vec<Profile> = settings
         .profile_order

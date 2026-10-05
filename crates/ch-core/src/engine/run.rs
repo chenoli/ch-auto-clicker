@@ -5,11 +5,8 @@ use crate::input::{InputBackend, InputError};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RunEnd {
-    /// Stop requested (command or emergency stop).
     Stopped,
-    /// Every timeline finished on its own (e.g. a scan without loop).
     Completed,
-    /// The stop-after timer fired.
     TimerElapsed,
     Failed(InputError),
 }
@@ -21,12 +18,9 @@ pub enum Poll {
     Pause,
 }
 
-/// Hooks the engine thread plugs into the loop. `poll` and `on_fire` must not block or allocate.
 pub trait RunControl {
-    /// Polled before every wait and after every wake.
     fn poll(&mut self) -> Poll;
 
-    /// Blocks while paused. Returns `true` to resume, `false` to stop.
     fn wait_while_paused(&mut self) -> bool {
         false
     }
@@ -34,8 +28,6 @@ pub trait RunControl {
     fn on_fire(&mut self, report: &FireReport);
 }
 
-/// The scheduler loop: wait precisely for the next deadline, fire, repeat. Timelines are halted
-/// when the run pauses and when it ends, however it ends.
 pub fn run<C: Clock + ?Sized, W: CoarseWaiter + ?Sized>(
     scheduler: &mut Scheduler,
     clock: &C,
@@ -65,7 +57,6 @@ fn run_until_end<C: Clock + ?Sized, W: CoarseWaiter + ?Sized>(
                 if !control.wait_while_paused() {
                     return RunEnd::Stopped;
                 }
-                // Resume where we left off: every deadline moves by the time spent paused.
                 scheduler.shift_all(clock.now().saturating_sub(paused_at));
                 continue;
             }
@@ -154,7 +145,6 @@ mod tests {
         )
     }
 
-    /// Counts halts and records the order of events.
     struct Halting {
         inner: IntervalTimeline,
         log: std::sync::Arc<std::sync::Mutex<Vec<&'static str>>>,
@@ -269,7 +259,6 @@ mod tests {
                 .iter()
                 .all(|r| r.lateness_ns < 10_000 && r.missed == 0)
         );
-        // 999 intervals of 1 ms: no drift accumulated.
         let elapsed = clock.peek();
         assert!(
             (999 * MS..999 * MS + 10_000).contains(&elapsed),
@@ -279,7 +268,6 @@ mod tests {
 
     #[test]
     fn a_million_events_do_not_drift() {
-        // Coarse auto-step keeps the busy-wait short; lateness per event stays under one step.
         let step = 100_000;
         let clock = FakeClock::with_auto_step(step);
         let mut waiter = FakeWaiter::new(clock.clone());
@@ -344,7 +332,6 @@ mod tests {
                 _ => 'R',
             })
             .collect();
-        // L@0 R@1 L@3 R@3 R@5 L@6 (ties go to the first timeline)
         assert_eq!(order.iter().collect::<String>(), "LRLRRL");
     }
 

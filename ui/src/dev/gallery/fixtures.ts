@@ -1,6 +1,5 @@
 import type { EngineTick, Profile } from "../../ipc";
 
-/** The profile the handoff prototype shows in Tela 01.A. */
 export function prototypeProfile(): Profile {
   return {
     schemaVersion: 1,

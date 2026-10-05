@@ -9,7 +9,6 @@ interface TitleBarProps {
   onClose: () => void;
 }
 
-/** 36px custom title bar; the free area drags the window (Tauri drag region). */
 export function TitleBar({ onMinimize, onClose }: TitleBarProps): ReactElement {
   const { t } = useTranslation();
   return (
@@ -27,7 +26,6 @@ export function TitleBar({ onMinimize, onClose }: TitleBarProps): ReactElement {
         aria-label={t("window.close")}
         onClick={onClose}
       >
-        {/* Drawn instead of the ✕ character, which Windows renders with a colored emoji font. */}
         <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
           <path d="M1 1l8 8M9 1L1 9" stroke="currentColor" strokeWidth="1.1" fill="none" />
         </svg>

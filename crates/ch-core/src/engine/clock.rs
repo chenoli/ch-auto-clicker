@@ -5,11 +5,9 @@ pub const NANOS_PER_US: u64 = 1_000;
 pub const NANOS_PER_MS: u64 = 1_000_000;
 
 pub trait Clock {
-    /// Monotonic nanoseconds from an arbitrary origin.
     fn now(&self) -> u64;
 }
 
-/// Virtual time for tests. Clones share the same timeline.
 #[derive(Debug, Clone, Default)]
 pub struct FakeClock {
     now: Arc<AtomicU64>,
@@ -21,7 +19,6 @@ impl FakeClock {
         Self::default()
     }
 
-    /// Every `now()` call advances time by `step` ns, so busy-wait loops terminate in tests.
     pub fn with_auto_step(step: u64) -> Self {
         Self {
             now: Arc::default(),

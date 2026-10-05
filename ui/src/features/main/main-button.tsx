@@ -7,7 +7,6 @@ import { countdownSeconds } from "../../i18n/format";
 import type { EngineState } from "../../ipc";
 import type { ReactElement } from "react";
 
-/** The visual states of Tela 10; "error" covers engine errors (hotkey conflicts arrive in Phase 4). */
 export type MainButtonState = "idle" | "countdown" | "running" | "paused" | "error";
 
 export function buttonStateFor(engine: EngineState): MainButtonState {
@@ -29,11 +28,8 @@ interface MainButtonProps {
   shortcut: string;
   countdownRemainingMs?: number | null;
   countdownTotalMs?: number;
-  /** Kicker for the error state, e.g. "Entrada bloqueada". */
   errorKicker?: string;
-  /** Label for the error state; defaults to "Iniciar" ("Revisar" for shortcut conflicts). */
   errorLabel?: string | undefined;
-  /** Struck-through dashed key: the start shortcut could not be registered. */
   brokenShortcut?: boolean;
   onPress: () => void;
 }

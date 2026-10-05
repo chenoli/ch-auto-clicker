@@ -13,10 +13,8 @@ import { VariationEditorView } from "./variation-editor-view";
 import type { Profile } from "../../ipc";
 import type { ReactElement } from "react";
 
-/** Handoff default until the timing benchmark has measured this machine. */
 const DEFAULT_MIN_RELIABLE_MS = 4;
 
-/** The variation editor window (Tela 02.B), connected to the Rust state. */
 export function VariationWindow(): ReactElement | null {
   const ready = useAppStore((s) => s.ready);
   const profile = useAppStore(selectActiveProfile);
@@ -41,7 +39,6 @@ export function VariationWindow(): ReactElement | null {
 
   const close = () => void getCurrentWindow().close();
 
-  // Saves directly (not through the queued sync) so the window closes only after Rust accepted it.
   const save = async (mutate: (p: Profile) => Profile) => {
     setBusy(true);
     const result = await commands.profileUpdate(mutate(profile), profile.updatedAt);

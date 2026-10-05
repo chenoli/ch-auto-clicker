@@ -1,6 +1,3 @@
-//! Screen scan (ARCHITECTURE §6.5): a zigzag over the area, walked at a constant speed by
-//! distance along the polyline, so the motion looks the same on every row and on the return.
-
 use crate::engine::timeline::Timeline;
 use crate::geometry::Point;
 use crate::input::{InputBackend, InputError};
@@ -9,19 +6,15 @@ use crate::wiggle::MOTION_INTERVAL_NS;
 
 const NANOS_PER_SEC: f64 = 1_000_000_000.0;
 
-/// The zigzag through an area, with cumulative lengths for lookup by distance.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ScanPath {
     vertices: Vec<Point>,
-    /// `cumulative[i]` = length from the start to `vertices[i]`.
     cumulative: Vec<f64>,
     rows: u32,
     looped: bool,
 }
 
 impl ScanPath {
-    /// Rows sit `spacing` px apart from the top edge and never below the bottom one. With `looped`
-    /// a straight segment leads back to the start at the same speed, with no jump.
     pub fn new(area: Area, spacing: u32, looped: bool) -> Self {
         let spacing = spacing.max(1);
         let w = i32::try_from(area.w.max(1)).unwrap_or(i32::MAX);
@@ -68,7 +61,6 @@ impl ScanPath {
         self.cumulative.last().copied().unwrap_or(0.0)
     }
 
-    /// Seconds for one pass (with the return segment when looping): the "ciclo" badge.
     pub fn cycle_secs(&self, speed_px_s: u32) -> f64 {
         self.length() / f64::from(speed_px_s.max(1))
     }
@@ -77,10 +69,8 @@ impl ScanPath {
         self.vertices.first().copied().unwrap_or(Point::new(0, 0))
     }
 
-    /// Point `s` px along the path, rounded to whole pixels; `s` is clamped to the path.
     pub fn point_at(&self, s: f64) -> Point {
         let s = s.clamp(0.0, self.length());
-        // First vertex whose cumulative length reaches `s`.
         let i = self.cumulative.partition_point(|&c| c < s).max(1);
         let Some(&b) = self.vertices.get(i) else {
             return self.vertices.last().copied().unwrap_or(Point::new(0, 0));
@@ -98,7 +88,6 @@ impl ScanPath {
         )
     }
 
-    /// Distance travelled after `elapsed_ns`: wraps around with loop, stops at the end without.
     pub fn distance_at(&self, elapsed_ns: u64, speed_px_s: u32) -> f64 {
         let travelled = elapsed_ns as f64 / NANOS_PER_SEC * f64::from(speed_px_s);
         let length = self.length();
@@ -120,7 +109,6 @@ fn lerp(a: i32, b: i32, t: f64) -> f64 {
     f64::from(a) + (f64::from(b) - f64::from(a)) * t
 }
 
-/// The scan as a scheduler timeline at 250 Hz. Without loop, reaching the end completes the run.
 #[derive(Debug, Clone)]
 pub struct ScanTimeline {
     path: ScanPath,
@@ -204,7 +192,6 @@ mod tests {
         let p = ScanPath::new(AREA, 24, false);
         assert_eq!(p.rows(), 11);
         assert_eq!(p.start(), Point::new(480, 300));
-        // 11 rows of 775 px + 10 steps of 24 px.
         assert!((p.length() - (11.0 * 775.0 + 240.0)).abs() < 1e-9);
         assert_eq!(p.point_at(f64::MAX), Point::new(1255, 540));
         assert_eq!(ScanPath::new(Area { h: 240, ..AREA }, 24, false).rows(), 10);
@@ -229,7 +216,6 @@ mod tests {
         assert!((looped.length() - open.length() - back).abs() < 1e-9);
         assert!((looped.cycle_secs(1200) - looped.length() / 1200.0).abs() < 1e-12);
         assert_eq!(looped.point_at(looped.length()), Point::new(480, 300));
-        // Halfway back from (1255, 540) to (480, 300).
         assert_eq!(
             looped.point_at(open.length() + back / 2.0),
             Point::new(868, 420)
@@ -277,7 +263,6 @@ mod tests {
             8,
             false,
         );
-        // 3 rows × 100 px + 2 × 8 px = 316 px at 2400 px/s ≈ 132 ms ≈ 33 updates.
         let mut t = ScanTimeline::new(0, path, 2400);
         let mut b = RecordingBackend::default();
         assert_eq!(t.interval(), 4 * MS);
@@ -309,7 +294,6 @@ mod tests {
         t.shift(500 * MS);
         assert_eq!(t.deadline(), Some(540 * MS));
         t.fire(&mut b).expect("fire");
-        // 40 ms of travel at 1200 px/s = 48 px from the start.
         assert_eq!(b.calls.last(), Some(&Call::MoveTo(path.point_at(48.0))));
         t.rebase(2_000 * MS);
         assert_eq!(t.deadline(), Some(2_004 * MS));

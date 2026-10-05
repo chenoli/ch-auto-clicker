@@ -3,7 +3,6 @@ import type { ReactElement, ReactNode } from "react";
 export interface SegmentedOption<T extends string> {
   value: T;
   label: ReactNode;
-  /** Small index shown before the label in the mode tabs ("01"). */
   index?: string;
 }
 

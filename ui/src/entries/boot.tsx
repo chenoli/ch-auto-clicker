@@ -12,7 +12,6 @@ import { initialTheme, syncTheme } from "../styles/theme";
 import type { Settings } from "../ipc";
 import type { ReactNode } from "react";
 
-/** Every Tauri window follows the theme (T9.1) and the language (T10.2) in the settings, live. */
 function followSettings(): void {
   syncTheme((apply) => {
     const both = (settings: Settings) => {
@@ -25,7 +24,6 @@ function followSettings(): void {
   });
 }
 
-// Shared by every window: styles, i18n and the last theme are in place before the first paint.
 export function boot(app: ReactNode): void {
   document.documentElement.dataset.theme = initialTheme();
   if (inTauri) followSettings();

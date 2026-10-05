@@ -1,7 +1,3 @@
-//! System tray (TASKS T11.6–T11.9, Tela 09): the state icon, the native menu and the shortcut
-//! conflict notification. The menu is rebuilt whenever the state, profiles or settings change.
-//! Limitation: the native Windows menu cannot reproduce the handoff's custom colors.
-
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
@@ -18,12 +14,10 @@ use crate::state::{AppState, emit_settings};
 use crate::{theme, tray_icon};
 
 const TRAY_ID: &str = "main";
-/// Running pulse: the dot blinks every 700 ms (Tela 09.A).
 const PULSE: Duration = Duration::from_millis(700);
 
 static PULSE_ON: AtomicBool = AtomicBool::new(true);
 
-/// Navigation request from the tray ("Configurações").
 #[derive(
     Debug,
     Clone,
@@ -39,7 +33,6 @@ pub struct NavigateRequested {
     pub screen: String,
 }
 
-/// "Ctrl Alt Esc", for menu accelerator hints and notifications.
 pub fn combo_label(hotkey: &Hotkey) -> String {
     let mut parts: Vec<&str> = hotkey
         .mods
@@ -64,7 +57,6 @@ pub fn combo_label(hotkey: &Hotkey) -> String {
     parts.join(" ")
 }
 
-/// Pixel size for the tray at the main window's DPI: 16 px at 100 % up to 32 px at 200 %.
 fn icon_size<R: Runtime>(app: &AppHandle<R>) -> u32 {
     let scale = app
         .get_webview_window("main")
@@ -209,7 +201,6 @@ fn build_menu<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
     )
 }
 
-/// Shows and focuses the main window (tray click, "Mostrar janela").
 pub fn show_main<R: Runtime>(app: &AppHandle<R>) {
     if let Some(main) = app.get_webview_window("main") {
         let _ = main.unminimize();
@@ -218,7 +209,6 @@ pub fn show_main<R: Runtime>(app: &AppHandle<R>) {
     }
 }
 
-/// Stops a running engine and waits for it, so nothing clicks during an exit or an update.
 pub fn stop_engine<R: Runtime>(app: &AppHandle<R>) {
     let state = app.state::<AppState>();
     if state.engine.shared().state().is_active() {
@@ -228,7 +218,6 @@ pub fn stop_engine<R: Runtime>(app: &AppHandle<R>) {
     state.persister.flush();
 }
 
-/// Stops the engine safely, saves everything and exits ("Sair", or closing with "Sair").
 pub fn quit<R: Runtime>(app: &AppHandle<R>) {
     stop_engine(app);
     app.exit(0);
@@ -282,7 +271,6 @@ fn on_menu<R: Runtime>(app: &AppHandle<R>, event: MenuEvent) {
         "quit" => quit(app),
         other => {
             if let Some(profile) = other.strip_prefix("profile:") {
-                // Decision D12: switching stops the run and leaves the new profile idle.
                 if state.engine.shared().state().is_active() {
                     state.engine.stop();
                 }
@@ -315,7 +303,6 @@ pub fn install<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<TrayIcon<R>> {
     Ok(tray)
 }
 
-/// Re-reads state, profiles and settings into the icon and the menu.
 pub fn refresh<R: Runtime>(app: &AppHandle<R>) {
     let (Some(tray), Some(state)) = (app.tray_by_id(TRAY_ID), app.try_state::<AppState>()) else {
         return;
@@ -350,9 +337,6 @@ fn spawn_pulse<R: Runtime>(app: AppHandle<R>) {
         .unwrap_or_else(|e| log::warn!("tray pulse thread: {e}"));
 }
 
-/// Native notification when Iniciar / Parar lost its shortcut to another app (Tela 09.B).
-/// Fallback: toast actions need the installed app identity (Phase 12), so this toast only
-/// informs; the main window shows the fix (decision D17).
 pub fn notify_hotkey_taken<R: Runtime>(app: &AppHandle<R>, combo: &Hotkey) {
     use tauri_plugin_notification::NotificationExt;
     let locale = app.state::<AppState>().settings().locale;

@@ -38,7 +38,6 @@ void i18n
     returnNull: false,
   });
 
-/** Switches the UI language of this window (T10.2) and the document language for assistive tech. */
 export function applyLocale(locale: string): void {
   const next = isLocale(locale) ? locale : DEFAULT_LOCALE;
   document.documentElement.lang = next;

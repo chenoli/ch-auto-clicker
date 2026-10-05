@@ -6,7 +6,6 @@ import type { Profile } from "../../ipc";
 import type { TFunction } from "i18next";
 import type { ReactElement } from "react";
 
-/** "100 ms · 10,0 CPS · esquerdo": the Click tab settings that Wiggle and Scan click with. */
 export function rateSummary(profile: Profile, locale: string, t: TFunction): string {
   const click = profile.click;
   const double = click.kind === "double";
@@ -18,7 +17,6 @@ export function rateSummary(profile: Profile, locale: string, t: TFunction): str
   ].join(" · ");
 }
 
-/** Card with the inherited click rate and "Ajustar ›", which switches to the Click tab (D1). */
 export function InheritedRate({
   profile,
   locale,

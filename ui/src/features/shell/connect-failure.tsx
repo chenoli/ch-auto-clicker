@@ -4,7 +4,6 @@ import { Callout } from "../../components/callout";
 
 import type { ReactElement } from "react";
 
-/** Shown instead of a blank window when the UI cannot reach the Rust side. */
 export function ConnectFailure({ detail }: { detail: string }): ReactElement {
   const { t } = useTranslation();
   return (

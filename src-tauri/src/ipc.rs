@@ -1,11 +1,8 @@
-//! Typed command/event registry (tauri-specta) and TypeScript bindings export.
-
 use tauri_specta::{Builder, collect_commands, collect_events};
 
 use crate::{capabilities, commands, events, hotkeys, hud, overlay, profiles, tray, updater};
 
 const BINDINGS_PATH: &str = "../ui/src/ipc/bindings.ts";
-const BINDINGS_HEADER: &str = "// Regenerate with `cargo test -p ch-clicker export_bindings`.";
 
 pub fn builder() -> Builder<tauri::Wry> {
     Builder::<tauri::Wry>::new()
@@ -74,18 +71,48 @@ pub fn builder() -> Builder<tauri::Wry> {
 
 pub fn export_bindings(builder: &Builder<tauri::Wry>) {
     builder
-        .export(
-            specta_typescript::Typescript::default().header(BINDINGS_HEADER),
-            BINDINGS_PATH,
-        )
+        .export(specta_typescript::Typescript::default(), BINDINGS_PATH)
         .expect("failed to export TypeScript bindings");
+    let generated = std::fs::read_to_string(BINDINGS_PATH).expect("read the TypeScript bindings");
+    std::fs::write(BINDINGS_PATH, without_comments(&generated))
+        .expect("write the TypeScript bindings");
+}
+
+fn without_comments(source: &str) -> String {
+    let mut out = String::with_capacity(source.len());
+    let mut in_block = false;
+    for line in source.lines() {
+        let trimmed = line.trim();
+        if in_block {
+            in_block = !trimmed.contains("*/");
+            continue;
+        }
+        if trimmed.starts_with("//") {
+            continue;
+        }
+        if trimmed.starts_with("/*") {
+            in_block = !trimmed.contains("*/");
+            continue;
+        }
+        out.push_str(line);
+        out.push('\n');
+    }
+    out.trim_start().to_owned()
 }
 
 #[cfg(test)]
 mod tests {
-    /// Regenerates `ui/src/ipc/bindings.ts`; CI fails if the result differs from the committed file.
     #[test]
     fn export_bindings() {
         super::export_bindings(&super::builder());
+    }
+
+    #[test]
+    fn strips_line_and_block_comments() {
+        let source = "// header\n\n/** Commands */\nexport const a = 1;\n/*\n * multi\n */\nexport const b = \"//x\";\n";
+        assert_eq!(
+            super::without_comments(source),
+            "export const a = 1;\nexport const b = \"//x\";\n"
+        );
     }
 }

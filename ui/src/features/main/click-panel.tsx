@@ -29,7 +29,6 @@ interface ClickPanelProps {
   onOpenPoints?: (() => void) | undefined;
 }
 
-/** Digits only, clamped to 1–60000 ms; `null` when nothing usable was typed. */
 export function parseInterval(raw: string): number | null {
   const digits = raw.replace(/\D/g, "");
   if (!digits) return null;
@@ -114,7 +113,6 @@ function ButtonRow({ profile, onChange }: Pick<ClickPanelProps, "profile" | "onC
   );
 }
 
-/** "Parada · Parar após": shared by every mode, since the timer applies to any run. */
 export function StopRow({ profile, onChange }: Pick<ClickPanelProps, "profile" | "onChange">): ReactElement {
   const { t } = useTranslation();
   const { stopAfter } = profile;

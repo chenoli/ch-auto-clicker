@@ -1,7 +1,3 @@
-//! The engine thread must not allocate while running (ARCHITECTURE §3): allocation can take locks
-//! and page faults, which show up as jitter. A counting global allocator proves the steady-state
-//! loop is allocation-free.
-
 use std::alloc::{GlobalAlloc, Layout, System};
 use std::cell::Cell;
 
@@ -39,7 +35,6 @@ unsafe impl GlobalAlloc for CountingAllocator {
 #[global_allocator]
 static GLOBAL: CountingAllocator = CountingAllocator;
 
-/// Mirrors what the engine does per fire: lock-free stats, no collections.
 struct EngineLikeControl<'a> {
     histogram: &'a AtomicHistogram,
     fires: u64,

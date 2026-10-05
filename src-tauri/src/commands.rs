@@ -1,5 +1,3 @@
-//! UI → Rust commands (ARCHITECTURE §7.1).
-
 use std::time::Duration;
 
 use ch_core::hotkeys::{HotkeyTarget, find_conflict, normalize, set_binding};
@@ -15,7 +13,6 @@ use crate::hotkeys::HotkeyStatus;
 use crate::state::{AppState, emit_profiles, emit_settings, refresh_capabilities};
 use crate::windowing;
 
-/// Everything a window needs to render its first frame.
 #[derive(Debug, Serialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct Bootstrap {
@@ -51,7 +48,6 @@ pub fn app_bootstrap(app: AppHandle, state: State<'_, AppState>) -> Bootstrap {
     }
 }
 
-/// Replaces the settings (the UI always sends the full object) and notifies every window.
 #[tauri::command]
 #[specta::specta]
 pub fn settings_update(
@@ -89,7 +85,6 @@ pub fn settings_update(
 
 pub const ANTI_CHEAT_ACK: &str = "ANTI_CHEAT_ACK";
 
-/// Records that the user read the anti-cheat warning; the next start goes ahead.
 #[tauri::command]
 #[specta::specta]
 pub fn settings_acknowledge_anti_cheat(app: AppHandle, state: State<'_, AppState>) -> Settings {
@@ -102,8 +97,6 @@ pub fn settings_acknowledge_anti_cheat(app: AppHandle, state: State<'_, AppState
     saved
 }
 
-/// Opens the Ko-fi page in the default browser ("Apoiar ↗" and the tray item). The URL is fixed
-/// here, never taken from the UI.
 #[tauri::command]
 #[specta::specta]
 pub fn app_open_support(app: AppHandle) -> AppResult<()> {
@@ -115,17 +108,14 @@ pub fn app_open_support(app: AppHandle) -> AppResult<()> {
 
 pub const SUPPORT_URL: &str = "https://ko-fi.com/chenoli";
 
-/// The current settings, for windows that only need the theme (variation, HUD, overlays).
 #[tauri::command]
 #[specta::specta]
 pub fn settings_get(state: State<'_, AppState>) -> Settings {
     state.data().settings
 }
 
-/// Last version stamp handed out, in epoch ms; keeps stamps strictly increasing in this process.
 static LAST_VERSION_MS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
-/// Next profile version stamp: millisecond ISO time, never equal to an earlier one.
 pub fn next_version() -> String {
     use std::sync::atomic::Ordering;
     let now = ch_core::time::now_epoch_ms();
@@ -144,8 +134,6 @@ pub fn next_version() -> String {
     }
 }
 
-/// Replaces a profile. `base_updated_at` is the version the caller edited; if another window saved
-/// in between, the update is refused with `STALE_PROFILE` instead of silently overwriting it.
 #[tauri::command]
 #[specta::specta]
 pub fn profile_update(
@@ -185,11 +173,8 @@ pub fn profile_update(
     Ok(saved)
 }
 
-/// Builds and starts the plan for `profile_id` (or the active profile). Shared by the main button,
-/// the F6 shortcut and profile shortcuts.
 pub fn start_profile(state: &AppState, profile_id: Option<String>) -> AppResult<()> {
     let data = state.data();
-    // The anti-cheat warning must be read once before anything clicks (T11.3).
     if !data.settings.anti_cheat_acknowledged {
         return Err(AppError::new(
             ANTI_CHEAT_ACK,
@@ -218,14 +203,12 @@ pub fn start_profile(state: &AppState, profile_id: Option<String>) -> AppResult<
     Ok(())
 }
 
-/// Starts the given (or active) profile after the configured countdown.
 #[tauri::command]
 #[specta::specta]
 pub fn engine_start(state: State<'_, AppState>, profile_id: Option<String>) -> AppResult<()> {
     start_profile(&state, profile_id)
 }
 
-/// Stops the run or cancels the countdown.
 #[tauri::command]
 #[specta::specta]
 pub fn engine_stop(state: State<'_, AppState>) {
@@ -250,14 +233,12 @@ pub fn engine_snapshot(state: State<'_, AppState>) -> EngineTick {
     engine_tick(&state)
 }
 
-/// Shortest reliable interval on this machine (provisional 4 ms until measured).
 #[tauri::command]
 #[specta::specta]
 pub fn engine_capabilities(state: State<'_, AppState>) -> Capabilities {
     state.capabilities()
 }
 
-/// Re-runs the timing benchmark (~3 s) and returns the new capabilities.
 #[tauri::command]
 #[specta::specta]
 pub async fn engine_run_benchmark(app: AppHandle) -> Result<Capabilities, String> {
@@ -272,14 +253,12 @@ pub fn hotkey_status(state: State<'_, AppState>) -> Vec<HotkeyStatus> {
     state.hotkeys().statuses()
 }
 
-/// Suspends every shortcut and starts capturing keys for the capture field.
 #[tauri::command]
 #[specta::specta]
 pub fn hotkey_begin_record(state: State<'_, AppState>) {
     state.hotkeys().begin_recording();
 }
 
-/// Leaves recording without changes and restores every shortcut.
 #[tauri::command]
 #[specta::specta]
 pub fn hotkey_cancel_record(app: AppHandle, state: State<'_, AppState>) -> Vec<HotkeyStatus> {
@@ -290,17 +269,10 @@ pub fn hotkey_cancel_record(app: AppHandle, state: State<'_, AppState>) -> Vec<H
 #[derive(Debug, Serialize, specta::Type)]
 #[serde(rename_all = "camelCase", tag = "result")]
 pub enum HotkeySetResult {
-    Saved {
-        statuses: Vec<HotkeyStatus>,
-    },
-    /// Another binding already uses the combo; nothing changed (call again with `replace`).
-    Conflict {
-        with: HotkeyTarget,
-    },
+    Saved { statuses: Vec<HotkeyStatus> },
+    Conflict { with: HotkeyTarget },
 }
 
-/// Assigns `combo` (or clears it with `None`) to `target`. With `replace`, the binding that held
-/// the combo loses it and shows a dash, as in the "Substituir" action of Tela 06.
 #[tauri::command]
 #[specta::specta]
 pub fn hotkey_set(
@@ -351,7 +323,6 @@ pub fn hotkey_set(
     }
 }
 
-/// Writes one binding into the app data.
 fn assign(
     data: &mut crate::state::AppData,
     target: &HotkeyTarget,
@@ -373,7 +344,6 @@ fn assign(
     }
 }
 
-/// Restores the handoff's default shortcuts (F6, F7, Ctrl Shift P, Ctrl Alt Right, Ctrl Alt Esc).
 #[tauri::command]
 #[specta::specta]
 pub fn hotkey_reset_defaults(app: AppHandle, state: State<'_, AppState>) -> Vec<HotkeyStatus> {
@@ -386,22 +356,18 @@ pub fn hotkey_reset_defaults(app: AppHandle, state: State<'_, AppState>) -> Vec<
     state.hotkeys().apply(&app, &data)
 }
 
-/// Tries every registration again (after the user freed a combo in another app).
 #[tauri::command]
 #[specta::specta]
 pub fn hotkey_retry(app: AppHandle, state: State<'_, AppState>) -> Vec<HotkeyStatus> {
     state.hotkeys().apply(&app, &state.data())
 }
 
-/// Opens the point capture overlays (Tela 03.B); resolves when the user finishes. Points are saved
-/// to the active profile as they are added.
 #[tauri::command]
 #[specta::specta]
 pub async fn overlay_pick_points(app: AppHandle) -> AppResult<()> {
     crate::overlay::pick(app, crate::overlay::OverlayMode::Points).await
 }
 
-/// Opens the area selection overlays (Tela 03.A); resolves when the user confirms or cancels.
 #[tauri::command]
 #[specta::specta]
 pub async fn overlay_pick_area(app: AppHandle) -> AppResult<()> {
@@ -414,7 +380,6 @@ pub fn overlay_set_mode(app: AppHandle, mode: crate::overlay::OverlayMode) -> Ap
     crate::overlay::set_mode(&app, mode)
 }
 
-/// Saves the rectangle drawn on overlay `monitor` (CSS pixels) as the scan area and closes.
 #[tauri::command]
 #[specta::specta]
 pub fn overlay_confirm_area(
@@ -440,7 +405,6 @@ pub fn overlay_state(app: AppHandle, monitor: u32) -> AppResult<crate::overlay::
     crate::overlay::overlay_state(&app, monitor as usize)
 }
 
-/// Adds a point at a CSS position of overlay `monitor`.
 #[tauri::command]
 #[specta::specta]
 pub fn overlay_add_point(
@@ -464,7 +428,6 @@ pub fn overlay_finish(app: AppHandle) {
     crate::overlay::finish(&app);
 }
 
-/// The main window asks for the height its content needs; Rust animates to it (640–900 px).
 #[tauri::command]
 #[specta::specta]
 pub fn window_set_content_height(
@@ -483,18 +446,14 @@ pub fn window_set_content_height(
     Ok(target)
 }
 
-/// Async on purpose: building a webview inside a synchronous command deadlocks WebView2 on
-/// Windows (the window frame appears but its content never loads).
 #[tauri::command]
 #[specta::specta]
 pub async fn window_open_variation(app: AppHandle) -> AppResult<()> {
     windowing::open_variation(&app).map_err(|e| AppError::new("WINDOW_OPEN_FAILED", e.to_string()))
 }
 
-/// Delay that lets the developer move the cursor off the button before the test click.
 const DEBUG_CLICK_DELAY: Duration = Duration::from_secs(2);
 
-/// Dev-only (T1.7): one left click at the cursor after a short delay.
 #[tauri::command]
 #[specta::specta]
 pub fn debug_click_once() -> Result<(), String> {

@@ -571,7 +571,6 @@ describe("OverlayWindow", () => {
     });
     const view = render(<OverlayWindow />);
     expect(await screen.findByText("Arraste para selecionar")).toBeInTheDocument();
-    // The saved area is shown pre-selected.
     expect(screen.getByText("200 × 100")).toBeInTheDocument();
     const root = view.container.firstElementChild as HTMLElement;
 
@@ -595,7 +594,6 @@ describe("OverlayWindow", () => {
     fireEvent.pointerUp(root);
     expect(screen.getByText("440 × 210")).toBeInTheDocument();
 
-    // A click without dragging keeps the rectangle.
     fireEvent.pointerDown(root, { button: 0, clientX: 800, clientY: 800 });
     fireEvent.pointerMove(root, { clientX: 801, clientY: 801 });
     fireEvent.pointerUp(root);

@@ -8,7 +8,6 @@ interface StepperProps {
   incrementLabel: string;
   canDecrement?: boolean;
   canIncrement?: boolean;
-  /** Dimmed value, e.g. while the stop timer is off. */
   muted?: boolean;
 }
 

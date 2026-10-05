@@ -1,6 +1,3 @@
-//! Global shortcut rules (ARCHITECTURE §10.1, TASKS T4.1): canonical key names, conflicts between
-//! bindings and the recording state machine behind the shortcut capture field.
-
 use std::collections::BTreeSet;
 
 use serde::{Deserialize, Serialize};
@@ -28,7 +25,6 @@ impl HotkeyAction {
     ];
 }
 
-/// What a shortcut triggers: an app action or a profile's own shortcut (decision D4).
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase", tag = "kind", content = "id")]
@@ -39,7 +35,6 @@ pub enum HotkeyTarget {
 
 pub const MOUSE_KEYS: [&str; 3] = ["MouseMiddle", "MouseX1", "MouseX2"];
 
-/// Every key name the app accepts, in canonical spelling.
 pub fn is_known_key(key: &str) -> bool {
     if MOUSE_KEYS.contains(&key) || NAMED_KEYS.contains(&key) {
         return true;
@@ -107,7 +102,6 @@ impl HotkeyError {
     }
 }
 
-/// Sorted, deduplicated modifiers and a validated key.
 pub fn normalize(hotkey: &Hotkey) -> Result<Hotkey, HotkeyError> {
     if matches!(hotkey.key.as_str(), "MouseLeft" | "MouseRight") {
         return Err(HotkeyError::PrimaryMouseButton);
@@ -118,7 +112,6 @@ pub fn normalize(hotkey: &Hotkey) -> Result<Hotkey, HotkeyError> {
     Ok(Hotkey::new(&hotkey.mods, &hotkey.key))
 }
 
-/// Every assigned shortcut: app actions first, then profiles.
 pub fn all_bindings(
     bindings: &HotkeyBindings,
     profiles: &[Profile],
@@ -145,7 +138,6 @@ pub fn binding_of(bindings: &HotkeyBindings, action: HotkeyAction) -> Option<&Ho
     }
 }
 
-/// Sets (or clears, with `None`) an action's shortcut. The emergency stop refuses `None`.
 pub fn set_binding(
     bindings: &mut HotkeyBindings,
     action: HotkeyAction,
@@ -163,7 +155,6 @@ pub fn set_binding(
     Ok(())
 }
 
-/// Another target already using `combo`, if any.
 pub fn find_conflict(
     bindings: &HotkeyBindings,
     profiles: &[Profile],
@@ -176,16 +167,13 @@ pub fn find_conflict(
         .map(|(t, _)| t)
 }
 
-/// Result of one key event while recording a shortcut.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RecordStep {
-    /// Modifiers held so far (shown live in the field).
     Partial(Vec<Modifier>),
     Done(Hotkey),
     Cancelled,
 }
 
-/// Recording rules (Tela 06): modifiers alone never confirm; Esc without modifiers cancels.
 #[derive(Debug, Default)]
 pub struct Recorder {
     held: BTreeSet<Modifier>,
@@ -216,7 +204,6 @@ impl Recorder {
     }
 }
 
-/// Modifier for a key name such as `LControl` or `RShift`.
 pub fn modifier_of(key: &str) -> Option<Modifier> {
     match key {
         "Control" | "LControl" | "RControl" => Some(Modifier::Ctrl),

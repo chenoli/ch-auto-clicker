@@ -1,16 +1,11 @@
-//! Timing capabilities (ARCHITECTURE §5.3, TASKS T2.9): the shortest interval this machine
-//! sustains, measured once per machine fingerprint and cached.
-
 use std::path::{Path, PathBuf};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use ch_engine::benchmark::{BENCH_INTERVALS_MS, BenchmarkReport, DEFAULT_MIN_RELIABLE_MS};
 use serde::{Deserialize, Serialize};
 
-/// ~3 s in total across the five intervals.
 pub const PER_INTERVAL: Duration = Duration::from_millis(600);
 const CACHE_VERSION: u32 = 1;
-/// When nothing passes, fall back to the longest interval measured.
 const WORST_CASE_MS: u32 = 16;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, specta::Type)]
@@ -26,7 +21,6 @@ pub struct BenchResult {
 #[serde(rename_all = "camelCase")]
 pub struct Capabilities {
     pub min_reliable_interval_ms: u32,
-    /// False until the benchmark has run on this machine; the UI then shows the 4 ms default.
     pub measured: bool,
     pub timer_kind: String,
     pub mmcss: bool,
@@ -80,7 +74,6 @@ pub fn cache_path() -> PathBuf {
     crate::paths::cache_dir().join("capabilities.json")
 }
 
-/// Cached capabilities, only if they were measured on this same machine and build.
 pub fn load_cached(path: &Path, fingerprint: &str) -> Option<Capabilities> {
     let text = std::fs::read_to_string(path).ok()?;
     let file: CacheFile = serde_json::from_str(&text).ok()?;
@@ -99,13 +92,11 @@ pub fn save_cache(path: &Path, capabilities: &Capabilities) -> std::io::Result<(
         capabilities: capabilities.clone(),
     };
     let json = serde_json::to_string_pretty(&file).map_err(std::io::Error::other)?;
-    // Write-then-rename so a crash never leaves a truncated cache behind.
     let tmp = path.with_extension("json.tmp");
     std::fs::write(&tmp, json)?;
     std::fs::rename(tmp, path)
 }
 
-/// Whole milliseconds: integers survive the JSON round trip exactly, fractions may not.
 pub fn now_ms() -> f64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -119,7 +110,6 @@ pub fn fingerprint() -> String {
     return String::from("non-windows");
 }
 
-/// Runs the benchmark on a real-time thread (blocks ~3 s) and caches the result.
 #[cfg(windows)]
 pub fn measure() -> Result<Capabilities, String> {
     let report = ch_engine::benchmark::run_system_benchmark(&BENCH_INTERVALS_MS, PER_INTERVAL)

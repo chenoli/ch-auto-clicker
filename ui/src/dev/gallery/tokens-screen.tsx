@@ -28,7 +28,6 @@ const DERIVED = [
   "edge-danger",
 ];
 
-// Each block sets its own data-theme, which also proves derived tokens recompute in nested themes.
 export function TokensScreen(): ReactElement {
   return (
     <div className="grid grid-cols-2 gap-3">

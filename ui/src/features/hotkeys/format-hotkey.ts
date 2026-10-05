@@ -14,15 +14,12 @@ const KEY_LABELS: Record<string, string> = {
   MouseX2: "X2",
 };
 
-/** Keys of a shortcut as shown in kbd chips: `["Ctrl", "Shift", "P"]`. */
 export function hotkeyKeys(hotkey: Hotkey | null | undefined): string[] {
   if (!hotkey) return [];
-  // The middle button is a word, so it follows the UI language; the rest are key names.
   const key = hotkey.key === "MouseMiddle" ? i18n.t("click.middle") : (KEY_LABELS[hotkey.key] ?? hotkey.key);
   return [...hotkey.mods.map((m) => MODIFIER_LABELS[m]), key];
 }
 
-/** One-line label: "Ctrl Shift P", or "—" when unassigned. */
 export function hotkeyLabel(hotkey: Hotkey | null | undefined): string {
   const keys = hotkeyKeys(hotkey);
   return keys.length ? keys.join(" ") : "—";

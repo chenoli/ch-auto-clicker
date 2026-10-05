@@ -1,17 +1,10 @@
-//! Text that Rust draws itself (window titles, file dialogs, tray menu, notifications), in the UI
-//! language (TASKS T10.3). The web UI has its own catalogs under `ui/src/i18n/locales`.
-
 use ch_core::model::Locale;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Text {
-    /// Title of the capture overlays (Telas 03.A/03.B).
     CaptureTitle,
-    /// Title of the variation editor window (Tela 02.B).
     VariationTitle,
-    /// File type name in the export/import dialogs.
     ProfileFileType,
-    // Tray menu (Tela 09.A).
     StateIdle,
     StateCountdown,
     StateRunning,
@@ -28,7 +21,6 @@ pub enum Text {
     Settings,
     Support,
     Quit,
-    /// Notification body when Iniciar / Parar lost its shortcut (Tela 09.B).
     HotkeyTakenBody,
 }
 
@@ -105,7 +97,6 @@ pub const fn text(locale: Locale, key: Text) -> &'static str {
     }
 }
 
-/// "F6 não pôde ser registrado" (notification title, Tela 09.B).
 pub fn hotkey_taken_title(locale: Locale, combo: &str) -> String {
     match locale {
         Locale::PtBr => format!("{combo} não pôde ser registrado"),

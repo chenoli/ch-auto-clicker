@@ -1,6 +1,3 @@
-//! App-wide state managed by Tauri: profiles and settings (source of truth for every window), the
-//! engine, telemetry, persistence and timing capabilities.
-
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Mutex, MutexGuard, OnceLock};
 
@@ -42,7 +39,6 @@ pub struct AppState {
     pub persister: Persister,
     capabilities: Mutex<Capabilities>,
     benchmarking: AtomicBool,
-    /// Ctrl is held over the HUD, so its moves are the user's and get saved (D5).
     hud_dragging: AtomicBool,
     pub animator: OnceLock<HeightAnimator>,
 }
@@ -68,7 +64,6 @@ impl AppState {
             )
             .map_err(|e| e.to_string())?;
         let mut loaded = loaded;
-        // The language picked in the installer wins once, on the first start after installing.
         if let Some(locale) = ch_win::system::take_installer_locale()
             && loaded.settings.locale != locale
         {
@@ -140,12 +135,10 @@ impl AppState {
         lock(&self.data).clone()
     }
 
-    /// Only the settings, for frequent readers (tray pulse, HUD) that do not need the profiles.
     pub fn settings(&self) -> Settings {
         lock(&self.data).settings.clone()
     }
 
-    /// Applies `f` to the data under the lock; `f` decides what changed.
     pub fn with_data<T>(&self, f: impl FnOnce(&mut AppData) -> T) -> T {
         f(&mut lock(&self.data))
     }
@@ -174,8 +167,6 @@ pub fn emit_profiles<R: Runtime>(app: &AppHandle<R>, data: &AppData) {
     crate::tray::refresh(app);
 }
 
-/// Runs the timing benchmark (blocking, ~3 s), stores the result and notifies every window.
-/// Refuses to start a second benchmark while one is running.
 pub fn refresh_capabilities<R: Runtime>(app: &AppHandle<R>) -> Result<Capabilities, String> {
     let state = app.state::<AppState>();
     if state.benchmarking.swap(true, Ordering::AcqRel) {
@@ -189,7 +180,6 @@ pub fn refresh_capabilities<R: Runtime>(app: &AppHandle<R>) -> Result<Capabiliti
     Ok(measured)
 }
 
-/// First launch on this machine (or after a Windows update): measure in the background.
 pub fn measure_if_needed<R: Runtime>(app: &AppHandle<R>) {
     if app.state::<AppState>().capabilities().measured {
         return;

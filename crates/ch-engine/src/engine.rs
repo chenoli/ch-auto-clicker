@@ -1,6 +1,3 @@
-//! The engine thread (ARCHITECTURE §3, §5): countdown, scheduler loop, pause and stop, driven by
-//! commands and published through atomics. Nothing on the hot path locks or allocates.
-
 use std::sync::atomic::{AtomicBool, AtomicU8, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, mpsc};
 use std::thread::JoinHandle;
@@ -14,19 +11,14 @@ use ch_core::engine::wait::{CoarseWaiter, Waker};
 use ch_core::input::{InputBackend, InputError};
 use ch_core::stats::AtomicHistogram;
 
-/// Countdown progress is published at this rate.
 const COUNTDOWN_STEP_NS: u64 = 100 * NANOS_PER_MS;
-/// While paused nothing is scheduled, so commands are polled at a relaxed pace.
 const PAUSE_POLL: Duration = Duration::from_millis(20);
 
 type Build = Box<dyn FnOnce(u64, Arc<Shared>) -> Scheduler + Send>;
 
-/// What to run. Timelines are built when the countdown ends, so they start at that instant.
 pub struct RunPlan {
     pub countdown_ns: u64,
-    /// Shortest intended gap between actions; the degraded-timing check compares jitter to it.
     pub nominal_interval_ns: u64,
-    /// Length of the stop timer, if any (drives the "remaining" readout).
     pub stop_after_ns: Option<u64>,
     build: Build,
 }
@@ -72,7 +64,6 @@ enum Command {
     Shutdown,
 }
 
-/// One state change, reported from the engine thread (allocation is fine here: transitions are rare).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StateChange {
     pub state: EngineState,
@@ -84,7 +75,6 @@ pub struct StateChange {
 
 pub type StateHook = Box<dyn Fn(&StateChange) + Send + Sync>;
 
-/// State shared between the engine thread, the telemetry thread and the app.
 #[derive(Debug, Default)]
 pub struct Shared {
     emergency: AtomicBool,
@@ -104,7 +94,6 @@ pub struct Shared {
     last_end: Mutex<Option<RunEnd>>,
 }
 
-/// Point-in-time readout for telemetry and the bootstrap snapshot.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Snapshot {
     pub state: EngineState,
@@ -122,7 +111,6 @@ impl Shared {
         EngineState::from_u8(self.state.load(Ordering::Acquire))
     }
 
-    /// Anything but idle or error.
     pub fn is_running(&self) -> bool {
         self.state().is_active() || self.state() == EngineState::Stopping
     }
@@ -135,12 +123,10 @@ impl Shared {
         self.clicks.load(Ordering::Relaxed)
     }
 
-    /// Counts one delivered tick of `clicks` clicks (2 for a double click).
     pub fn add_clicks(&self, clicks: u64) {
         self.clicks.fetch_add(clicks, Ordering::Relaxed);
     }
 
-    /// Counts a click skipped because it would have landed on our own window.
     pub fn add_skipped_self(&self) {
         self.skipped_self.fetch_add(1, Ordering::Relaxed);
     }
@@ -161,7 +147,6 @@ impl Shared {
         self.last_end.lock().ok().and_then(|g| g.clone())
     }
 
-    /// Running time without pauses; frozen while paused, so the stop timer pauses too.
     fn elapsed_ns(&self, now: u64, state: EngineState) -> u64 {
         let started = self.run_started_ns.load(Ordering::Relaxed);
         if started == 0
@@ -227,7 +212,6 @@ impl Shared {
     }
 }
 
-/// The engine thread's view of the state machine.
 struct Machine<'a> {
     shared: &'a Shared,
     hook: &'a StateHook,
@@ -281,7 +265,6 @@ impl<C: Clock> EngineControl<'_, C> {
             Command::TogglePause => Poll::Pause,
             Command::Ack => Poll::Continue,
             other => {
-                // A new Start replaces this run; Shutdown ends it. Either way, finish this one first.
                 *self.pending = Some(other);
                 self.stop_with(StopReason::User)
             }
@@ -291,7 +274,6 @@ impl<C: Clock> EngineControl<'_, C> {
 
 impl<C: Clock> RunControl for EngineControl<'_, C> {
     fn poll(&mut self) -> Poll {
-        // Checked first and without the channel, so a flooded queue can never delay it.
         if self.shared.emergency.load(Ordering::Acquire) {
             return self.stop_with(StopReason::Emergency);
         }
@@ -371,7 +353,6 @@ fn countdown<C: Clock, W: CoarseWaiter>(
             return CountdownEnd::Cancelled(StopReason::Emergency);
         }
         match rx.try_recv() {
-            // F6 during the countdown cancels it; pausing has no meaning yet.
             Ok(Command::Stop) => return CountdownEnd::Cancelled(StopReason::User),
             Ok(Command::TogglePause | Command::Ack) | Err(mpsc::TryRecvError::Empty) => {}
             Ok(other) => {
@@ -407,8 +388,6 @@ impl std::fmt::Debug for Engine {
 }
 
 impl Engine {
-    /// Spawns the engine thread. `init` runs first on that thread (e.g. raising its priority) and
-    /// whatever it returns stays alive until the thread exits. `hook` sees every state change.
     pub fn spawn<C, W, B, G>(
         clock: C,
         mut waiter: W,
@@ -483,12 +462,10 @@ impl Engine {
         (self.waker)();
     }
 
-    /// Starts a run (after its countdown), replacing the current one if any.
     pub fn start(&self, plan: RunPlan) {
         self.send(Command::Start(plan));
     }
 
-    /// Stops the run, or cancels the countdown.
     pub fn stop(&self) {
         self.send(Command::Stop);
     }
@@ -497,18 +474,15 @@ impl Engine {
         self.send(Command::TogglePause);
     }
 
-    /// Clears the error state after the user saw it.
     pub fn ack_error(&self) {
         self.send(Command::Ack);
     }
 
-    /// Stops through an atomic flag that bypasses the command queue.
     pub fn emergency_stop(&self) {
         self.shared.emergency.store(true, Ordering::Release);
         (self.waker)();
     }
 
-    /// Blocks until the engine is idle (or in error) or the timeout passes.
     pub fn wait_idle(&self, timeout: Duration) -> bool {
         let deadline = Instant::now() + timeout;
         while self.shared.is_running() {
@@ -521,7 +495,6 @@ impl Engine {
     }
 }
 
-/// Everything one run needs, borrowed from the engine thread.
 struct RunContext<'a, C, W, B> {
     clock: &'a C,
     waiter: &'a mut W,
@@ -611,7 +584,6 @@ impl Drop for Engine {
 
 #[cfg(windows)]
 impl Engine {
-    /// The production engine: QPC clock, high-resolution timer, `SendInput`, real-time priority.
     pub fn spawn_system(hook: StateHook) -> windows::core::Result<Self> {
         use ch_win::input::SendInputBackend;
         use ch_win::timing::{HighResWaiter, QpcClock, RealtimeGuard};

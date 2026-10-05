@@ -1,6 +1,3 @@
-//! Calendar helpers without a date library: ISO-8601 UTC timestamps for profile metadata.
-
-/// UTC civil date from days since 1970-01-01 (Howard Hinnant's algorithm).
 pub fn civil_date(days: i64) -> (i64, u32, u32) {
     let z = days + 719_468;
     let era = z.div_euclid(146_097);
@@ -14,7 +11,6 @@ pub fn civil_date(days: i64) -> (i64, u32, u32) {
     (year, month, day)
 }
 
-/// `2026-10-04T20:10:00Z` for a Unix time in milliseconds (sub-second part dropped).
 pub fn iso_utc(epoch_ms: u64) -> String {
     let secs = epoch_ms / 1_000;
     let (y, mo, d) = civil_date((secs / 86_400) as i64);
@@ -27,7 +23,6 @@ pub fn iso_utc(epoch_ms: u64) -> String {
     )
 }
 
-/// `2026-10-04T20:10:00.123Z`, millisecond precision.
 pub fn iso_utc_ms(epoch_ms: u64) -> String {
     let base = iso_utc(epoch_ms);
     format!("{}.{:03}Z", &base[..base.len() - 1], epoch_ms % 1_000)

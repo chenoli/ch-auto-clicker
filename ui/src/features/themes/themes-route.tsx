@@ -14,13 +14,11 @@ import type { ReactElement } from "react";
 
 const nameOf = (id: ThemeId) => THEMES.find((theme) => theme.id === id)?.name ?? id;
 
-/** "Grafite", or "Seguindo o Windows · Papel" (Tela 08 row). */
 export function themeLabel(settings: Settings, t: TFunction): string {
   const shown = resolveTheme(settings, systemIsDark());
   return settings.followSystemTheme ? t("settings.followingSystem", { name: nameOf(shown) }) : nameOf(shown);
 }
 
-/** Follows the Windows light/dark switch while the screen is open. */
 function useSystemDark(): boolean {
   const [dark, setDark] = useState(systemIsDark);
   useEffect(() => {
@@ -39,7 +37,6 @@ interface ThemesRouteProps {
   onClose: () => void;
 }
 
-/** Tela 07 connected to the settings; the theme itself is applied by every window's boot sync. */
 export function ThemesRoute({ settings, onBack, onMinimize, onClose }: ThemesRouteProps): ReactElement {
   const dark = useSystemDark();
   const [error, setError] = useState<string | null>(null);

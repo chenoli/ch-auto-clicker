@@ -4,7 +4,6 @@ on:
   pull_request:
   push:
     branches: [main]
-  # The release workflow runs the same checks before building.
   workflow_call:
 
 concurrency:
@@ -58,7 +57,6 @@ jobs:
         with:
           node-version: 24
           cache: pnpm
-      # generate_context! exige o frontendDist (dist/) existente.
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
       - run: cargo fmt --all --check

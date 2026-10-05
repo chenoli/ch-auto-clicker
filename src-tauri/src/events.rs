@@ -1,6 +1,3 @@
-//! Rust → UI events (ARCHITECTURE §7.2). tauri-specta names them in kebab-case after the type
-//! (`EngineTick` → `engine-tick`).
-
 use ch_core::engine::state::{EngineState, StopReason};
 use ch_core::model::{Profile, Settings};
 use ch_core::stats::JitterStats;
@@ -16,7 +13,6 @@ fn saturating_u32(v: u64) -> u32 {
     v.min(u64::from(u32::MAX)) as u32
 }
 
-/// 10 Hz while active: counters and times for the footer, HUD and tray. Also the snapshot shape.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, specta::Type, tauri_specta::Event)]
 #[serde(rename_all = "camelCase")]
 pub struct EngineTick {
@@ -45,7 +41,6 @@ impl From<Snapshot> for EngineTick {
     }
 }
 
-/// Every engine state transition (the main button, footer, HUD and tray follow it).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, specta::Type, tauri_specta::Event)]
 #[serde(rename_all = "camelCase")]
 pub struct EngineStatus {
@@ -71,7 +66,6 @@ impl From<&StateChange> for EngineStatus {
     }
 }
 
-/// 1 Hz lateness summary (diagnostics).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, specta::Type, tauri_specta::Event)]
 #[serde(rename_all = "camelCase")]
 pub struct EngineJitter {
@@ -100,11 +94,9 @@ impl From<JitterStats> for EngineJitter {
 #[serde(rename_all = "camelCase")]
 pub enum DegradedReason {
     Timing,
-    /// A monitor was unplugged, moved or rescaled during the run; it was paused.
     DisplayChanged,
 }
 
-/// The requested rate is not being met (or recovered); drives the warning callout.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, specta::Type, tauri_specta::Event)]
 #[serde(rename_all = "camelCase")]
 pub struct EngineDegraded {
@@ -112,11 +104,9 @@ pub struct EngineDegraded {
     pub reason: DegradedReason,
 }
 
-/// Settings changed (from any window); every window re-renders from this.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, specta::Type, tauri_specta::Event)]
 pub struct SettingsChanged(pub Settings);
 
-/// Profiles or the active profile changed.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, specta::Type, tauri_specta::Event)]
 #[serde(rename_all = "camelCase")]
 pub struct ProfilesChanged {
@@ -124,7 +114,6 @@ pub struct ProfilesChanged {
     pub active_profile_id: Option<String>,
 }
 
-/// Forwards engine telemetry to every window.
 pub struct EventSink<R: Runtime>(pub AppHandle<R>);
 
 impl<R: Runtime> TelemetrySink for EventSink<R> {

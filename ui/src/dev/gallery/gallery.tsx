@@ -18,7 +18,6 @@ export interface GalleryRoute {
   lang: Locale;
 }
 
-/** Parses `#/<screen>?theme=<id>&lang=<locale>`; unknown values fall back to the defaults. */
 export function parseGalleryHash(hash: string): GalleryRoute {
   const [path = "", query = ""] = hash.replace(/^#\/?/, "").split("?");
   const params = new URLSearchParams(query);
@@ -59,7 +58,6 @@ export function Gallery(): ReactElement {
                 <a href={`#/${screen.id}?theme=${route.theme}&lang=${route.lang}`}>{screen.title}</a>
               </figcaption>
             )}
-            {/* Fixed frame size so screenshots are comparable run to run. */}
             <div data-testid={`screen-${screen.id}`} style={{ width: screen.width, height: screen.height }}>
               {screen.render()}
             </div>

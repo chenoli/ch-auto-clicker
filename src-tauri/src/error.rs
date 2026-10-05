@@ -1,6 +1,3 @@
-//! Error shape for every command (ARCHITECTURE §7): a stable `code` the UI translates
-//! (`errors.<code>`) plus an English message for logs.
-
 use serde::Serialize;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, specta::Type)]

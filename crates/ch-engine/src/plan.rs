@@ -1,6 +1,3 @@
-//! Builds a [`RunPlan`] from a profile (ARCHITECTURE §5.1, §6.1, §6.6). The profile is copied, so
-//! edits during a run apply on the next start (decision D8).
-
 use ch_core::engine::clock::NANOS_PER_MS;
 use ch_core::engine::scheduler::Scheduler;
 use ch_core::engine::timeline::{IntervalTimeline, StopTimeline, Timeline};
@@ -21,12 +18,10 @@ pub enum PlanError {
     Invalid(Vec<ValidationError>),
     #[error("the points list is empty")]
     NoPoints,
-    /// A point is outside the current virtual desktop (a monitor was unplugged or moved).
     #[error("point ({x}, {y}) is outside the screens")]
     PointsOffscreen { x: i32, y: i32 },
     #[error("no scan area selected")]
     NoArea,
-    /// The scan area is no longer fully on the screens.
     #[error("the scan area is outside the screens")]
     AreaOffscreen,
 }
@@ -43,8 +38,6 @@ impl PlanError {
     }
 }
 
-/// The screens a run plays on: the virtual desktop (points must be inside it) and each monitor
-/// (the wiggle never leaves the one the cursor is on).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Screens {
     pub desktop: Rect,
@@ -60,7 +53,6 @@ impl From<&DisplayLayout> for Screens {
     }
 }
 
-/// What the run does besides (or instead of) clicking.
 enum Motion {
     None,
     Wiggle { amplitude_pct: f64, speed_hz: u8 },
@@ -184,7 +176,6 @@ pub fn build_plan(
                     action,
                 ))
             } else {
-                // Gap before point n = next interval + that point's delay ("Delay é somado ao intervalo").
                 let delays: Vec<u64> = points.iter().map(|(_, d)| *d).collect();
                 let mut cycle = intervals_ns.into_iter().cycle();
                 let gaps = (1usize..)
@@ -195,7 +186,6 @@ pub fn build_plan(
                     let target = targets[next];
                     next = (next + 1) % targets.len();
                     backend.move_to(target)?;
-                    // Checked after the move: the cursor is now exactly where the click would land.
                     if guard.blocks_click() {
                         shared.add_skipped_self();
                         return Ok(());
@@ -206,7 +196,6 @@ pub fn build_plan(
                 });
                 Box::new(IntervalTimeline::new(start, gaps, action))
             };
-            // Wiggle and scan click wherever the motion has the cursor, at the Click tab's rate.
             if clicks {
                 timelines.push(click_timeline);
             }
@@ -263,7 +252,6 @@ mod tests {
         Profile::new_default("p", "Teste", "2026-10-04T00:00:00Z")
     }
 
-    /// Builds the plan's scheduler and runs `fires` actions on virtual time.
     fn simulate(plan: RunPlan, fires: usize) -> (Vec<Call>, Vec<u64>, Arc<Shared>, RunEnd) {
         let shared = Arc::new(Shared::default());
         let clock = FakeClock::with_auto_step(1_000);
@@ -441,7 +429,6 @@ mod tests {
         assert_eq!(end, RunEnd::Stopped);
         assert_eq!(shared.clicks(), 0);
         assert!(calls.iter().all(|c| matches!(c, Call::MoveTo(_))));
-        // 250 Hz updates on the first (left) monitor, whose centre is the origin without a cursor.
         assert!(times.windows(2).all(|w| w[1] - w[0] < 4 * MS + 10_000));
         let xs: Vec<i32> = calls
             .iter()

@@ -1,7 +1,3 @@
-//! Mini HUD window (TASKS T11.10–T11.12, Tela 04, decision D5): an always-on-top pill that
-//! clicks pass through and that never takes focus. It fades to 40 % under the cursor; holding
-//! Ctrl over it makes it draggable, and the position is saved.
-
 use std::time::Duration;
 
 use ch_core::model::{Settings, WindowPosition};
@@ -14,17 +10,12 @@ use tauri_specta::Event;
 use crate::state::AppState;
 
 pub const LABEL: &str = "hud";
-/// Distinct from the main window so tools (and screen readers) can tell them apart.
 const HUD_TITLE: &str = "CH. Clicker HUD";
-/// Room for the widest state (Rodando with counter, remaining time and chip) at any locale.
 const DEFAULT_SIZE: (f64, f64) = (460.0, 56.0);
-/// Gap to the work area's top-right corner.
 const MARGIN: i32 = 16;
 const POLL: Duration = Duration::from_millis(100);
-/// While the HUD is hidden there is nothing to track; wake up rarely.
 const POLL_HIDDEN: Duration = Duration::from_millis(500);
 
-/// Cursor over the HUD (it fades) and whether Ctrl currently makes it draggable.
 #[derive(
     Debug,
     Clone,
@@ -46,7 +37,6 @@ fn window<R: Runtime>(app: &AppHandle<R>) -> Option<WebviewWindow<R>> {
     app.get_webview_window(LABEL)
 }
 
-/// Creates the hidden HUD window once, at startup.
 pub fn create<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
     let (w, h) = DEFAULT_SIZE;
     let hud = WebviewWindowBuilder::new(app, LABEL, WebviewUrl::App("hud.html".into()))
@@ -77,7 +67,6 @@ pub fn create<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
     Ok(())
 }
 
-/// Default spot: top-right corner of the primary monitor's work area.
 fn default_position<R: Runtime>(
     app: &AppHandle<R>,
     hud: &WebviewWindow<R>,
@@ -91,12 +80,10 @@ fn default_position<R: Runtime>(
     ))
 }
 
-/// Puts the HUD where the user left it, or in the default corner.
 pub fn place<R: Runtime>(app: &AppHandle<R>, settings: &Settings) {
     let Some(hud) = window(app) else {
         return;
     };
-    // A saved spot on a monitor that is no longer connected falls back to the default corner.
     let saved = match (settings.hud.x, settings.hud.y) {
         (Some(x), Some(y)) if on_a_monitor(app, x, y) => Some(PhysicalPosition::new(x, y)),
         _ => None,
@@ -118,7 +105,6 @@ fn on_a_monitor<R: Runtime>(app: &AppHandle<R>, x: i32, y: i32) -> bool {
 
 fn save_position<R: Runtime>(app: &AppHandle<R>, pos: PhysicalPosition<i32>) {
     let state = app.state::<AppState>();
-    // Only moves made by the user (Ctrl + drag) are saved; programmatic placement is skipped.
     if !state.hud_dragging() {
         return;
     }
@@ -132,7 +118,6 @@ fn save_position<R: Runtime>(app: &AppHandle<R>, pos: PhysicalPosition<i32>) {
     state.persister.save_settings(&settings);
 }
 
-/// Shows the HUD while a run is active and "Mostrar HUD" is on; hides it otherwise.
 pub fn sync<R: Runtime>(app: &AppHandle<R>) {
     let (Some(hud), Some(state)) = (window(app), app.try_state::<AppState>()) else {
         return;
@@ -141,16 +126,13 @@ pub fn sync<R: Runtime>(app: &AppHandle<R>) {
     let want = settings.show_hud && state.engine.shared().state().is_active();
     let visible = hud.is_visible().unwrap_or(false);
     if want && !visible {
-        // Shown first: the settings event below must not re-enter this branch.
         let _ = hud.show();
-        // D5: the "Segure Ctrl para mover" hint shows the first 3 times.
         if settings.hud_hints_shown < 3 {
             let saved = state.with_data(|d| {
                 d.settings.hud_hints_shown = d.settings.hud_hints_shown.saturating_add(1);
                 d.settings.clone()
             });
             state.persister.save_settings(&saved);
-            // The raw event, not `emit_settings`, which would call back into this function.
             let _ = crate::events::SettingsChanged(saved).emit(app);
         }
     } else if !want && visible {
@@ -158,7 +140,6 @@ pub fn sync<R: Runtime>(app: &AppHandle<R>) {
     }
 }
 
-/// The HUD page reports the pill's size; the window follows it, keeping the right edge.
 #[tauri::command]
 #[specta::specta]
 pub fn hud_resize(app: AppHandle, width: f64, height: f64) {
@@ -176,7 +157,6 @@ pub fn hud_resize(app: AppHandle, width: f64, height: f64) {
     let _ = hud.set_position(PhysicalPosition::new(right - new_width, pos.y));
 }
 
-/// Hover fade and Ctrl-drag: the HUD only accepts the mouse while Ctrl is held over it.
 fn spawn_poll<R: Runtime>(app: AppHandle<R>) {
     let spawn = std::thread::Builder::new()
         .name("ch-hud-poll".into())

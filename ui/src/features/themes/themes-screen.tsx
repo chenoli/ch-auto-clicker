@@ -11,10 +11,8 @@ import type { ThemeId } from "../../styles/tokens";
 import type { ReactElement } from "react";
 
 interface ThemesScreenProps {
-  /** Theme on screen (already resolved when following Windows). */
   shown: ThemeId;
   followSystem: boolean;
-  /** A refused save (`errors.<code>`). */
   errorCode?: string | null;
   onSelect: (id: ThemeId) => void;
   onToggleFollow: () => void;
@@ -23,7 +21,6 @@ interface ThemesScreenProps {
   onClose: () => void;
 }
 
-/** A miniature main window painted with the theme's own tokens (nested `data-theme`). */
 function ThemePreview({ id }: { id: ThemeId }) {
   return (
     <div data-theme={id} className="theme-preview" aria-hidden="true">
@@ -53,7 +50,6 @@ function ThemePreview({ id }: { id: ThemeId }) {
   );
 }
 
-/** Tela 07: the six themes, each previewed in its own colors. */
 export function ThemesScreen({
   shown,
   followSystem,

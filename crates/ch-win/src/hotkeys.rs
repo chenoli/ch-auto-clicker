@@ -1,13 +1,3 @@
-//! Global shortcuts (ARCHITECTURE §10.1, TASKS T4.2–T4.6).
-//!
-//! One thread owns a message-only window and a message loop:
-//! - keyboard shortcuts use `RegisterHotKey`, so another app holding the same combo is detected;
-//! - mouse-button shortcuts (middle, X1, X2) use a `WH_MOUSE_LL` hook that ignores injected
-//!   events, so the engine's own side clicks never trigger them;
-//! - a `WH_KEYBOARD_LL` hook records new combos and is a second path for the emergency stop, which
-//!   must work even if its `RegisterHotKey` registration failed;
-//! - a timer reinstalls the hooks, because Windows silently drops a hook that ever answers slowly.
-
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex, RwLock, mpsc};
 use std::thread::JoinHandle;
@@ -32,7 +22,6 @@ use windows::core::w;
 
 use crate::keymap::{hotkey_modifiers, name_from_vk, vk_from_name};
 
-/// Registration id reserved for the emergency stop.
 pub const EMERGENCY_ID: u32 = 0xE5C;
 const WM_REQUEST: u32 = WM_APP + 1;
 const WATCHDOG_TIMER: usize = 1;
@@ -42,9 +31,7 @@ const REPLY_TIMEOUT: Duration = Duration::from_secs(2);
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ServiceEvent {
-    /// A registered shortcut fired (keyboard or mouse button).
     Triggered(u32),
-    /// A key event while recording a new combo.
     Recording(RecordStep),
 }
 
@@ -74,7 +61,6 @@ impl RegisterError {
 pub type EventSink = Box<dyn Fn(ServiceEvent) + Send + Sync>;
 pub type EmergencyFn = Arc<dyn Fn() + Send + Sync>;
 
-/// State the hook procedures read; they have no context pointer, so it lives in a global.
 struct HookState {
     sink: EventSink,
     on_emergency: EmergencyFn,
@@ -94,7 +80,6 @@ fn lock<T>(m: &Mutex<T>) -> std::sync::MutexGuard<'_, T> {
     m.lock().unwrap_or_else(|e| e.into_inner())
 }
 
-/// Modifiers currently held, read from the async key state.
 fn held_modifiers() -> Vec<Modifier> {
     // SAFETY: GetAsyncKeyState only reads input state.
     let down = |vk: i32| unsafe { GetAsyncKeyState(vk) } < 0;
@@ -114,7 +99,6 @@ fn held_modifiers() -> Vec<Modifier> {
     mods
 }
 
-/// Whether `key` pressed with `mods` held is exactly `combo`.
 pub fn matches_combo(combo: &Hotkey, key: &str, mods: &[Modifier]) -> bool {
     combo.key == key && Hotkey::new(mods, key).mods == combo.mods
 }
@@ -140,7 +124,6 @@ impl std::fmt::Debug for HotkeyService {
     }
 }
 
-/// Hook handles owned by the service thread.
 #[derive(Default)]
 struct Hooks {
     keyboard: Option<HHOOK>,
@@ -210,7 +193,6 @@ fn unregister(hwnd: HWND, id: u32) {
 }
 
 impl HotkeyService {
-    /// Starts the shortcut thread. Only one service may exist at a time (the hooks share a global).
     pub fn spawn(sink: EventSink, on_emergency: EmergencyFn) -> windows::core::Result<Self> {
         let state = Arc::new(HookState {
             sink,
@@ -324,7 +306,6 @@ impl HotkeyService {
         };
     }
 
-    /// Registers `hotkey` under `id`. Mouse-button combos go to the mouse hook instead.
     pub fn register(&self, id: u32, hotkey: &Hotkey) -> Result<(), RegisterError> {
         let (reply, answer) = mpsc::channel();
         self.send(Request::Register(id, hotkey.clone(), reply));
@@ -333,14 +314,12 @@ impl HotkeyService {
             .unwrap_or(Err(RegisterError::NoReply))
     }
 
-    /// Drops every registration except the emergency stop.
     pub fn unregister_all(&self) {
         let (reply, answer) = mpsc::channel();
         self.send(Request::UnregisterAll(reply));
         let _ = answer.recv_timeout(REPLY_TIMEOUT);
     }
 
-    /// (Re)binds the emergency stop. The keyboard hook watches it even if registration fails.
     pub fn set_emergency(&self, hotkey: &Hotkey) -> Result<(), RegisterError> {
         let (reply, answer) = mpsc::channel();
         self.send(Request::SetEmergency(hotkey.clone(), reply));
@@ -349,12 +328,10 @@ impl HotkeyService {
             .unwrap_or(Err(RegisterError::NoReply))
     }
 
-    /// While recording, key and side-button events are swallowed and reported as [`ServiceEvent::Recording`].
     pub fn set_recording(&self, on: bool) {
         self.send(Request::Record(on));
     }
 
-    /// Message window handle, for tests that post synthetic `WM_HOTKEY` messages.
     pub fn hwnd(&self) -> isize {
         self.hwnd
     }
@@ -443,7 +420,6 @@ unsafe extern "system" fn window_proc(
     }
 }
 
-/// Swallow the event (1) or pass it on.
 fn next(code: i32, wparam: WPARAM, lparam: LPARAM) -> LRESULT {
     // SAFETY: forwarding the hook arguments unchanged.
     unsafe { CallNextHookEx(None, code, wparam, lparam) }
@@ -494,7 +470,6 @@ unsafe extern "system" fn mouse_proc(code: i32, wparam: WPARAM, lparam: LPARAM) 
     // SAFETY: for WH_MOUSE_LL, lparam points to an MSLLHOOKSTRUCT valid during this call.
     let info = unsafe { &*(lparam.0 as *const MSLLHOOKSTRUCT) };
     if info.flags & LLMHF_INJECTED != 0 {
-        // Our own engine's clicks (and other tools') never trigger shortcuts.
         return next(code, wparam, lparam);
     }
     let message = wparam.0 as u32;
@@ -536,7 +511,6 @@ mod tests {
 
     use super::*;
 
-    /// Combos nobody uses, so the tests never steal a shortcut from the user's apps.
     fn unusual(key: &str) -> Hotkey {
         Hotkey::new(&[Ctrl, Alt, Shift], key)
     }
@@ -581,7 +555,6 @@ mod tests {
         .expect("post");
     }
 
-    // One test owns the global hook state at a time.
     static SERIAL: Mutex<()> = Mutex::new(());
 
     #[test]
@@ -595,7 +568,6 @@ mod tests {
             Ok(ServiceEvent::Triggered(7))
         );
 
-        // Another registration of the same combo (here: a thread-level one) is reported as taken.
         f.service.unregister_all();
         // SAFETY: thread-level hotkey on the test thread, removed below.
         unsafe { RegisterHotKey(None, 99, MOD_CONTROL | MOD_ALT | MOD_SHIFT, 0x87) }

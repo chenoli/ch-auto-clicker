@@ -22,7 +22,6 @@ interface SettingsRouteProps {
   onClose: () => void;
 }
 
-/** Tela 08 connected to Rust: each change is saved at once; Rust applies autostart and the theme. */
 export function SettingsRoute({ settings, ...nav }: SettingsRouteProps): ReactElement {
   const { t } = useTranslation();
   const version = useAppStore((s) => s.version);

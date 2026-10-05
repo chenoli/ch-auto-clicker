@@ -5,25 +5,17 @@ use super::clock::Clock;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Wake {
     Deadline,
-    /// Woken by another thread (new command or emergency stop).
     Signal,
 }
 
-/// Wakes a sleeping waiter from any thread.
 pub type Waker = Arc<dyn Fn() + Send + Sync>;
 
 pub trait CoarseWaiter {
-    /// Sleeps until about `deadline` (clock ns) or until signalled. May return early or a bit late;
-    /// the caller re-checks the clock.
     fn sleep_until(&mut self, deadline: u64) -> Wake;
 
     fn waker(&self) -> Waker;
 }
 
-/// Sleeps on the OS timer until `spin_window` before the deadline, then busy-waits the rest.
-///
-/// The timer alone overshoots by up to ~0.5–1 ms; spinning only the final stretch gets
-/// microsecond precision while keeping the CPU idle for most of each interval.
 pub fn wait_precisely<C: Clock + ?Sized, W: CoarseWaiter + ?Sized>(
     clock: &C,
     waiter: &mut W,
@@ -48,8 +40,6 @@ pub fn wait_precisely<C: Clock + ?Sized, W: CoarseWaiter + ?Sized>(
     }
 }
 
-/// Test waiter driving a [`FakeClock`](super::clock::FakeClock): sleeping jumps time forward, and a
-/// signal can be scheduled for a given instant.
 #[cfg(any(test, feature = "test-util"))]
 pub mod fake {
     use std::sync::Arc;
@@ -62,7 +52,6 @@ pub mod fake {
     pub struct FakeWaiter {
         clock: FakeClock,
         signalled: Arc<AtomicBool>,
-        /// Clock time at which a signal fires on its own (`u64::MAX` = never).
         signal_at: Arc<AtomicU64>,
         pub sleeps: u64,
     }

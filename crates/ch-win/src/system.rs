@@ -1,5 +1,3 @@
-//! Machine identity used to invalidate cached timing measurements (ARCHITECTURE §5.3).
-
 use windows::Win32::System::Power::{GetSystemPowerStatus, SYSTEM_POWER_STATUS};
 use windows::Win32::System::Registry::{
     HKEY, HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, RRF_RT_REG_DWORD, RRF_RT_REG_SZ,
@@ -57,7 +55,6 @@ fn read_dword(key: &str, value: &str) -> Option<u32> {
     Some(data)
 }
 
-/// e.g. `26300.1234 | AMD Ryzen 7 5800X 8-Core Processor | 16 threads`.
 pub fn machine_fingerprint() -> String {
     let build = read_string(CURRENT_VERSION, "CurrentBuild").unwrap_or_else(|| "?".into());
     let ubr = read_dword(CURRENT_VERSION, "UBR").map_or_else(String::new, |u| format!(".{u}"));
@@ -66,7 +63,6 @@ pub fn machine_fingerprint() -> String {
     format!("{build}{ubr} | {cpu} | {threads} threads")
 }
 
-/// `Some(true)` on battery, `Some(false)` on AC, `None` when Windows cannot tell.
 pub fn on_battery() -> Option<bool> {
     let mut status = SYSTEM_POWER_STATUS::default();
     // SAFETY: writes into a valid, correctly sized local struct.
@@ -78,12 +74,9 @@ pub fn on_battery() -> Option<bool> {
     }
 }
 
-/// Where the installer leaves the language chosen in its language selector.
 const INSTALLER_KEY: &str = r"Software\Chenoli\CH Clicker";
 const PENDING_LOCALE: &str = "PendingLocale";
 
-/// The language picked in the installer, read once: the value is deleted so later updates (which
-/// run the installer without the selector) never override the user's own choice.
 pub fn take_installer_locale() -> Option<ch_core::model::Locale> {
     let raw = read_string_in(HKEY_CURRENT_USER, INSTALLER_KEY, PENDING_LOCALE)?;
     let (key, value) = (HSTRING::from(INSTALLER_KEY), HSTRING::from(PENDING_LOCALE));
@@ -98,7 +91,6 @@ pub fn take_installer_locale() -> Option<ch_core::model::Locale> {
     ch_core::model::Locale::from_tag(&raw)
 }
 
-/// Windows UI language as a CH. Clicker locale (first run only; the user can change it later).
 pub fn ui_locale() -> ch_core::model::Locale {
     // SAFETY: no arguments; returns the current user's UI language id.
     let langid = unsafe { windows::Win32::Globalization::GetUserDefaultUILanguage() };
@@ -125,7 +117,6 @@ mod tests {
 
     #[test]
     fn power_status_is_readable() {
-        // Desktops report AC; laptops either. Only "unknown" would be suspicious here.
         let _ = on_battery();
     }
 

@@ -1,6 +1,3 @@
-//! Validation rules from ARCHITECTURE §4, applied on import, update and start. Each error carries
-//! a stable code the UI translates.
-
 use crate::model::{
     COORD_MAX, COUNTDOWN_MAX_SECONDS, DELAY_MS_MAX, INTERVAL_MS_MAX, INTERVAL_MS_MIN,
     LINE_SPACING_MAX, LINE_SPACING_MIN, NAME_MAX_CHARS, POINTS_MAX, Profile, SCAN_AREA_MAX,
@@ -44,7 +41,6 @@ pub enum ValidationError {
 }
 
 impl ValidationError {
-    /// Stable identifier for i18n (`errors.<code>`).
     pub fn code(&self) -> &'static str {
         match self {
             Self::NameLength => "NAME_LENGTH",
@@ -71,7 +67,6 @@ fn interval_ok(ms: u32) -> bool {
     (INTERVAL_MS_MIN..=INTERVAL_MS_MAX).contains(&ms)
 }
 
-/// All rule violations of a profile (empty when valid).
 pub fn validate_profile(p: &Profile) -> Vec<ValidationError> {
     let mut errors = Vec::new();
     let name_len = p.name.trim().chars().count();

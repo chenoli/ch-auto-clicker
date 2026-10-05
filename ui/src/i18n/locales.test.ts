@@ -4,7 +4,6 @@ import i18n, { LOCALES, applyLocale, isLocale, resources } from ".";
 
 type Tree = { [key: string]: string | Tree };
 
-/** `{ a: { b: "x" } }` → `{ "a.b": "x" }`. */
 function flatten(tree: Tree, prefix = ""): Record<string, string> {
   return Object.entries(tree).reduce<Record<string, string>>((out, [key, value]) => {
     const path = prefix ? `${prefix}.${key}` : key;
@@ -12,7 +11,6 @@ function flatten(tree: Tree, prefix = ""): Record<string, string> {
   }, {});
 }
 
-/** ICU argument names used by a message: `{name}`, `{count, plural, …}` → name, count. */
 function placeholders(message: string): string[] {
   return [...new Set([...message.matchAll(/\{\s*([A-Za-z_]\w*)\s*[,}]/g)].map((m) => m[1] ?? ""))].sort();
 }

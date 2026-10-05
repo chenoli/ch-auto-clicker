@@ -1,6 +1,3 @@
-//! Engine state machine (ARCHITECTURE §5.1). The engine thread is the only writer; every change
-//! goes through [`transition`], so illegal jumps are impossible by construction.
-
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -33,7 +30,6 @@ impl EngineState {
         Self::ALL.get(usize::from(v)).copied().unwrap_or(Self::Idle)
     }
 
-    /// Countdown, running or paused: what the footer, HUD and tray show as "active".
     pub fn is_active(self) -> bool {
         matches!(self, Self::Countdown | Self::Running | Self::Paused)
     }
@@ -53,22 +49,16 @@ pub enum StopReason {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EngineEvent {
-    Start {
-        countdown: bool,
-    },
+    Start { countdown: bool },
     CountdownElapsed,
-    /// F6, click or emergency stop during the countdown.
     Cancel,
     TogglePause,
     Stop,
-    /// Cleanup after a stop finished.
     Stopped,
     Fail,
-    /// The user acknowledged an engine error.
     Ack,
 }
 
-/// Next state for `event` in `state`, or `None` when the event does not apply there.
 pub fn transition(state: EngineState, event: EngineEvent) -> Option<EngineState> {
     use EngineEvent as E;
     use EngineState as S;

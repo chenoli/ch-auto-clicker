@@ -1,4 +1,3 @@
-/* CH. Clicker — tokens de tema. data-theme no <html>. Grafite é o padrão. */
 :root,
 [data-theme="grafite"] {
   --bg: #141412;
@@ -90,7 +89,6 @@
   --on-accent: #000000;
 }
 
-/* Derivados (todos os temas) */
 :root {
   --border-strong: color-mix(in oklch, var(--fg) 16%, transparent);
   --divider: color-mix(in oklch, var(--fg) 7%, transparent);

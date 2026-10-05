@@ -1,5 +1,3 @@
-//! Tauri app: commands, events, windows and plugins (ARCHITECTURE §2, §7).
-
 mod capabilities;
 mod commands;
 mod display_watch;
@@ -25,10 +23,8 @@ mod windowing;
 
 use tauri::Manager;
 
-/// Argument the autostart entry passes so the app opens in the tray.
 const STARTED_MINIMIZED: &str = "--minimized";
 
-/// "Ao fechar a janela" and "Minimizar para a bandeja" (T11.8).
 fn on_main_event(
     app: &tauri::AppHandle,
     window: &tauri::WebviewWindow,
@@ -64,7 +60,6 @@ pub fn run() {
     ipc::export_bindings(&specta);
 
     tauri::Builder::default()
-        // Must be the first plugin so a second instance exits before anything else initializes.
         .plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
             if let Some(window) = app.get_webview_window("main") {
                 let _ = window.unminimize();
@@ -97,7 +92,6 @@ pub fn run() {
             hud::create(app.handle())?;
             display_watch::spawn(app.handle().clone());
             updater::spawn(app.handle().clone());
-            // Autostart passes --minimized: stay in the tray (T11.5).
             let minimized = std::env::args().any(|a| a == STARTED_MINIMIZED);
             if let Some(main) = app.get_webview_window("main") {
                 if !minimized {
@@ -107,7 +101,6 @@ pub fn run() {
                 let window = main.clone();
                 main.on_window_event(move |event| on_main_event(&handle, &window, event));
             }
-            // "Seguir o Windows": repaint when the Windows app theme flips.
             if let Some(main) = app.get_webview_window("main") {
                 let handle = app.handle().clone();
                 main.on_window_event(move |event| {

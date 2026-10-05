@@ -10,9 +10,7 @@ repository.workspace = true
 publish.workspace = true
 
 [features]
-# Exposes the recording input backend to other crates' tests.
 test-util = []
-# Derives specta::Type so the app can export these types to TypeScript.
 specta = ["dep:specta"]
 
 [dependencies]
@@ -22,7 +20,6 @@ specta = { workspace = true, optional = true }
 thiserror.workspace = true
 
 [dev-dependencies]
-# Integration tests use the fakes behind `test-util`.
 ch-core = { path = ".", features = ["test-util"] }
 proptest = "1.11"
 

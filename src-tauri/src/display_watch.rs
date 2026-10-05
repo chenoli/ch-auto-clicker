@@ -1,10 +1,3 @@
-//! Display changes during a run (ARCHITECTURE §6.3 and §9.5 item 7): if a monitor is unplugged,
-//! moved or rescaled while the engine is active, normalized coordinates no longer mean the same
-//! pixels, so the run pauses (or the countdown is cancelled) and the UI explains why.
-//!
-//! Polled once a second: message-only windows do not receive `WM_DISPLAYCHANGE` broadcasts, and a
-//! second of latency is fine for a safety stop.
-
 use std::time::Duration;
 
 use ch_core::engine::state::EngineState;
@@ -16,7 +9,6 @@ use crate::state::AppState;
 
 const POLL: Duration = Duration::from_secs(1);
 
-/// What to do with the run when the layout changed.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Reaction {
     None,
@@ -24,7 +16,6 @@ pub enum Reaction {
     Stop,
 }
 
-/// Decides from the engine state and whether the fingerprint differs from the one at start.
 pub fn reaction(state: EngineState, changed: bool) -> Reaction {
     match (state, changed) {
         (_, false) => Reaction::None,
@@ -48,7 +39,6 @@ pub fn spawn<R: Runtime>(app: AppHandle<R>) {
     let spawned = std::thread::Builder::new()
         .name("ch-display-watch".into())
         .spawn(move || {
-            // Layout at the start of the current run; None while idle.
             let mut baseline: Option<String> = None;
             loop {
                 std::thread::sleep(POLL);

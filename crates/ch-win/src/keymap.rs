@@ -1,11 +1,8 @@
-//! Virtual-key codes ↔ the canonical key names stored in profiles (`F6`, `Escape`, `P`...).
-
 use ch_core::model::Modifier;
 use windows::Win32::UI::Input::KeyboardAndMouse::{
     HOT_KEY_MODIFIERS, MOD_ALT, MOD_CONTROL, MOD_SHIFT, MOD_WIN,
 };
 
-/// Named keys and their virtual-key codes (letters, digits, F-keys and numpad are computed).
 const NAMED: [(&str, u16); 34] = [
     ("Backspace", 0x08),
     ("Tab", 0x09),
@@ -33,7 +30,6 @@ const NAMED: [(&str, u16); 34] = [
     ("Slash", 0xBF),
     ("Backquote", 0xC0),
     ("Quote", 0xDE),
-    // Modifier keys (only meaningful while recording).
     ("Shift", 0x10),
     ("Control", 0x11),
     ("Alt", 0x12),

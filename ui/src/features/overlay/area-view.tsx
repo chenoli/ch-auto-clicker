@@ -11,7 +11,6 @@ import type { PointerEvent as ReactPointerEvent, ReactElement } from "react";
 export interface AreaViewProps {
   state: OverlayState;
   imageUrl: string | null;
-  /** The rectangle being drawn on this monitor, in CSS pixels. */
   rect: AreaRect | null;
   viewport: { width: number; height: number };
   onHandleDown?: (handle: Handle, e: ReactPointerEvent) => void;
@@ -21,7 +20,6 @@ export interface AreaViewProps {
   onFinish?: () => void;
 }
 
-/** Tela 03.A: drag a rectangle over the frozen screen; thirds grid, 8 handles and the size HUD. */
 export function AreaView({
   state,
   imageUrl,

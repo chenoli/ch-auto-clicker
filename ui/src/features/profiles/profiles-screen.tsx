@@ -19,19 +19,16 @@ export interface ProfilesScreenProps {
   profiles: readonly Profile[];
   activeId: string | null;
   locale: string;
-  /** Where the profiles live, for the footer. */
   dataPath: string;
   recordingProfile: string | null;
   heldMods: readonly Modifier[];
   conflict: PendingConflict | null;
-  /** Result of the last import or a failed command. */
   notice?: { tone: "info" | "warn" | "danger"; content: ReactNode } | null;
   onBack: () => void;
   onMinimize: () => void;
   onClose: () => void;
   onActivate: (id: string) => void;
   onCreate: () => void;
-  /** Resolves with an error code when the name is refused. */
   onRename: (id: string, name: string) => Promise<string | null>;
   onDuplicate: (id: string) => void;
   onExport: (id: string) => void;
@@ -43,13 +40,11 @@ export interface ProfilesScreenProps {
   onCancelRecord: () => void;
   onReplaceHotkey: () => void;
   onKeepHotkey: () => void;
-  /** Gallery: open this card's menu on first render. */
   initialMenuFor?: string | null;
 }
 
 const hasFiles = (e: DragEvent) => Array.from(e.dataTransfer.types).includes("Files");
 
-/** Tela 05.B: no profiles yet; also the drop target for `.chprofile` files. */
 export function EmptyProfiles({ onCreate, onImport }: { onCreate: () => void; onImport: () => void }): ReactElement {
   const { t } = useTranslation();
   return (
@@ -74,7 +69,6 @@ export function EmptyProfiles({ onCreate, onImport }: { onCreate: () => void; on
   );
 }
 
-/** Tela 05.A: the profile library. */
 export function ProfilesScreen(props: ProfilesScreenProps): ReactElement {
   const { t } = useTranslation();
   const { profiles, activeId, conflict } = props;
@@ -84,7 +78,6 @@ export function ProfilesScreen(props: ProfilesScreenProps): ReactElement {
   const [renameError, setRenameError] = useState<{ id: string; code: string } | null>(null);
   const [dropping, setDropping] = useState(false);
 
-  // Close the "⋯" menu on any outside click or Esc.
   useEffect(() => {
     if (!menuFor) return;
     const close = () => setMenuFor(null);

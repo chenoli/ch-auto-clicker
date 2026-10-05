@@ -11,9 +11,7 @@ interface FooterProps {
   clicks: number;
   elapsedMs: number;
   countdownRemainingMs: number | null;
-  /** Modes that only move show "—" for clicks. */
   noClicks?: boolean;
-  /** Footer text in the error state ("Entrada bloqueada"). */
   errorText?: string;
 }
 

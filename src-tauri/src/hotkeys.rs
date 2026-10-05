@@ -1,6 +1,3 @@
-//! Shortcut manager (TASKS T4.5–T4.7): registers every binding with the Windows service, keeps
-//! their status for the UI and turns triggers into engine and profile actions.
-
 use std::collections::HashMap;
 use std::sync::mpsc;
 use std::sync::{Arc, Mutex, MutexGuard};
@@ -20,17 +17,14 @@ pub struct HotkeyStatus {
     pub target: HotkeyTarget,
     pub combo: Hotkey,
     pub ok: bool,
-    /// `HOTKEY_TAKEN` when another app holds the combo.
     pub error_code: Option<String>,
 }
 
-/// Registration result of every binding.
 #[derive(
     Debug, Clone, PartialEq, Eq, Serialize, Deserialize, specta::Type, tauri_specta::Event,
 )]
 pub struct HotkeyStatusChanged(pub Vec<HotkeyStatus>);
 
-/// Live feedback while the capture field records a combo.
 #[derive(
     Debug, Clone, PartialEq, Eq, Serialize, Deserialize, specta::Type, tauri_specta::Event,
 )]
@@ -41,7 +35,6 @@ pub struct HotkeyRecording {
     pub cancelled: bool,
 }
 
-/// A shortcut-triggered action failed (e.g. starting a mode not available yet).
 #[derive(
     Debug, Clone, PartialEq, Eq, Serialize, Deserialize, specta::Type, tauri_specta::Event,
 )]
@@ -53,7 +46,6 @@ pub struct HotkeyActionFailed {
 struct Registry {
     ids: HashMap<u32, HotkeyTarget>,
     statuses: Vec<HotkeyStatus>,
-    /// Iniciar / Parar combo already announced as taken, so the toast shows once per conflict.
     notified: Option<Hotkey>,
 }
 
@@ -67,7 +59,6 @@ fn lock<T>(m: &Mutex<T>) -> MutexGuard<'_, T> {
     m.lock().unwrap_or_else(|e| e.into_inner())
 }
 
-/// Events from the shortcut thread, handled off that thread so hooks always answer fast.
 enum Dispatch {
     Triggered(u32),
     Recording(RecordStep),
@@ -90,7 +81,6 @@ impl HotkeyManager {
                 let _ = lock(&tx).send(message);
             }),
             Arc::new(move || {
-                // Straight to the engine's atomic flag: no channel, no lock on the hot path.
                 if let Some(state) = emergency_app.try_state::<AppState>() {
                     state.engine.emergency_stop();
                 }
@@ -121,7 +111,6 @@ impl HotkeyManager {
         lock(&self.registry).statuses.clone()
     }
 
-    /// Re-registers every binding and reports the result to every window.
     pub fn apply<R: Runtime>(&self, app: &AppHandle<R>, data: &AppData) -> Vec<HotkeyStatus> {
         let mut registry = lock(&self.registry);
         registry.ids.clear();
@@ -172,7 +161,6 @@ impl HotkeyManager {
         statuses
     }
 
-    /// Suspends every shortcut (so pressing F6 records instead of starting) and starts recording.
     pub fn begin_recording(&self) {
         #[cfg(windows)]
         {
@@ -243,7 +231,6 @@ fn on_triggered<R: Runtime>(app: &AppHandle<R>, id: u32) {
             Ok(())
         }
         HotkeyTarget::Action(HotkeyAction::NextProfile) => {
-            // Decision D12: switching stops the run and leaves the next profile idle.
             if active {
                 state.engine.stop();
             }
@@ -261,10 +248,8 @@ fn on_triggered<R: Runtime>(app: &AppHandle<R>, id: u32) {
             });
             Ok(())
         }
-        // Handled by the emergency callback; never registered under a regular id.
         HotkeyTarget::Action(HotkeyAction::EmergencyStop) => Ok(()),
         HotkeyTarget::Profile(id) => {
-            // Decision D4: a profile's shortcut activates it and starts; pressing it again stops.
             let is_current =
                 state.data().settings.active_profile_id.as_deref() == Some(id.as_str());
             if active && is_current {
@@ -283,7 +268,6 @@ fn on_triggered<R: Runtime>(app: &AppHandle<R>, id: u32) {
         }
     };
     if let Err(e) = result {
-        // The anti-cheat warning lives in the main window: bring it up so it can be read.
         if e.code == crate::commands::ANTI_CHEAT_ACK
             && let Some(main) = app.get_webview_window("main")
         {
@@ -295,7 +279,6 @@ fn on_triggered<R: Runtime>(app: &AppHandle<R>, id: u32) {
     }
 }
 
-/// Makes `id` (or the next profile in order) active, persisting and announcing the change.
 pub fn switch_profile<R: Runtime>(app: &AppHandle<R>, state: &AppState, id: Option<&str>) {
     let data = state.with_data(|data| {
         let order = &data.settings.profile_order;

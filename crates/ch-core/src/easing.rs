@@ -1,6 +1,3 @@
-//! CSS `cubic-bezier()` timing curves, so native animations (window height) follow the same easing
-//! as the UI (`--ease-out: cubic-bezier(.2,.7,.2,1)`).
-
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct CubicBezier {
     x1: f64,
@@ -9,7 +6,6 @@ pub struct CubicBezier {
     y2: f64,
 }
 
-/// The design system's `--ease-out`.
 pub const EASE_OUT: CubicBezier = CubicBezier::new(0.2, 0.7, 0.2, 1.0);
 
 impl CubicBezier {
@@ -18,7 +14,6 @@ impl CubicBezier {
     }
 
     fn sample(a1: f64, a2: f64, t: f64) -> f64 {
-        // Bernstein form with P0 = 0 and P3 = 1.
         let u = 1.0 - t;
         3.0 * u * u * t * a1 + 3.0 * u * t * t * a2 + t * t * t
     }
@@ -28,13 +23,11 @@ impl CubicBezier {
         3.0 * u * u * a1 + 6.0 * u * t * (a2 - a1) + 3.0 * t * t * (1.0 - a2)
     }
 
-    /// Eased progress for linear progress `x` in 0..=1.
     pub fn at(&self, x: f64) -> f64 {
         let x = x.clamp(0.0, 1.0);
         if x == 0.0 || x == 1.0 {
             return x;
         }
-        // Newton's method on x(t) = x, falling back to bisection where the slope is flat.
         let mut t = x;
         for _ in 0..8 {
             let err = Self::sample(self.x1, self.x2, t) - x;
@@ -88,7 +81,6 @@ mod tests {
 
     #[test]
     fn ease_out_front_loads_the_motion() {
-        // Reference values solved by hand: x(t) = 0.6t(1 - t) + t³, y(t) = 2.1(1 - t)²t + 3(1 - t)t² + t³.
         assert!(
             (EASE_OUT.at(0.25) - 0.7274).abs() < 0.001,
             "{}",

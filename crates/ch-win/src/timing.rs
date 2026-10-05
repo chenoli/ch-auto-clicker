@@ -1,6 +1,3 @@
-//! High-resolution timing (ARCHITECTURE §5.2): QPC clock, a waitable timer that also wakes on a
-//! signal, and real-time priority for the engine thread.
-
 use std::sync::Arc;
 
 use ch_core::engine::clock::Clock;
@@ -17,7 +14,6 @@ use windows::Win32::System::Threading::{
 use windows::core::{PCWSTR, w};
 
 const NANOS_PER_SEC: u128 = 1_000_000_000;
-/// Waitable timers count in 100 ns units; negative due times are relative.
 const NANOS_PER_TIMER_TICK: u64 = 100;
 
 #[derive(Debug, Clone, Copy)]
@@ -53,9 +49,7 @@ impl Clock for QpcClock {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TimerKind {
-    /// `CREATE_WAITABLE_TIMER_HIGH_RESOLUTION` (Windows 10 1803+).
     HighResolution,
-    /// Plain waitable timer with the system tick raised to 1 ms via `timeBeginPeriod`.
     Legacy,
 }
 
@@ -83,7 +77,6 @@ impl Drop for OwnedHandle {
     }
 }
 
-/// Sleeps on a waitable timer and wakes early when its event is signalled from another thread.
 #[derive(Debug)]
 pub struct HighResWaiter {
     clock: QpcClock,
@@ -172,8 +165,6 @@ impl CoarseWaiter for HighResWaiter {
     }
 }
 
-/// Raises the calling thread to time-critical priority and registers it with MMCSS ("Games"),
-/// which keeps the scheduler from being parked behind normal threads. Reverted on drop.
 #[derive(Debug)]
 pub struct RealtimeGuard {
     mmcss: Option<OwnedMmcss>,
@@ -250,8 +241,6 @@ mod tests {
             assert_eq!(waiter.sleep_until(deadline), Wake::Deadline);
             worst = worst.max(clock.now().saturating_sub(deadline));
         }
-        // Coarse only (no spin), sanity bound: the timer wakes near the deadline even while other
-        // tests (or the user's apps) load the CPU. Real precision is measured by tools/jitter-bench.
         assert!(worst < 15 * NANOS_PER_MS, "worst overshoot {worst} ns");
     }
 

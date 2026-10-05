@@ -18,7 +18,6 @@ describe("scan math", () => {
     expect(scanRows({ ...AREA, h: 240 }, 24)).toBe(10);
     expect(scanLength(AREA, 24, false)).toBe(11 * 775 + 240);
     expect(scanLength(AREA, 24, true)).toBeCloseTo(11 * 775 + 240 + Math.hypot(775, 240));
-    // Even rows end back on the left: the return is straight up.
     expect(scanLength({ ...AREA, h: 240 }, 24, true)).toBeCloseTo(10 * 775 + 216 + 216);
     expect(scanCycleSecs(AREA, 24, 1200, true)).toBeCloseTo(7.98, 2);
   });

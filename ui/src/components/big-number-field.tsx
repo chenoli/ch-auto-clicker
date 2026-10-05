@@ -3,7 +3,6 @@ import type { ReactElement } from "react";
 interface BigNumberFieldProps {
   value: string;
   onChange: (raw: string) => void;
-  /** Called on blur or Enter, so the caller can normalize what was typed. */
   onCommit?: () => void;
   unit: string;
   label: string;

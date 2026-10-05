@@ -84,7 +84,6 @@ export default tseslint.config(
     },
   },
   {
-    // Command-line scripts report progress on the terminal.
     files: ["tools/**", "ui/tests/**"],
     rules: { "no-console": "off" },
   },

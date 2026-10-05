@@ -12,18 +12,14 @@ export interface HudViewProps {
   clicks: number;
   countdownRemainingMs: number | null;
   remainingMs: number | null;
-  /** Start/stop and pause shortcut labels ("F6", "F7"). */
   startStop: string;
   pauseResume: string;
-  /** Cursor over the HUD: it fades to 40 % (Tela 04). */
   hover?: boolean;
-  /** Ctrl is held over it: it can be dragged (decision D5). */
   draggable?: boolean;
   showHint?: boolean;
   onDragStart?: () => void;
 }
 
-/** Tela 04: the floating pill for countdown, running and paused. */
 export function HudView(props: HudViewProps): ReactElement | null {
   const { t } = useTranslation();
   const { state, locale } = props;

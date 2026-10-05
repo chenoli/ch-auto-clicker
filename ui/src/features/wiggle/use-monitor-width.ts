@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 
-/** Physical width of the monitor the window is on; follows moves between monitors and DPI changes. */
 export function monitorWidthNow(): number {
   return Math.round(window.screen.width * window.devicePixelRatio) || 1920;
 }

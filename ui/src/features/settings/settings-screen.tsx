@@ -25,7 +25,6 @@ export type UpdateState =
   | { kind: "installing" }
   | { kind: "failed" };
 
-/** Footer action: check, show the result, or install the version found. */
 function UpdateAction({
   update,
   onCheck,
@@ -57,10 +56,8 @@ export interface SettingsScreenProps {
   settings: Settings;
   version: string;
   capabilities: Capabilities | null;
-  /** Name shown on the Tema row ("Grafite", or "Seguindo o Windows · Papel"). */
   themeLabel: string;
   measuring?: boolean;
-  /** A refused save or a failed action (`errors.<code>`). */
   errorCode?: string | null;
   onChange: (next: Settings) => void;
   onLocale: (locale: Locale) => void;
@@ -68,7 +65,6 @@ export interface SettingsScreenProps {
   onOpenHotkeys: () => void;
   onSupport: () => void;
   onMeasure: () => void;
-  /** Update state for the footer; omitted in the gallery. */
   update?: UpdateState;
   onCheckUpdate?: () => void;
   onInstallUpdate?: () => void;
@@ -110,7 +106,6 @@ function LinkRow({ label, value, onClick }: { label: string; value?: ReactNode; 
   );
 }
 
-/** "Avançado" (decision D3): the measured timing limits and "Medir novamente". */
 function Advanced({
   capabilities,
   measuring,
@@ -170,7 +165,6 @@ function Advanced({
   );
 }
 
-/** Tela 08: general preferences. Every change is saved right away. */
 export function SettingsScreen(props: SettingsScreenProps): ReactElement {
   const { t } = useTranslation();
   const { settings, onChange } = props;

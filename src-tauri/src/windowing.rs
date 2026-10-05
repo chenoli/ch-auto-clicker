@@ -1,6 +1,3 @@
-//! Native window behavior: the main window's animated height (TASKS T3.17, decision 7) and the
-//! variation editor window (T3.18, decision D13).
-
 use std::sync::mpsc;
 use std::time::{Duration, Instant};
 
@@ -18,7 +15,6 @@ const FRAME: Duration = Duration::from_millis(16);
 const VARIATION_LABEL: &str = "variation";
 const VARIATION_SIZE: (f64, f64) = (560.0, 640.0);
 
-/// Clamps a requested height to 640–900 px and to the space left below the window's top edge.
 pub fn clamp_height(requested: f64, space_below_top: Option<f64>) -> f64 {
     let ceiling = space_below_top.map_or(MAX_HEIGHT, |s| s.min(MAX_HEIGHT));
     requested.clamp(
@@ -27,13 +23,11 @@ pub fn clamp_height(requested: f64, space_below_top: Option<f64>) -> f64 {
     )
 }
 
-/// Height at `elapsed` of an animation from `from` to `to`.
 pub fn height_at(from: f64, to: f64, elapsed: Duration) -> f64 {
     let progress = elapsed.as_secs_f64() / DURATION.as_secs_f64();
     from + (to - from) * EASE_OUT.at(progress)
 }
 
-/// Animates the main window's height on its own thread; new targets retarget smoothly.
 #[derive(Debug)]
 pub struct HeightAnimator {
     tx: mpsc::Sender<f64>,
@@ -84,7 +78,6 @@ impl HeightAnimator {
     }
 }
 
-/// Logical pixels between the window's top edge and the bottom of its monitor's work area.
 pub fn space_below_top<R: Runtime>(window: &WebviewWindow<R>) -> Option<f64> {
     let monitor = window.current_monitor().ok().flatten()?;
     let scale = monitor.scale_factor();
@@ -94,7 +87,6 @@ pub fn space_below_top<R: Runtime>(window: &WebviewWindow<R>) -> Option<f64> {
     Some(f64::from(bottom - top) / scale)
 }
 
-/// Opens (or focuses) the variation editor, centered over the main window and owned by it.
 pub fn open_variation<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
     if let Some(existing) = app.get_webview_window(VARIATION_LABEL) {
         existing.set_focus()?;
@@ -135,7 +127,6 @@ pub fn open_variation<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
     .build()?;
     let _ = window.set_position(LogicalPosition::new(x, y));
 
-    // Modal relative to the main window: block it until the editor closes.
     let _ = main.set_enabled(false);
     let main_for_close = main.clone();
     window.on_window_event(move |event| {

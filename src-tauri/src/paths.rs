@@ -1,8 +1,5 @@
-//! App data locations (ARCHITECTURE §4).
-
 use std::path::PathBuf;
 
-/// `%LOCALAPPDATA%\Chenoli\CH Clicker`: machine-specific data (logs, caches).
 pub fn local_data_dir() -> PathBuf {
     std::env::var_os("LOCALAPPDATA")
         .map_or_else(std::env::temp_dir, PathBuf::from)

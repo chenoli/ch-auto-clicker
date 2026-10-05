@@ -1,14 +1,9 @@
-//! Lateness statistics for the scheduler (ARCHITECTURE §5.3): a log-bucketed histogram, a
-//! lock-free variant the engine thread writes to, and the "timing degraded" detector.
-
 use std::sync::atomic::{AtomicU32, AtomicU64, Ordering};
 
 use crate::engine::clock::NANOS_PER_US;
 
 const SUB_BUCKETS: usize = 8;
-/// Powers of two in microseconds covered before the overflow bucket (2^21 µs ≈ 2.1 s).
 const MAX_POW: usize = 21;
-/// Bucket 0 holds sub-microsecond samples; the last one holds everything past the range.
 pub const BUCKETS: usize = 1 + MAX_POW * SUB_BUCKETS + 1;
 
 fn bucket_of(ns: u64) -> usize {
@@ -25,7 +20,6 @@ fn bucket_of(ns: u64) -> usize {
     1 + pow * SUB_BUCKETS + sub
 }
 
-/// Exclusive upper bound of a bucket in microseconds (percentiles report this conservative edge).
 fn bucket_upper_us(index: usize) -> u64 {
     if index == 0 {
         return 1;
@@ -39,7 +33,6 @@ fn bucket_upper_us(index: usize) -> u64 {
     base + (base * (sub + 1)).div_ceil(SUB_BUCKETS as u64)
 }
 
-/// Summary sent to the UI once per second while running.
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub struct JitterStats {
     pub samples: u64,
@@ -92,7 +85,6 @@ impl Histogram {
         self.max_ns as f64 / NANOS_PER_US as f64
     }
 
-    /// Upper edge of the bucket holding the `p`-th percentile (0.0..=1.0), in microseconds.
     pub fn percentile_us(&self, p: f64) -> f64 {
         if self.total == 0 {
             return 0.0;
@@ -129,7 +121,6 @@ impl Histogram {
     }
 }
 
-/// Written by the engine thread without locks or allocation; drained by the telemetry thread.
 #[derive(Debug)]
 pub struct AtomicHistogram {
     counts: [AtomicU32; BUCKETS],
@@ -157,7 +148,6 @@ impl AtomicHistogram {
         self.missed.fetch_add(events, Ordering::Relaxed);
     }
 
-    /// Returns everything recorded since the previous drain and resets the counters.
     pub fn drain(&self) -> Histogram {
         let mut out = Histogram::default();
         for (slot, counter) in out.counts.iter_mut().zip(self.counts.iter()) {
@@ -170,8 +160,6 @@ impl AtomicHistogram {
     }
 }
 
-/// Flags sustained timing trouble: p95 above half the interval for 2 consecutive samples turns it
-/// on; 5 consecutive good samples turn it off again (ARCHITECTURE §5.3).
 #[derive(Debug, Default)]
 pub struct DegradedDetector {
     degraded: bool,
@@ -187,7 +175,6 @@ impl DegradedDetector {
         self.degraded
     }
 
-    /// Feeds one per-second sample. Returns the new state only when it changes.
     pub fn update(&mut self, p95_us: f64, interval_us: f64) -> Option<bool> {
         let bad = interval_us > 0.0 && p95_us > interval_us / 2.0;
         if bad {
@@ -307,7 +294,6 @@ mod tests {
     }
 
     proptest! {
-        // Percentiles stay within one bucket (12.5% + 1 µs) of the exact value.
         #[test]
         fn percentile_error_is_below_one_bucket(
             samples in prop::collection::vec(0u64..500_000, 1..400),

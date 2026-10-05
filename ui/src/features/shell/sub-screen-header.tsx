@@ -3,15 +3,12 @@ import { useTranslation } from "react-i18next";
 import type { ReactElement, ReactNode } from "react";
 
 interface SubScreenHeaderProps {
-  /** Small label above the title; Tela 05 has none. */
   kicker?: string;
   title: string;
   onBack: () => void;
-  /** Text action on the right ("Restaurar padrão"). */
   action?: ReactNode;
 }
 
-/** Header of a sub-screen: "‹" back button, kicker and Syne title (handoff 02.A, 05, 06, 08). */
 export function SubScreenHeader({ kicker, title, onBack, action }: SubScreenHeaderProps): ReactElement {
   const { t } = useTranslation();
   return (
