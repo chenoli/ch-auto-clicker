@@ -7,7 +7,8 @@
   "header": {
     "profile": "Perfil",
     "profiles": "Perfis",
-    "settings": "Configurações"
+    "settings": "Configurações",
+    "manageProfiles": "Gerenciar perfis…"
   },
   "modes": {
     "click": "Click",
@@ -120,7 +121,19 @@
     "OVERLAY_OPEN": "A captura de tela já está aberta.",
     "CAPTURE_FAILED": "Não foi possível capturar a tela.",
     "NO_AREA": "Selecione a área do scan antes de iniciar.",
-    "AREA_OFFSCREEN": "A área do scan saiu das telas conectadas. Selecione de novo."
+    "AREA_OFFSCREEN": "A área do scan saiu das telas conectadas. Selecione de novo.",
+    "NAME_EMPTY": "O nome não pode ficar vazio.",
+    "NAME_TOO_LONG": "O nome pode ter até 48 caracteres.",
+    "NAME_TAKEN": "Já existe um perfil com esse nome.",
+    "LAST_PROFILE": "O último perfil não pode ser excluído.",
+    "ORDER_INVALID": "Não foi possível reordenar os perfis.",
+    "EXPORT_FAILED": "Não foi possível salvar o arquivo.",
+    "IMPORT_TOO_LARGE": "O arquivo é grande demais para ser um perfil.",
+    "IMPORT_NOT_JSON": "O arquivo não é um perfil válido (não é JSON).",
+    "IMPORT_NOT_CHPROFILE": "O arquivo não é um .chprofile.",
+    "IMPORT_FUTURE_VERSION": "O arquivo foi criado por uma versão mais nova do CH. Clicker.",
+    "IMPORT_INVALID": "O perfil do arquivo tem valores inválidos.",
+    "IMPORT_UNREADABLE": "Não foi possível ler o arquivo."
   },
   "gallery": {
     "title": "Galeria de telas",
@@ -168,7 +181,8 @@
         "name": "Parada de emergência",
         "desc": "Interrompe tudo, sempre ativo"
       }
-    }
+    },
+    "conflictShort": "Já usado por “{name}”."
   },
   "settings": {
     "kicker": "Aplicativo",
@@ -177,7 +191,8 @@
     "comingSoon": "As demais configurações chegam na Fase 11."
   },
   "common": {
-    "back": "Voltar"
+    "back": "Voltar",
+    "cancel": "Cancelar"
   },
   "points": {
     "kicker": "Modo click · Posição",
@@ -252,5 +267,47 @@
     "loopHint": "Recomeçar do topo ao terminar",
     "decrease": "Diminuir espaçamento",
     "increase": "Aumentar espaçamento"
+  },
+  "profiles": {
+    "title": "Perfis",
+    "import": "Importar",
+    "exportActive": "Exportar",
+    "search": "Buscar perfil",
+    "new": "+ Novo",
+    "defaultName": "Novo perfil",
+    "noMatch": "Nenhum perfil com esse nome.",
+    "footer": "{count, plural, =0 {0 perfis} one {# perfil} other {# perfis}} · {path}",
+    "actions": "Ações de {name}",
+    "rename": "Renomear",
+    "renameLabel": "Nome do perfil",
+    "setHotkey": "Definir atalho…",
+    "clearHotkey": "Remover atalho",
+    "duplicate": "Duplicar",
+    "export": "Exportar…",
+    "delete": "Excluir",
+    "confirmDelete": "Excluir este perfil? Não dá para desfazer.",
+    "emptyCount": "00 perfis",
+    "emptyTitle1": "Nenhum perfil",
+    "emptyTitle2": "salvo ainda.",
+    "emptyText": "Ajuste um modo na janela principal e salve como perfil, ou importe um arquivo existente.",
+    "create": "Criar perfil",
+    "importFile": "Importar .chprofile",
+    "dropHint": "ou arraste um arquivo para esta área",
+    "dropNow": "Solte o arquivo .chprofile para importar",
+    "imported": "Perfil “{name}” importado.",
+    "exported": "Exportado para {path}",
+    "notes": {
+      "renamed": "O nome já existia: ficou “{to}”.",
+      "hotkeyDropped": "O atalho {combo} já estava em uso e foi descartado.",
+      "migrated": "O arquivo era de uma versão anterior e foi atualizado."
+    },
+    "summary": {
+      "clicks": "clica",
+      "noArea": "sem área",
+      "loop": "loop",
+      "once": "uma vez",
+      "variation": "Variação {blocks} ms",
+      "points": "{count, plural, one {# ponto} other {# pontos}}"
+    }
   }
 }

@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, createEvent, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { prototypeProfile, tick } from "../dev/gallery/fixtures";
@@ -28,6 +28,15 @@ const mocks = vi.hoisted(() => ({
     overlayPickArea: vi.fn(),
     overlaySetMode: vi.fn(),
     overlayConfirmArea: vi.fn(),
+    profileActivate: vi.fn(),
+    profileCreate: vi.fn(),
+    profileRename: vi.fn(),
+    profileDuplicate: vi.fn(),
+    profileExport: vi.fn(),
+    profileDelete: vi.fn(),
+    profileImport: vi.fn(),
+    profileImportText: vi.fn(),
+    hotkeySet: vi.fn(),
   },
 }));
 
@@ -164,6 +173,132 @@ describe("MainWindow", () => {
     mocks.commands.appBootstrap.mockReturnValue(new Promise(() => {}));
     const { container } = render(<MainWindow />);
     expect(container).toBeEmptyDOMElement();
+  });
+});
+
+describe("ProfilesRoute", () => {
+  const ok = (data: unknown = null) => ({ status: "ok", data });
+
+  async function openProfiles() {
+    render(<MainWindow />);
+    fireEvent.click(await screen.findByRole("button", { name: "Perfis" }));
+    expect(await screen.findByRole("heading", { name: "Perfis" })).toBeInTheDocument();
+  }
+
+  it("switches profiles from the header dropdown", async () => {
+    const other = { ...prototypeProfile(), id: "other", name: "Outro" };
+    mocks.commands.appBootstrap.mockResolvedValue({ ...bootstrap(), profiles: [prototypeProfile(), other] });
+    mocks.commands.profileActivate.mockResolvedValue({
+      status: "error",
+      error: { code: "PROFILE_NOT_FOUND", message: "" },
+    });
+    render(<MainWindow />);
+    fireEvent.click(await screen.findByRole("button", { name: /Coleta rápida/ }));
+    fireEvent.click(screen.getByRole("menuitemradio", { name: "Outro" }));
+    expect(mocks.commands.profileActivate).toHaveBeenCalledWith("other");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Perfil não encontrado.");
+  });
+
+  it("drives every command and reports results", async () => {
+    mocks.commands.profileActivate.mockResolvedValue(ok());
+    mocks.commands.profileCreate.mockResolvedValue(ok());
+    mocks.commands.profileDuplicate.mockResolvedValue({
+      status: "error",
+      error: { code: "NAME_TOO_LONG", message: "" },
+    });
+    mocks.commands.profileExport.mockResolvedValueOnce(ok("C:\\x.chprofile")).mockResolvedValueOnce(ok(null));
+    mocks.commands.profileRename.mockResolvedValue({ status: "error", error: { code: "NAME_TAKEN", message: "" } });
+    await openProfiles();
+
+    fireEvent.click(screen.getByRole("button", { name: "Coleta rápida" }));
+    expect(mocks.commands.profileActivate).toHaveBeenCalledWith("proto");
+    fireEvent.click(screen.getByRole("button", { name: "+ Novo" }));
+    expect(mocks.commands.profileCreate).toHaveBeenCalledWith("Novo perfil");
+    fireEvent.keyDown(screen.getByRole("button", { name: "Coleta rápida" }), { key: "d", ctrlKey: true });
+    expect(await screen.findByRole("alert")).toHaveTextContent("até 48 caracteres");
+    fireEvent.click(screen.getByRole("button", { name: "Exportar" }));
+    expect(await screen.findByText("Exportado para C:\\x.chprofile")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Exportar" }));
+    await act(async () => {});
+    expect(screen.queryByText(/Exportado/)).toBeNull();
+
+    fireEvent.keyDown(screen.getByRole("button", { name: "Coleta rápida" }), { key: "F2" });
+    const input = screen.getByRole("textbox", { name: "Nome do perfil" });
+    fireEvent.change(input, { target: { value: "Outro" } });
+    fireEvent.keyDown(input, { key: "Enter" });
+    expect(await screen.findByText("Já existe um perfil com esse nome.")).toBeInTheDocument();
+    fireEvent.keyDown(input, { key: "Escape" });
+
+    fireEvent.click(screen.getByRole("button", { name: "Voltar" }));
+    expect(await screen.findByText("Coleta rápida")).toBeInTheDocument();
+  });
+
+  it("explains imports, their notes and refused files", async () => {
+    const profile = { ...prototypeProfile(), id: "new", name: "Coleta rápida (2)" };
+    mocks.commands.profileImport
+      .mockResolvedValueOnce(
+        ok({
+          profile,
+          notes: [
+            { kind: "renamed", from: "Coleta rápida", to: "Coleta rápida (2)" },
+            { kind: "hotkeyDropped", combo: { mods: [], key: "F6" } },
+            { kind: "migrated", fromVersion: 0 },
+          ],
+        }),
+      )
+      .mockResolvedValueOnce(ok(null))
+      .mockResolvedValueOnce(ok({ profile, notes: [] }));
+    mocks.commands.profileImportText.mockResolvedValue({
+      status: "error",
+      error: { code: "IMPORT_NOT_CHPROFILE", message: "" },
+    });
+    await openProfiles();
+
+    fireEvent.click(screen.getByRole("button", { name: "Importar" }));
+    expect(await screen.findByText("Perfil “Coleta rápida (2)” importado.")).toBeInTheDocument();
+    expect(screen.getByText(/ficou “Coleta rápida \(2\)”/)).toBeInTheDocument();
+    expect(screen.getByText(/O atalho F6 já estava em uso/)).toBeInTheDocument();
+    expect(screen.getByText(/versão anterior/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Importar" }));
+    await act(async () => {});
+    expect(screen.queryByText(/importado/)).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Importar" }));
+    expect(await screen.findByText("Perfil “Coleta rápida (2)” importado.")).toBeInTheDocument();
+
+    const root = screen.getByRole("heading", { name: "Perfis" }).closest(".relative") as HTMLElement;
+    const drop = (file: File) => {
+      const event = createEvent.drop(root);
+      Object.defineProperty(event, "dataTransfer", { value: { types: ["Files"], files: [file] } });
+      fireEvent(root, event);
+    };
+    const big = new File(["x"], "big.chprofile");
+    Object.defineProperty(big, "size", { value: 2 * 1024 * 1024 });
+    drop(big);
+    expect(await screen.findByRole("alert")).toHaveTextContent("grande demais");
+    const small = new File(["{}"], "x.chprofile");
+    Object.defineProperty(small, "text", { value: async () => "{}" });
+    drop(small);
+    await waitFor(() => expect(mocks.commands.profileImportText).toHaveBeenCalledWith("{}"));
+    expect(await screen.findByRole("alert")).toHaveTextContent("não é um .chprofile");
+  });
+
+  it("records, clears and deletes through the shared shortcut recorder", async () => {
+    mocks.commands.hotkeySet.mockResolvedValue(ok({ result: "saved", statuses: [] }));
+    mocks.commands.profileDelete.mockResolvedValue(ok());
+    const other = { ...prototypeProfile(), id: "other", name: "Outro", hotkey: { mods: ["ctrl"], key: "2" } };
+    mocks.commands.appBootstrap.mockResolvedValue({ ...bootstrap(), profiles: [prototypeProfile(), other] });
+    await openProfiles();
+    fireEvent.click(screen.getByRole("button", { name: "Ações de Outro" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: /Remover atalho/ }));
+    expect(mocks.commands.hotkeySet).toHaveBeenCalledWith({ kind: "profile", id: "other" }, null, false);
+    fireEvent.click(screen.getByRole("button", { name: "Ações de Outro" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: /Definir atalho/ }));
+    expect(mocks.commands.hotkeyBeginRecord).toHaveBeenCalledOnce();
+    expect(screen.getByText("Pressione as teclas…")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Ações de Coleta rápida" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: /Excluir/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Excluir" }));
+    expect(mocks.commands.profileDelete).toHaveBeenCalledWith("proto");
   });
 });
 

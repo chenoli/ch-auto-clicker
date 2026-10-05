@@ -14,6 +14,7 @@ import { HotkeysScreen } from "../hotkeys/hotkeys-screen";
 import { useHotkeyRecording } from "../hotkeys/use-hotkey-recording";
 import { chcapUrl } from "../overlay/overlay-keys";
 import { PointsRoute } from "../points/points-route";
+import { ProfilesRoute } from "../profiles/profiles-route";
 import { SettingsScreen } from "../settings/settings-screen";
 import { ConnectFailure } from "../shell/connect-failure";
 import { MainWindowView } from "./main-window-view";
@@ -21,7 +22,7 @@ import { MainWindowView } from "./main-window-view";
 import type { Profile } from "../../ipc";
 import type { ReactElement } from "react";
 
-type Screen = "main" | "settings" | "hotkeys" | "points";
+type Screen = "main" | "settings" | "hotkeys" | "points" | "profiles";
 
 const MIN_HEIGHT = 640;
 
@@ -40,6 +41,7 @@ export function MainWindow(): ReactElement | null {
   const lastStatus = useAppStore((s) => s.lastStatus);
   const commandError = useAppStore((s) => s.commandError);
   const hotkeys = useAppStore((s) => s.hotkeys);
+  const profiles = useAppStore((s) => s.profiles);
   const [screen, setScreen] = useState<Screen>("main");
   const recordingApi = useHotkeyRecording();
   const { cancel: cancelRecording } = recordingApi;
@@ -105,6 +107,10 @@ export function MainWindow(): ReactElement | null {
     );
   }
 
+  if (screen === "profiles") {
+    return <ProfilesRoute recording={recordingApi} onBack={() => go("main")} {...windowActions} />;
+  }
+
   if (screen === "points") {
     return (
       <PointsRoute
@@ -137,6 +143,14 @@ export function MainWindow(): ReactElement | null {
         void commands.windowOpenVariation();
       }}
       onOpenPoints={() => go("points")}
+      profiles={profiles}
+      onSelectProfile={(id) => {
+        setCommandError(null);
+        void commands.profileActivate(id).then((r) => {
+          if (r.status === "error") setCommandError(r.error.code);
+        });
+      }}
+      onOpenProfiles={() => go("profiles")}
       thumbnailUrl={profile.modes.scan.area && inTauri ? thumbnailUrl(profile) : null}
       onSelectArea={() => {
         setCommandError(null);

@@ -3,7 +3,8 @@ import { useTranslation } from "react-i18next";
 import type { ReactElement, ReactNode } from "react";
 
 interface SubScreenHeaderProps {
-  kicker: string;
+  /** Small label above the title; Tela 05 has none. */
+  kicker?: string;
   title: string;
   onBack: () => void;
   /** Text action on the right ("Restaurar padrão"). */
@@ -19,7 +20,7 @@ export function SubScreenHeader({ kicker, title, onBack, action }: SubScreenHead
         ‹
       </button>
       <div className="flex flex-1 flex-col gap-0.75">
-        <span className="micro-label">{kicker}</span>
+        {kicker && <span className="micro-label">{kicker}</span>}
         <h1 className="m-0 font-display text-20 leading-none font-extrabold tracking-logo text-fg">{title}</h1>
       </div>
       {action}

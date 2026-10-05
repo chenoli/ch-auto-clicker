@@ -389,6 +389,9 @@
   .callout[data-tone="danger"] {
     --callout: var(--danger);
   }
+  .callout[data-tone="info"] {
+    --callout: var(--accent);
+  }
   .callout__dot {
     width: 6px;
     height: 6px;
@@ -989,6 +992,250 @@
     border-radius: var(--radius-control);
     background: var(--bg-2);
     border: 1px solid var(--border);
+  }
+
+  /* Profiles (Telas 05.A / 05.B). */
+  .menu-divider {
+    height: 1px;
+    margin: 4px 6px;
+    background: color-mix(in oklch, var(--fg) 9%, transparent);
+  }
+  .menu-item:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+  .menu-item--danger {
+    color: var(--danger);
+  }
+  .text-button {
+    height: 30px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 7px;
+    background: none;
+    font: inherit;
+    font-size: var(--text-12);
+    font-weight: 600;
+    color: var(--fg-2);
+    cursor: pointer;
+  }
+  .text-button:hover:not(:disabled) {
+    background: color-mix(in oklch, var(--fg) 6%, transparent);
+  }
+  .text-button:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+  .search-field {
+    flex: 1;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 12px;
+    border-radius: 8px;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+  }
+  .search-field:focus-within {
+    border-color: color-mix(in oklch, var(--accent) 45%, transparent);
+  }
+  .search-field__icon {
+    flex: none;
+    width: 10px;
+    height: 10px;
+    border-radius: 5px;
+    border: 1.5px solid var(--fg-3);
+  }
+  .search-field input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    outline: none;
+    font: inherit;
+    font-size: var(--text-13);
+    color: var(--fg);
+  }
+  .search-field input::placeholder {
+    color: var(--fg-3);
+  }
+  .search-field input::-webkit-search-cancel-button {
+    display: none;
+  }
+  .profile-card {
+    display: grid;
+    grid-template-columns: 64px 1fr auto;
+    gap: 12px;
+    align-items: center;
+    padding: 10px;
+    border-radius: 12px;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .profile-card:hover {
+    border-color: color-mix(in oklch, var(--fg) 16%, transparent);
+  }
+  .profile-card[data-active="true"] {
+    border-color: color-mix(in oklch, var(--accent) 45%, transparent);
+  }
+  .profile-thumb {
+    position: relative;
+    width: 64px;
+    height: 48px;
+    border-radius: 7px;
+    background: var(--bg);
+    border: 1px solid color-mix(in oklch, var(--fg) 7%, transparent);
+    overflow: hidden;
+  }
+  .profile-thumb__dot {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--accent);
+  }
+  .profile-thumb__track {
+    position: absolute;
+    left: 6px;
+    right: 6px;
+    top: 23px;
+    height: 2px;
+    border-radius: 1px;
+    background: var(--bg-3);
+  }
+  .profile-thumb__band {
+    position: absolute;
+    left: 26px;
+    top: 16px;
+    width: 12px;
+    height: 16px;
+    background: color-mix(in oklch, var(--accent) 20%, transparent);
+    border-left: 1px solid var(--accent);
+    border-right: 1px solid var(--accent);
+  }
+  .mode-badge {
+    flex: none;
+    padding: 2px 7px;
+    border-radius: 20px;
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    font-size: var(--text-9);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--fg-2);
+  }
+  .profile-key {
+    padding: 3px 7px;
+    border-radius: 5px;
+    border: 1px solid color-mix(in oklch, var(--fg) 14%, transparent);
+    font-size: var(--text-11);
+    font-weight: 700;
+    color: var(--fg);
+    white-space: nowrap;
+  }
+  .profile-key[data-empty="true"] {
+    color: var(--fg-3);
+  }
+  .profile-key--recording {
+    display: flex;
+    gap: 4px;
+    border-color: color-mix(in oklch, var(--accent) 55%, transparent);
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .profile-more {
+    width: 24px;
+    height: 24px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    font-size: var(--text-14);
+    color: var(--fg-2);
+    cursor: pointer;
+  }
+  .profile-more:hover,
+  .profile-more[data-open="true"] {
+    background: color-mix(in oklch, var(--fg) 8%, transparent);
+  }
+  .profile-menu {
+    position: absolute;
+    right: 0;
+    top: calc(100% - 6px);
+    z-index: 20;
+    width: 184px;
+  }
+  .profile-rename {
+    min-width: 0;
+    flex: 1;
+    height: 24px;
+    padding: 0 6px;
+    border-radius: 5px;
+    border: 1px solid color-mix(in oklch, var(--accent) 45%, transparent);
+    background: var(--bg);
+    outline: none;
+    font: inherit;
+    font-size: var(--text-14);
+    font-weight: 600;
+    color: var(--fg);
+  }
+  .profile-action {
+    height: 26px;
+    padding: 0 9px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    font: inherit;
+    font-size: var(--text-12);
+    font-weight: 600;
+    color: var(--fg);
+    cursor: pointer;
+  }
+  .profile-action--danger {
+    border-color: color-mix(in oklch, var(--danger) 45%, transparent);
+    color: var(--danger);
+  }
+  .profile-conflict {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 12px;
+    padding: 8px 10px 0;
+    font-size: var(--text-11);
+    color: var(--warn);
+  }
+  .link--muted {
+    color: var(--fg-2);
+  }
+  .profiles-empty {
+    flex: 1;
+    margin: 4px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    padding: 32px;
+    border-radius: 12px;
+    border: 1px dashed color-mix(in oklch, var(--fg) 16%, transparent);
+    text-align: center;
+  }
+  .profiles-drop {
+    position: absolute;
+    inset: 44px 12px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    border: 1.5px dashed var(--accent);
+    background: color-mix(in oklch, var(--bg) 88%, transparent);
+    font-size: var(--text-13);
+    font-weight: 600;
+    color: var(--fg);
+    pointer-events: none;
   }
 
   /* Scan panel (Tela 01.C). */

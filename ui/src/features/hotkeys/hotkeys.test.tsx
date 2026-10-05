@@ -83,7 +83,11 @@ describe("HotkeysScreen", () => {
   it("shows the recording state, live modifiers and the conflict actions", () => {
     const props = screenProps({
       recording: "startStop",
-      conflict: { action: "capturePoint", combo: { mods: [], key: "F7" }, withName: "Pausar / Retomar" },
+      conflict: {
+        target: { kind: "action", id: "capturePoint" },
+        combo: { mods: [], key: "F7" },
+        withName: "Pausar / Retomar",
+      },
     });
     const { rerender } = render(<HotkeysScreen {...props} />);
     expect(field(/Iniciar \/ Parar/)).toHaveAttribute("data-state", "recording");
@@ -164,7 +168,7 @@ describe("useHotkeyRecording", () => {
     emit({ mods: [], combo: { mods: [], key: "F7" }, cancelled: false });
     await vi.waitFor(() =>
       expect(result.current.conflict).toEqual({
-        action: "startStop",
+        target: { kind: "action", id: "startStop" },
         combo: { mods: [], key: "F7" },
         withName: "Pausar / Retomar",
       }),

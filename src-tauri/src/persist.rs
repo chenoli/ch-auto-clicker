@@ -16,10 +16,6 @@ const FLUSH_TIMEOUT: Duration = Duration::from_secs(5);
 enum Save {
     Settings(Box<Settings>),
     Profile(Box<Profile>),
-    #[cfg_attr(
-        not(test),
-        expect(dead_code, reason = "profile deletion arrives in Phase 8 (T8.1)")
-    )]
     Delete(String),
     Flush(mpsc::Sender<()>),
 }
@@ -135,10 +131,6 @@ impl Persister {
         let _ = self.tx.send(Save::Profile(Box::new(profile.clone())));
     }
 
-    #[cfg_attr(
-        not(test),
-        expect(dead_code, reason = "profile deletion arrives in Phase 8 (T8.1)")
-    )]
     pub fn delete_profile(&self, id: &str) {
         let _ = self.tx.send(Save::Delete(id.to_owned()));
     }

@@ -85,6 +85,10 @@
   --leading-none: 1;
   --leading-label: 1.15;
   --leading-body: 1.5;
+  /* Handoff: display titles 1.05, compact help text 1.45, empty-state copy 1.7. */
+  --leading-display: 1.05;
+  --leading-snug: 1.45;
+  --leading-relaxed: 1.7;
 }
 
 @layer base {

@@ -43,8 +43,8 @@ pub fn app_bootstrap(app: AppHandle, state: State<'_, AppState>) -> Bootstrap {
     Bootstrap {
         version: app.package_info().version.to_string(),
         dpi_awareness: dpi_awareness().to_owned(),
+        profiles: ch_core::profiles::ordered(&data.settings, &data.profiles),
         settings: data.settings,
-        profiles: data.profiles,
         engine: engine_tick(&state),
         capabilities: state.capabilities(),
         hotkeys: state.hotkeys().statuses(),

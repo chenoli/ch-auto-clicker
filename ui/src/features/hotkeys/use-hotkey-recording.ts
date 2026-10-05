@@ -10,10 +10,16 @@ import type { Hotkey, HotkeyAction, HotkeyTarget, Modifier } from "../../ipc";
 import type { PendingConflict } from "./hotkeys-screen";
 
 export interface HotkeyRecordingApi {
+  /** The action being recorded (Tela 06), or null. */
   recording: HotkeyAction | null;
+  /** The profile whose shortcut is being recorded (Tela 05, decision D4), or null. */
+  recordingProfile: string | null;
   heldMods: Modifier[];
   conflict: PendingConflict | null;
   record: (action: HotkeyAction) => void;
+  recordProfile: (id: string) => void;
+  /** Removes a profile's shortcut. */
+  clearProfile: (id: string) => void;
   cancel: () => void;
   replace: () => void;
   keep: () => void;
@@ -23,7 +29,7 @@ export interface HotkeyRecordingApi {
 export function useHotkeyRecording(): HotkeyRecordingApi {
   const { t } = useTranslation();
   const profiles = useAppStore((s) => s.profiles);
-  const [recording, setRecording] = useState<HotkeyAction | null>(null);
+  const [recording, setRecording] = useState<HotkeyTarget | null>(null);
   const [heldMods, setHeldMods] = useState<Modifier[]>([]);
   const [conflict, setConflict] = useState<PendingConflict | null>(null);
 
@@ -36,15 +42,15 @@ export function useHotkeyRecording(): HotkeyRecordingApi {
   );
 
   const save = useCallback(
-    async (action: HotkeyAction, combo: Hotkey, replace: boolean) => {
-      const result = await commands.hotkeySet({ kind: "action", id: action }, combo, replace);
+    async (target: HotkeyTarget, combo: Hotkey | null, replace: boolean) => {
+      const result = await commands.hotkeySet(target, combo, replace);
       if (result.status === "error") {
         setCommandError(result.error.code);
         setConflict(null);
         return;
       }
-      if (result.data.result === "conflict") {
-        setConflict({ action, combo, withName: nameOf(result.data.with) });
+      if (result.data.result === "conflict" && combo) {
+        setConflict({ target, combo, withName: nameOf(result.data.with) });
       } else {
         setConflict(null);
       }
@@ -79,12 +85,15 @@ export function useHotkeyRecording(): HotkeyRecordingApi {
     };
   }, [recording, save]);
 
-  const record = useCallback((action: HotkeyAction) => {
+  const start = useCallback((target: HotkeyTarget) => {
     setConflict(null);
     setHeldMods([]);
-    setRecording(action);
+    setRecording(target);
     if (inTauri) void commands.hotkeyBeginRecord();
   }, []);
+  const record = useCallback((action: HotkeyAction) => start({ kind: "action", id: action }), [start]);
+  const recordProfile = useCallback((id: string) => start({ kind: "profile", id }), [start]);
+  const clearProfile = useCallback((id: string) => void save({ kind: "profile", id }, null, false), [save]);
 
   const cancel = useCallback(() => {
     setRecording((current) => {
@@ -95,10 +104,21 @@ export function useHotkeyRecording(): HotkeyRecordingApi {
   }, []);
 
   const replace = useCallback(() => {
-    if (conflict) void save(conflict.action, conflict.combo, true);
+    if (conflict) void save(conflict.target, conflict.combo, true);
   }, [conflict, save]);
 
   const keep = useCallback(() => setConflict(null), []);
 
-  return { recording, heldMods, conflict, record, cancel, replace, keep };
+  return {
+    recording: recording?.kind === "action" ? recording.id : null,
+    recordingProfile: recording?.kind === "profile" ? recording.id : null,
+    heldMods,
+    conflict,
+    record,
+    recordProfile,
+    clearProfile,
+    cancel,
+    replace,
+    keep,
+  };
 }

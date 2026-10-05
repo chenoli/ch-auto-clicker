@@ -44,6 +44,24 @@ export const commands = {
 	/**  Tries every registration again (after the user freed a combo in another app). */
 	hotkeyRetry: () => __TAURI_INVOKE<HotkeyStatus[]>("hotkey_retry"),
 	screenLayout: () => __TAURI_INVOKE<ScreenLayout>("screen_layout"),
+	/**  "+ Novo": a default profile at the end of the list. */
+	profileCreate: (name: string) => typedError<Profile, AppError>(__TAURI_INVOKE("profile_create", { name })),
+	profileDuplicate: (id: string) => typedError<Profile, AppError>(__TAURI_INVOKE("profile_duplicate", { id })),
+	profileRename: (id: string, name: string) => typedError<Profile, AppError>(__TAURI_INVOKE("profile_rename", { id, name })),
+	/**  Deletes a profile (and its thumbnail). Deleting the one that is running stops the run first. */
+	profileDelete: (id: string) => typedError<null, AppError>(__TAURI_INVOKE("profile_delete", { id })),
+	profileReorder: (order: string[]) => typedError<null, AppError>(__TAURI_INVOKE("profile_reorder", { order })),
+	/**  Makes a profile active. Switching while a run is going stops it (decision D12). */
+	profileActivate: (id: string) => typedError<null, AppError>(__TAURI_INVOKE("profile_activate", { id })),
+	/**  Asks where to save and writes the `.chprofile`. Resolves with the path, or null if cancelled. */
+	profileExport: (id: string) => typedError<string | null, AppError>(__TAURI_INVOKE("profile_export", { id })),
+	/**  Asks for a `.chprofile` and imports it. Resolves with null if cancelled. */
+	profileImport: () => typedError<{
+	profile: Profile,
+	notes: ImportNote[],
+} | null, AppError>(__TAURI_INVOKE("profile_import")),
+	/**  Imports the text of a dropped file (Tela 05.B). */
+	profileImportText: (text: string) => typedError<ImportResult, AppError>(__TAURI_INVOKE("profile_import_text", { text })),
 	/**
 	 *  Opens the point capture overlays (Tela 03.B); resolves when the user finishes. Points are saved
 	 *  to the active profile as they are added.
@@ -232,6 +250,21 @@ export type HotkeyStatusChanged = HotkeyStatus[];
 
 /**  What a shortcut triggers: an app action or a profile's own shortcut (decision D4). */
 export type HotkeyTarget = { kind: "action"; id: HotkeyAction } | { kind: "profile"; id: string };
+
+/**  What the import had to change, so the UI can tell the user. */
+export type ImportNote = 
+/**  The name was taken; the profile was renamed. */
+{ kind: "renamed"; from: string; to: string } | 
+/**  The shortcut was already used and was dropped. */
+{ kind: "hotkeyDropped"; combo: Hotkey } | 
+/**  The file came from an older schema and was upgraded. */
+{ kind: "migrated"; from_version: number };
+
+/**  An imported profile and what had to change to fit this library. */
+export type ImportResult = {
+	profile: Profile,
+	notes: ImportNote[],
+};
 
 export type InputBackendKind = "sendinput" | "interception";
 

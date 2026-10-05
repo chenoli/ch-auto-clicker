@@ -29,6 +29,7 @@ tauri-plugin-log = "2.10"
 tauri-plugin-single-instance = "2.5"
 uuid = { version = "1.27", features = ["v4"] }
 tauri-specta = { version = "=2.0.0-rc.25", features = ["derive", "typescript"] }
+tauri-plugin-dialog = "2.8"
 
 [target.'cfg(windows)'.dependencies]
 ch-win.workspace = true

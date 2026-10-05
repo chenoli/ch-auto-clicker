@@ -2,7 +2,7 @@
 
 use tauri_specta::{Builder, collect_commands, collect_events};
 
-use crate::{capabilities, commands, events, hotkeys, overlay};
+use crate::{capabilities, commands, events, hotkeys, overlay, profiles};
 
 const BINDINGS_PATH: &str = "../ui/src/ipc/bindings.ts";
 const BINDINGS_HEADER: &str = "// Regenerate with `cargo test -p ch-clicker export_bindings`.";
@@ -27,6 +27,15 @@ pub fn builder() -> Builder<tauri::Wry> {
             commands::hotkey_reset_defaults,
             commands::hotkey_retry,
             commands::screen_layout,
+            profiles::profile_create,
+            profiles::profile_duplicate,
+            profiles::profile_rename,
+            profiles::profile_delete,
+            profiles::profile_reorder,
+            profiles::profile_activate,
+            profiles::profile_export,
+            profiles::profile_import,
+            profiles::profile_import_text,
             commands::overlay_pick_points,
             commands::overlay_pick_area,
             commands::overlay_set_mode,

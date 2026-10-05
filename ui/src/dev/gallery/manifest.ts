@@ -16,6 +16,8 @@ export const SCREEN_META: ScreenMeta[] = [
   { id: "variation", title: "02.B — Variação de intervalo", width: 560, height: 640, reference: "variacao" },
   { id: "area-overlay", title: "03.A — Seleção de área (50%)", width: 960, height: 540 },
   { id: "overlay", title: "03.B — Captura de ponto (50%)", width: 960, height: 540, reference: "overlay" },
+  { id: "profiles", title: "05.A — Perfis", width: 420, height: 640, reference: "perfis" },
+  { id: "profiles-empty", title: "05.B — Perfis · estado vazio", width: 420, height: 640 },
   { id: "hotkeys", title: "06 — Atalhos", width: 420, height: 640, reference: "atalhos" },
   { id: "hotkeys-states", title: "06 — Atalhos · gravando e conflito", width: 420, height: 640 },
   { id: "tokens", title: "11 — Tokens", width: 880, height: 620 },

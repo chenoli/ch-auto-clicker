@@ -6,7 +6,7 @@ import { TitleBar } from "../main/title-bar";
 import { SubScreenHeader } from "../shell/sub-screen-header";
 import { hotkeyKeys, hotkeyLabel } from "./format-hotkey";
 
-import type { Hotkey, HotkeyAction, HotkeyBindings, HotkeyStatus, Modifier } from "../../ipc";
+import type { Hotkey, HotkeyAction, HotkeyBindings, HotkeyStatus, HotkeyTarget, Modifier } from "../../ipc";
 import type { ReactElement } from "react";
 
 export const ACTIONS: readonly HotkeyAction[] = [
@@ -18,7 +18,7 @@ export const ACTIONS: readonly HotkeyAction[] = [
 ];
 
 export interface PendingConflict {
-  action: HotkeyAction;
+  target: HotkeyTarget;
   combo: Hotkey;
   withName: string;
 }
@@ -82,7 +82,7 @@ export function HotkeysScreen({
           const status = statuses.find((s) => s.target.kind === "action" && s.target.id === action);
           const taken = status ? !status.ok : false;
           const isRecording = recording === action;
-          const isConflict = conflict?.action === action;
+          const isConflict = conflict?.target.kind === "action" && conflict.target.id === action;
           const shown = isConflict ? conflict.combo : combo;
           const state = isRecording ? "recording" : isConflict || taken ? "conflict" : "normal";
           return (

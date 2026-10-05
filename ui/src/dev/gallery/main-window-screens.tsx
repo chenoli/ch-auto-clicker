@@ -163,7 +163,11 @@ export function HotkeysStatesDemo(): ReactElement {
   return (
     <Hotkeys
       recording="startStop"
-      conflict={{ action: "pauseResume", combo: { mods: [], key: "F6" }, withName: "Iniciar / Parar" }}
+      conflict={{
+        target: { kind: "action", id: "pauseResume" },
+        combo: { mods: [], key: "F6" },
+        withName: "Iniciar / Parar",
+      }}
     />
   );
 }

@@ -137,7 +137,7 @@ pub fn emit_settings<R: Runtime>(app: &AppHandle<R>, settings: &Settings) {
 
 pub fn emit_profiles<R: Runtime>(app: &AppHandle<R>, data: &AppData) {
     let _ = ProfilesChanged {
-        profiles: data.profiles.clone(),
+        profiles: ch_core::profiles::ordered(&data.settings, &data.profiles),
         active_profile_id: data.settings.active_profile_id.clone(),
     }
     .emit(app);

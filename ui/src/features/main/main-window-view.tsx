@@ -36,6 +36,10 @@ export interface MainWindowViewProps {
   onOpenPoints?: () => void;
   /** Fixed monitor width (gallery); the window measures its own monitor otherwise. */
   monitorWidth?: number;
+  /** Every profile in display order, for the header dropdown. */
+  profiles?: readonly { id: string; name: string }[];
+  onSelectProfile?: (id: string) => void;
+  onOpenProfiles?: () => void;
   /** Scan area thumbnail (served by Rust), or null for the placeholder. */
   thumbnailUrl?: string | null;
   onSelectArea?: () => void;
@@ -63,6 +67,9 @@ export function MainWindowView({
   onOpenVariation,
   onOpenPoints,
   monitorWidth: fixedMonitorWidth,
+  profiles = [],
+  onSelectProfile,
+  onOpenProfiles,
   thumbnailUrl,
   onSelectArea,
   onMinimize,
@@ -116,7 +123,14 @@ export function MainWindowView({
   return (
     <div ref={rootRef} className="flex h-full flex-col bg-bg">
       <TitleBar onMinimize={onMinimize} onClose={onClose} />
-      <Header profileName={profile.name} onOpenSettings={onOpenSettings} />
+      <Header
+        profileName={profile.name}
+        profiles={profiles}
+        activeProfileId={profile.id}
+        onSelectProfile={onSelectProfile}
+        onOpenProfiles={onOpenProfiles}
+        onOpenSettings={onOpenSettings}
+      />
       <ModeTabs mode={profile.mode} onChange={(mode) => onEdit((p) => ({ ...p, mode }))} />
       <MainButton
         state={shortcutBroken ? "error" : buttonStateFor(engine.state)}

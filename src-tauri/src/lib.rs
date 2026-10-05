@@ -10,6 +10,7 @@ mod logging;
 mod overlay;
 mod paths;
 mod persist;
+mod profiles;
 mod state;
 mod thumbs;
 #[allow(dead_code)] // consumed by the tray icons in Phase 11
@@ -33,6 +34,7 @@ pub fn run() {
             }
         }))
         .plugin(logging::plugin())
+        .plugin(tauri_plugin_dialog::init())
         .register_uri_scheme_protocol(overlay::SCHEME, |ctx, request| {
             overlay::handle_protocol(ctx.app_handle(), request.uri().path())
         })

@@ -45,7 +45,7 @@ Rodar `pnpm lint:fix`, `pnpm format` e `cargo fmt --all` como parte da revisão.
 
 - Teste co-localizado para todo código novo, na mesma fase. Cobertura mínima de 80% em linhas, branches, funções e statements (quebra o pipeline): Vitest no frontend; `cargo llvm-cov` nos crates com lógica a partir da Fase 1.
 - Telas: verificar na janela real do Tauri e na galeria (`ui/gallery.html`), nos temas Grafite (escuro) e Papel (claro), com screenshot aberto e conferido; paridade com o protótipo via Playwright.
-- **Input real (cliques, movimentos, hotkeys):** testes que injetam input no sistema ficam com `#[ignore]`. O usuário costuma ter jogos abertos na tela 2 (`DISPLAY2`): input real só na tela 1 (`DISPLAY1`, principal), com `CH_TEST_MONITORS=primary`. Nunca mover o cursor, clicar ou abrir janelas na tela 2.
+- **Input real (cliques, movimentos, hotkeys):** testes que injetam input no sistema ficam com `#[ignore]`. O usuário costuma ter jogos abertos na tela 2 (`DISPLAY2`): input real só na tela 1 (`DISPLAY1`, principal), com `CH_TEST_MONITORS=primary`. Nunca mover o cursor, clicar ou abrir janelas na tela 2. Antes de qualquer clique, arrasto ou movimento real, confirmar que a janela sob o ponto é do processo `ch-clicker` (a tela 1 também pode ter jogos abertos); execuções do motor que movem o cursor exigem a mesma checagem para toda a área.
 - Benchmarks de timing (`tools/jitter-bench`) registram resultados em `docs/bench/`.
 
 ## 7. Segurança

@@ -1,6 +1,12 @@
 import type { ReactElement, ReactNode } from "react";
 
-export function Callout({ children, tone = "warn" }: { children: ReactNode; tone?: "warn" | "danger" }): ReactElement {
+export function Callout({
+  children,
+  tone = "warn",
+}: {
+  children: ReactNode;
+  tone?: "info" | "warn" | "danger";
+}): ReactElement {
   return (
     <div className="callout" data-tone={tone} role={tone === "danger" ? "alert" : "note"}>
       <span className="callout__dot" />
