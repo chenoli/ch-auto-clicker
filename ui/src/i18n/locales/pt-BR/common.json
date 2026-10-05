@@ -13,5 +13,9 @@
   "units": {
     "cps": "CPS",
     "ms": "ms"
+  },
+  "debug": {
+    "clickOnce": "Clique de teste em 2 s",
+    "clickScheduled": "Clique agendado. Posicione o cursor."
   }
 }

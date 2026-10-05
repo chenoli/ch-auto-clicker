@@ -5,11 +5,11 @@
 
 Regras permanentes. Não são sugestões: siga exatamente.
 
-## 1. Parar a cada fase
+## 1. Fases contínuas (autorizado pelo usuário em 2026-10-04)
 
-Nunca inicie a próxima fase por conta própria, mesmo que a anterior tenha fechado limpa. Ao terminar uma fase:
-implementar → verificar → revisão em 10 camadas → corrigir → atualizar `refs/` → commit → **parar e esperar autorização explícita**.
-Um "sim" sobre o roadmap geral não é cheque em branco. Se a sessão for interrompida no meio de uma fase, retome a mesma fase.
+O usuário autorizou seguir as fases em sequência, sem pausa entre elas; ele interrompe se notar algo. Cada fase continua fechando completa:
+implementar → verificar → revisão em 10 camadas → corrigir → atualizar `refs/` → commit → relatório curto → próxima fase.
+Decisões de trade-off (custo, segurança, mudança de escopo) ainda vão para o usuário antes de seguir. Se a sessão for interrompida no meio de uma fase, retome a mesma fase.
 
 ## 2. Commits
 
@@ -45,7 +45,7 @@ Rodar `pnpm lint:fix`, `pnpm format` e `cargo fmt --all` como parte da revisão.
 
 - Teste co-localizado para todo código novo, na mesma fase. Cobertura mínima de 80% em linhas, branches, funções e statements (quebra o pipeline): Vitest no frontend; `cargo llvm-cov` nos crates com lógica a partir da Fase 1.
 - Telas: verificar na janela real do Tauri e na galeria (`ui/gallery.html`), nos temas Grafite (escuro) e Papel (claro), com screenshot aberto e conferido; paridade com o protótipo via Playwright.
-- **Input real (cliques, movimentos, hotkeys):** testes que injetam input no sistema ficam com `#[ignore]` e só rodam com autorização explícita do usuário na hora, com jogos e apps sensíveis fechados. Nunca trazer janelas para frente nem injetar input enquanto o usuário pode estar usando outro app.
+- **Input real (cliques, movimentos, hotkeys):** testes que injetam input no sistema ficam com `#[ignore]`. O usuário costuma ter jogos abertos na tela 2 (`DISPLAY2`): input real só na tela 1 (`DISPLAY1`, principal), com `CH_TEST_MONITORS=primary`. Nunca mover o cursor, clicar ou abrir janelas na tela 2.
 - Benchmarks de timing (`tools/jitter-bench`) registram resultados em `docs/bench/`.
 
 ## 7. Segurança

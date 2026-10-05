@@ -7,7 +7,15 @@ rust-version.workspace = true
 authors.workspace = true
 publish.workspace = true
 
+[features]
+# Exposes the recording input backend to other crates' tests.
+test-util = []
+
 [dependencies]
+thiserror.workspace = true
+
+[dev-dependencies]
+proptest = "1.11"
 
 [lints]
 workspace = true

@@ -9,6 +9,8 @@ export const commands = {
 	appBootstrap: () => __TAURI_INVOKE<Bootstrap>("app_bootstrap"),
 	/**  Emits `DevPing` back to the UI (Phase 0 event channel probe). */
 	devPing: () => typedError<null, string>(__TAURI_INVOKE("dev_ping")),
+	/**  Dev-only (T1.7): one left click at the cursor after a short delay. */
+	debugClickOnce: () => typedError<null, string>(__TAURI_INVOKE("debug_click_once")),
 };
 
 /** Events */

@@ -30,6 +30,8 @@ O **Controle Inteligente de Aplicativos** do Windows 11 bloqueia os executáveis
 | `pnpm tokens`                                           | Regenera temas a partir de `design/tokens.json`                               |
 | `cargo test --workspace`                                | Testes Rust (também regenera `ui/src/ipc/bindings.ts`)                        |
 | `cargo clippy --workspace --all-targets -- -D warnings` | Lint Rust                                                                     |
+| `cargo llvm-cov --workspace --exclude ch-clicker`       | Cobertura Rust (mínimo 80%)                                                   |
+| `cargo test -p ch-win --test injection -- --ignored`    | Testes que injetam cliques reais (só com jogos e apps sensíveis fechados)     |
 
 ## Estrutura
 

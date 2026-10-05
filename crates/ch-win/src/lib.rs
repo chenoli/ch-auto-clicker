@@ -3,3 +3,4 @@
 #![cfg(windows)]
 
 pub mod display;
+pub mod input;

@@ -11,7 +11,8 @@ pub fn builder() -> Builder<tauri::Wry> {
     Builder::<tauri::Wry>::new()
         .commands(collect_commands![
             commands::app_bootstrap,
-            commands::dev_ping
+            commands::dev_ping,
+            commands::debug_click_once
         ])
         .events(collect_events![events::DevPing])
 }

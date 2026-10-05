@@ -408,13 +408,14 @@ advance(): deadline += intervals.next() + pts[k].delayMs     // "Delay é somado
 
 ```
 V = desktop virtual (SM_XVIRTUALSCREEN, SM_YVIRTUALSCREEN, SM_CXVIRTUALSCREEN, SM_CYVIRTUALSCREEN)
-nx = round((x - V.left) * 65535 / (V.width  - 1))
-ny = round((y - V.top)  * 65535 / (V.height - 1))
-SendInput(MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_VIRTUALDESK, nx, ny)
+nx = ceil((x - V.left) * 65536 / V.width)          // idem para y com V.top / V.height
+SendInput(MOUSEEVENTF_MOVE | ABSOLUTE | VIRTUALDESK | MOVE_NOCOALESCE, nx, ny)
 ```
 
+- O Windows converte de volta com `x = V.left + floor(nx * V.width / 65536)`. Arredondar para cima na ida é o inverso exato dessa conversão para qualquer largura até 65536 px. Um teste de propriedade em `ch-core::geometry` garante o round-trip para layouts aleatórios (origem negativa, 1 a 65536 px).
 - Movimentos absolutos **não** sofrem aceleração do ponteiro ("Aprimorar precisão do ponteiro") nem a velocidade do mouse. Movimentos relativos sofrem, por isso nunca são usados.
-- Uma função inversa em `ch-core` + teste de propriedade garantem `inverse(normalize(x)) == x` para qualquer layout. No primeiro uso por layout, uma verificação com `GetCursorPos` confirma o pixel. Se houver erro de ±1 px, aplica-se correção por offset calibrado e, como último recurso, `SetCursorPos`.
+- `MOVE_NOCOALESCE` impede que o Windows funda movimentos seguidos (importante no wiggle e no scan).
+- Depois de cada movimento, `GetCursorPos` confere o pixel. Uma diferença de até 2 px é corrigida com `SetCursorPos` e contada como correção (diagnóstico). Uma diferença maior significa que o usuário mexeu o mouse, e o backend não briga com ele. O teste de integração `absolute_moves_land_on_the_exact_pixel_on_every_monitor` exige zero correções.
 - O layout é recalculado em `WM_DISPLAYCHANGE` e `WM_DPICHANGED`. Se ele mudar durante uma execução, o motor pausa e emite `engine://degraded {reason: "display_changed"}`.
 
 ### 6.4 Mouse wiggle
