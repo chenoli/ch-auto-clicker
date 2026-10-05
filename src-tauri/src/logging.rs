@@ -1,7 +1,5 @@
 //! Rotating file log in `%LOCALAPPDATA%\Chenoli\CH Clicker\logs` (5 MB x 5) and panic capture.
 
-use std::path::PathBuf;
-
 use tauri::Runtime;
 use tauri::plugin::TauriPlugin;
 use tauri_plugin_log::{RotationStrategy, Target, TargetKind};
@@ -9,16 +7,11 @@ use tauri_plugin_log::{RotationStrategy, Target, TargetKind};
 const MAX_FILE_BYTES: u128 = 5 * 1024 * 1024;
 const KEEP_FILES: usize = 5;
 
-pub fn log_dir() -> PathBuf {
-    let base = std::env::var_os("LOCALAPPDATA").map_or_else(std::env::temp_dir, PathBuf::from);
-    base.join("Chenoli").join("CH Clicker").join("logs")
-}
-
 pub fn plugin<R: Runtime>() -> TauriPlugin<R> {
     tauri_plugin_log::Builder::new()
         .clear_targets()
         .target(Target::new(TargetKind::Folder {
-            path: log_dir(),
+            path: crate::paths::log_dir(),
             file_name: Some("ch-clicker".into()),
         }))
         .target(Target::new(TargetKind::Stdout))

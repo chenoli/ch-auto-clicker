@@ -64,7 +64,7 @@ jobs:
       - run: cargo test --workspace
       - uses: taiki-e/install-action@cargo-llvm-cov
       - name: Cobertura Rust (mínimo 80%)
-        run: cargo llvm-cov --workspace --exclude ch-clicker --fail-under-lines 80 --fail-under-functions 80
+        run: cargo llvm-cov --workspace --exclude ch-clicker --exclude jitter-bench --fail-under-lines 80 --fail-under-functions 80
       - name: Bindings TypeScript em dia
         shell: bash
         run: git diff --exit-code -- ui/src/ipc/bindings.ts

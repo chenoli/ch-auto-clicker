@@ -1,0 +1,18 @@
+[package]
+name = "jitter-bench"
+description = "Measures CH. Clicker scheduler lateness and writes a report to docs/bench."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[dependencies]
+ch-core.workspace = true
+ch-engine.workspace = true
+
+[target.'cfg(windows)'.dependencies]
+ch-win.workspace = true
+
+[lints]
+workspace = true

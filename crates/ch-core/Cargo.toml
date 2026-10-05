@@ -15,6 +15,8 @@ test-util = []
 thiserror.workspace = true
 
 [dev-dependencies]
+# Integration tests use the fakes behind `test-util`.
+ch-core = { path = ".", features = ["test-util"] }
 proptest = "1.11"
 
 [lints]

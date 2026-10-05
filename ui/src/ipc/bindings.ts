@@ -7,27 +7,70 @@ import * as __TAURI_EVENT from "@tauri-apps/api/event";
 /** Commands */
 export const commands = {
 	appBootstrap: () => __TAURI_INVOKE<Bootstrap>("app_bootstrap"),
-	/**  Emits `DevPing` back to the UI (Phase 0 event channel probe). */
-	devPing: () => typedError<null, string>(__TAURI_INVOKE("dev_ping")),
+	/**  Shortest reliable interval on this machine (provisional 4 ms until measured). */
+	engineCapabilities: () => __TAURI_INVOKE<Capabilities>("engine_capabilities"),
+	/**  Re-runs the timing benchmark (~3 s) and returns the new capabilities. */
+	engineRunBenchmark: () => typedError<Capabilities, string>(__TAURI_INVOKE("engine_run_benchmark")),
 	/**  Dev-only (T1.7): one left click at the cursor after a short delay. */
 	debugClickOnce: () => typedError<null, string>(__TAURI_INVOKE("debug_click_once")),
 };
 
 /** Events */
 export const events = {
-	devPing: makeEvent<DevPing>("dev-ping"),
+	capabilities: makeEvent<Capabilities>("capabilities"),
+	engineDegraded: makeEvent<EngineDegraded>("engine-degraded"),
+	engineJitter: makeEvent<EngineJitter>("engine-jitter"),
+	engineTick: makeEvent<EngineTick>("engine-tick"),
 };
 
 /* Types */
+export type BenchResult = {
+	intervalMs: number,
+	p99Us: number | null,
+	missed: number,
+	reliable: boolean,
+};
+
 /**  Initial state for a window; grows settings, profiles and engine state in later phases. */
 export type Bootstrap = {
 	version: string,
 	dpiAwareness: string,
 };
 
-/**  Phase 0 probe for the typed Rust → UI path; removed once real events exist. */
-export type DevPing = {
-	atMs: number | null,
+export type Capabilities = {
+	minReliableIntervalMs: number,
+	/**  False until the benchmark has run on this machine; the UI then shows the 4 ms default. */
+	measured: boolean,
+	timerKind: string,
+	mmcss: boolean,
+	measuredAtMs: number | null,
+	fingerprint: string,
+	results: BenchResult[],
+};
+
+export type DegradedReason = "timing";
+
+/**  The requested rate is not being met (or recovered); drives the warning callout. */
+export type EngineDegraded = {
+	degraded: boolean,
+	reason: DegradedReason,
+};
+
+/**  1 Hz lateness summary (diagnostics). */
+export type EngineJitter = {
+	samples: number,
+	p50Us: number | null,
+	p95Us: number | null,
+	p99Us: number | null,
+	maxUs: number | null,
+	missed: number,
+};
+
+/**  10 Hz while a run is active: counters and elapsed time for the footer, HUD and tray. */
+export type EngineTick = {
+	fires: number,
+	missed: number,
+	elapsedMs: number | null,
 };
 
 /* Tauri Specta runtime */

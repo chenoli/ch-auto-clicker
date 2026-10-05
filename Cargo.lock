@@ -488,6 +488,7 @@ name = "ch-clicker"
 version = "0.1.0"
 dependencies = [
  "ch-core",
+ "ch-engine",
  "ch-win",
  "log",
  "serde",
@@ -505,6 +506,7 @@ dependencies = [
 name = "ch-core"
 version = "0.1.0"
 dependencies = [
+ "ch-core",
  "proptest",
  "thiserror 2.0.21",
 ]
@@ -514,6 +516,8 @@ name = "ch-engine"
 version = "0.1.0"
 dependencies = [
  "ch-core",
+ "ch-win",
+ "windows",
 ]
 
 [[package]]
@@ -1911,6 +1915,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "875a5a69ac2bab1a891711cf5eccbec1ce0341ea805560dcd90b7a2e925132e8"
 dependencies = [
  "jiff-tzdb",
+]
+
+[[package]]
+name = "jitter-bench"
+version = "0.1.0"
+dependencies = [
+ "ch-core",
+ "ch-engine",
+ "ch-win",
 ]
 
 [[package]]

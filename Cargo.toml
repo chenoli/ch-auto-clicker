@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/ch-core", "crates/ch-win", "crates/ch-engine", "crates/ch-storage", "src-tauri"]
+members = ["crates/ch-core", "crates/ch-win", "crates/ch-engine", "crates/ch-storage", "src-tauri", "tools/jitter-bench"]
 
 [workspace.package]
 version = "0.1.0"

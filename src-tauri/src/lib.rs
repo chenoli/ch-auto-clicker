@@ -1,9 +1,12 @@
 //! Tauri app: commands, events, windows and plugins (ARCHITECTURE §2, §7).
 
+mod capabilities;
 mod commands;
 mod events;
 mod ipc;
 mod logging;
+mod paths;
+mod state;
 #[allow(dead_code)] // consumed by the tray icons in Phase 11
 mod tokens;
 
@@ -28,6 +31,9 @@ pub fn run() {
         .setup(move |app| {
             logging::install_panic_hook();
             specta.mount_events(app);
+            let state = state::AppState::new(app.handle())?;
+            app.manage(state);
+            state::measure_if_needed(app.handle());
             log::info!(
                 "{} {} started (DPI: {})",
                 ch_core::PRODUCT_NAME,

@@ -10,5 +10,12 @@ publish.workspace = true
 [dependencies]
 ch-core.workspace = true
 
+[target.'cfg(windows)'.dependencies]
+ch-win.workspace = true
+windows.workspace = true
+
+[dev-dependencies]
+ch-core = { workspace = true, features = ["test-util"] }
+
 [lints]
 workspace = true

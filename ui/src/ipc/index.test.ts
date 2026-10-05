@@ -9,6 +9,7 @@ describe("ipc", () => {
 
   it("re-exports the generated bindings", () => {
     expect(typeof commands.appBootstrap).toBe("function");
-    expect(typeof events.devPing.listen).toBe("function");
+    expect(typeof events.engineTick.listen).toBe("function");
+    expect(typeof events.capabilities.listen).toBe("function");
   });
 });

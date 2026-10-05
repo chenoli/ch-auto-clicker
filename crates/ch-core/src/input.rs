@@ -54,6 +54,28 @@ pub trait InputBackend {
     fn button_up(&mut self, button: MouseButton) -> Result<(), InputError>;
 }
 
+/// Accepts every call and does nothing; the timing benchmark measures the scheduler with it.
+#[derive(Debug, Default, Clone, Copy)]
+pub struct NoopBackend;
+
+impl InputBackend for NoopBackend {
+    fn move_to(&mut self, _target: Point) -> Result<(), InputError> {
+        Ok(())
+    }
+
+    fn click(&mut self, _button: MouseButton, _kind: ClickKind) -> Result<(), InputError> {
+        Ok(())
+    }
+
+    fn button_down(&mut self, _button: MouseButton) -> Result<(), InputError> {
+        Ok(())
+    }
+
+    fn button_up(&mut self, _button: MouseButton) -> Result<(), InputError> {
+        Ok(())
+    }
+}
+
 /// Records calls instead of injecting input. For engine tests in any crate.
 #[cfg(any(test, feature = "test-util"))]
 pub mod fake {
@@ -158,6 +180,15 @@ mod tests {
             expected: 2,
         }
         .to_string()
+    }
+
+    #[test]
+    fn noop_backend_accepts_everything() {
+        let mut b = NoopBackend;
+        assert!(b.move_to(Point::new(0, 0)).is_ok());
+        assert!(b.click(MouseButton::Left, ClickKind::Double).is_ok());
+        assert!(b.button_down(MouseButton::X1).is_ok());
+        assert!(b.button_up(MouseButton::X1).is_ok());
     }
 
     #[test]

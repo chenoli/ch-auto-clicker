@@ -1,11 +1,12 @@
 //! UI → Rust commands (ARCHITECTURE §7.1).
 
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::Duration;
 
 use serde::Serialize;
-use tauri_specta::Event;
+use tauri::{AppHandle, State};
 
-use crate::events::DevPing;
+use crate::capabilities::Capabilities;
+use crate::state::{AppState, refresh_capabilities};
 
 /// Initial state for a window; grows settings, profiles and engine state in later phases.
 #[derive(Debug, Serialize, specta::Type)]
@@ -24,14 +25,20 @@ pub fn app_bootstrap(app: tauri::AppHandle) -> Bootstrap {
     }
 }
 
-/// Emits `DevPing` back to the UI (Phase 0 event channel probe).
+/// Shortest reliable interval on this machine (provisional 4 ms until measured).
 #[tauri::command]
 #[specta::specta]
-pub fn dev_ping(app: tauri::AppHandle) -> Result<(), String> {
-    let at_ms = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map_or(0.0, |d| d.as_secs_f64() * 1000.0);
-    DevPing { at_ms }.emit(&app).map_err(|e| e.to_string())
+pub fn engine_capabilities(state: State<'_, AppState>) -> Capabilities {
+    state.capabilities()
+}
+
+/// Re-runs the timing benchmark (~3 s) and returns the new capabilities.
+#[tauri::command]
+#[specta::specta]
+pub async fn engine_run_benchmark(app: AppHandle) -> Result<Capabilities, String> {
+    tauri::async_runtime::spawn_blocking(move || refresh_capabilities(&app))
+        .await
+        .map_err(|e| e.to_string())?
 }
 
 /// Delay that lets the developer move the cursor off the button before the test click.
