@@ -42,6 +42,8 @@ pub struct AppState {
     pub persister: Persister,
     capabilities: Mutex<Capabilities>,
     benchmarking: AtomicBool,
+    /// Ctrl is held over the HUD, so its moves are the user's and get saved (D5).
+    hud_dragging: AtomicBool,
     pub animator: OnceLock<HeightAnimator>,
 }
 
@@ -77,6 +79,8 @@ impl AppState {
         let hook_app = app.clone();
         let engine = Engine::spawn_system(Box::new(move |change| {
             let _ = EngineStatus::from(change).emit(&hook_app);
+            crate::tray::refresh(&hook_app);
+            crate::hud::sync(&hook_app);
         }))
         .map_err(|e| format!("engine: {e}"))?;
         let telemetry = Telemetry::spawn(
@@ -101,12 +105,21 @@ impl AppState {
             persister: Persister::spawn(store, DEBOUNCE),
             capabilities: Mutex::new(capabilities),
             benchmarking: AtomicBool::new(false),
+            hud_dragging: AtomicBool::new(false),
             animator: OnceLock::new(),
         })
     }
 
     pub fn hotkeys(&self) -> &crate::hotkeys::HotkeyManager {
         &self.hotkeys
+    }
+
+    pub fn hud_dragging(&self) -> bool {
+        self.hud_dragging.load(Ordering::Relaxed)
+    }
+
+    pub fn set_hud_dragging(&self, dragging: bool) {
+        self.hud_dragging.store(dragging, Ordering::Relaxed);
     }
 
     pub fn overlays(&self) -> &crate::overlay::OverlayManager {
@@ -133,6 +146,8 @@ impl AppState {
 
 pub fn emit_settings<R: Runtime>(app: &AppHandle<R>, settings: &Settings) {
     let _ = SettingsChanged(settings.clone()).emit(app);
+    crate::tray::refresh(app);
+    crate::hud::sync(app);
 }
 
 pub fn emit_profiles<R: Runtime>(app: &AppHandle<R>, data: &AppData) {
@@ -141,6 +156,7 @@ pub fn emit_profiles<R: Runtime>(app: &AppHandle<R>, data: &AppData) {
         active_profile_id: data.settings.active_profile_id.clone(),
     }
     .emit(app);
+    crate::tray::refresh(app);
 }
 
 /// Runs the timing benchmark (blocking, ~3 s), stores the result and notifies every window.

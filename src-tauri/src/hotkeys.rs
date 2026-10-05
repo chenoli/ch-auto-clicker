@@ -53,6 +53,8 @@ pub struct HotkeyActionFailed {
 struct Registry {
     ids: HashMap<u32, HotkeyTarget>,
     statuses: Vec<HotkeyStatus>,
+    /// Iniciar / Parar combo already announced as taken, so the toast shows once per conflict.
+    notified: Option<Hotkey>,
 }
 
 pub struct HotkeyManager {
@@ -154,8 +156,19 @@ impl HotkeyManager {
             });
         }
         let statuses = registry.statuses.clone();
+        let taken = statuses
+            .iter()
+            .find(|s| s.target == HotkeyTarget::Action(HotkeyAction::StartStop) && !s.ok)
+            .map(|s| s.combo.clone());
+        let announce = taken
+            .clone()
+            .filter(|c| registry.notified.as_ref() != Some(c));
+        registry.notified = taken;
         drop(registry);
         let _ = HotkeyStatusChanged(statuses.clone()).emit(app);
+        if let Some(combo) = announce {
+            crate::tray::notify_hotkey_taken(app, &combo);
+        }
         statuses
     }
 
@@ -270,6 +283,14 @@ fn on_triggered<R: Runtime>(app: &AppHandle<R>, id: u32) {
         }
     };
     if let Err(e) = result {
+        // The anti-cheat warning lives in the main window: bring it up so it can be read.
+        if e.code == crate::commands::ANTI_CHEAT_ACK
+            && let Some(main) = app.get_webview_window("main")
+        {
+            let _ = main.unminimize();
+            let _ = main.show();
+            let _ = main.set_focus();
+        }
         let _ = HotkeyActionFailed { code: e.code }.emit(app);
     }
 }

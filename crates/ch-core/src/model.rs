@@ -345,6 +345,12 @@ pub struct Settings {
     pub hotkeys: HotkeyBindings,
     pub hud: WindowPosition,
     pub window: WindowPosition,
+    /// The one-time anti-cheat warning was accepted (TASKS T11.3). Missing in older files.
+    #[serde(default)]
+    pub anti_cheat_acknowledged: bool,
+    /// How many times the "Segure Ctrl para mover" hint was shown on the HUD (D5: first 3).
+    #[serde(default)]
+    pub hud_hints_shown: u8,
 }
 
 impl Settings {
@@ -363,6 +369,8 @@ impl Settings {
             active_profile_id: None,
             profile_order: Vec::new(),
             hotkeys: HotkeyBindings::default(),
+            anti_cheat_acknowledged: false,
+            hud_hints_shown: 0,
             hud: WindowPosition::default(),
             window: WindowPosition::default(),
         }

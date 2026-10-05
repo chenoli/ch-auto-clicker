@@ -24,12 +24,15 @@ serde.workspace = true
 serde_json.workspace = true
 specta.workspace = true
 specta-typescript = "0.0.12"
-tauri = { version = "2.12", features = [] }
+tauri = { version = "2.12", features = ["image-png", "tray-icon"] }
 tauri-plugin-log = "2.10"
 tauri-plugin-single-instance = "2.5"
 uuid = { version = "1.27", features = ["v4"] }
 tauri-specta = { version = "=2.0.0-rc.25", features = ["derive", "typescript"] }
 tauri-plugin-dialog = "2.8"
+tauri-plugin-opener = "2.7"
+tauri-plugin-autostart = "2.7"
+tauri-plugin-notification = "2.5"
 
 [target.'cfg(windows)'.dependencies]
 ch-win.workspace = true

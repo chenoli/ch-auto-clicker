@@ -10,6 +10,7 @@ import {
 import { SCREEN_META } from "./manifest";
 import { AreaOverlayScreenDemo, OverlayScreenDemo, PointsScreenDemo } from "./points-screens";
 import { ProfilesEmptyDemo, ProfilesScreenDemo, ThemesScreenDemo } from "./profiles-screens";
+import { HudStatesDemo, SettingsScreenDemo } from "./settings-screens";
 import { TokensScreen } from "./tokens-screen";
 
 import type { ScreenMeta } from "./manifest";
@@ -32,6 +33,8 @@ const RENDERERS: Record<string, () => ReactNode> = {
   "profiles-empty": () => <ProfilesEmptyDemo />,
   hotkeys: () => <HotkeysScreenDemo />,
   "hotkeys-states": () => <HotkeysStatesDemo />,
+  settings: () => <SettingsScreenDemo />,
+  hud: () => <HudStatesDemo />,
   themes: () => <ThemesScreenDemo />,
   tokens: () => <TokensScreen />,
 };

@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { useTranslation } from "react-i18next";
 
-import { commands, inTauri } from "../../ipc";
+import { commands, events, inTauri } from "../../ipc";
 
 import { selectActiveProfile, setCommandError, useAppStore } from "../../store/app-store";
 import { connectStore } from "../../store/connect";
@@ -16,9 +15,10 @@ import { useHotkeyRecording } from "../hotkeys/use-hotkey-recording";
 import { chcapUrl } from "../overlay/overlay-keys";
 import { PointsRoute } from "../points/points-route";
 import { ProfilesRoute } from "../profiles/profiles-route";
-import { SettingsScreen } from "../settings/settings-screen";
+import { SettingsRoute } from "../settings/settings-route";
 import { ConnectFailure } from "../shell/connect-failure";
-import { ThemesRoute, themeLabel } from "../themes/themes-route";
+import { ThemesRoute } from "../themes/themes-route";
+import { AntiCheatDialog } from "./anti-cheat-dialog";
 import { MainWindowView } from "./main-window-view";
 
 import type { Profile } from "../../ipc";
@@ -27,6 +27,8 @@ import type { ReactElement } from "react";
 type Screen = "main" | "settings" | "hotkeys" | "points" | "profiles" | "themes";
 
 const MIN_HEIGHT = 640;
+/** Rust refuses the first start until the anti-cheat notice is accepted (T11.3). */
+const ANTI_CHEAT_ACK = "ANTI_CHEAT_ACK";
 
 /** The scan thumbnail; `updatedAt` busts the webview cache when a new area is saved. */
 function thumbnailUrl(profile: Profile): string {
@@ -35,7 +37,6 @@ function thumbnailUrl(profile: Profile): string {
 
 /** The main window (Tela 01) and its sub-screens, connected to the Rust state. */
 export function MainWindow(): ReactElement | null {
-  const { t } = useTranslation();
   const ready = useAppStore((s) => s.ready);
   const profile = useAppStore(selectActiveProfile);
   const settings = useAppStore((s) => s.settings);
@@ -49,6 +50,15 @@ export function MainWindow(): ReactElement | null {
   const recordingApi = useHotkeyRecording();
   const { cancel: cancelRecording } = recordingApi;
   const [connectError, setConnectError] = useState<string | null>(null);
+
+  // "Configurações" in the tray menu opens that screen here.
+  useEffect(() => {
+    if (!inTauri) return;
+    const unlisten = events.navigateRequested.listen((e) => {
+      if (e.payload.screen === "settings") setScreen("settings");
+    });
+    return () => void unlisten.then((f) => f());
+  }, []);
 
   useEffect(() => {
     let dispose: (() => void) | undefined;
@@ -89,15 +99,8 @@ export function MainWindow(): ReactElement | null {
 
   if (screen === "settings") {
     return (
-      <SettingsScreen
-        themeLabel={themeLabel(settings, t)}
-        locale={settings.locale}
-        onLocale={(locale) => {
-          setCommandError(null);
-          void commands.settingsUpdate({ ...settings, locale }).then((r) => {
-            if (r.status === "error") setCommandError(r.error.code);
-          });
-        }}
+      <SettingsRoute
+        settings={settings}
         onOpenThemes={() => go("themes")}
         onOpenHotkeys={() => go("hotkeys")}
         onBack={() => go("main")}
@@ -146,42 +149,53 @@ export function MainWindow(): ReactElement | null {
 
   const startStatus = hotkeys.find((h) => h.target.kind === "action" && h.target.id === "startStop");
   return (
-    <MainWindowView
-      profile={profile}
-      locale={settings.locale}
-      engine={engine}
-      countdownTotalMs={countdownTotalMs}
-      shortcut={hotkeyLabel(settings.hotkeys.startStop)}
-      errorCode={engine.state === "error" ? (lastStatus?.errorCode ?? null) : null}
-      commandError={commandError}
-      hotkeyError={startStatus && !startStatus.ok ? hotkeyLabel(startStatus.combo) : null}
-      onEdit={onEdit}
-      onPrimary={() => void primaryAction(engine.state)}
-      onReviewHotkeys={() => go("hotkeys")}
-      onStartAnyway={() => void primaryAction("idle")}
-      onOpenSettings={() => go("settings")}
-      onOpenVariation={() => {
-        setCommandError(null);
-        void commands.windowOpenVariation();
-      }}
-      onOpenPoints={() => go("points")}
-      profiles={profiles}
-      onSelectProfile={(id) => {
-        setCommandError(null);
-        void commands.profileActivate(id).then((r) => {
-          if (r.status === "error") setCommandError(r.error.code);
-        });
-      }}
-      onOpenProfiles={() => go("profiles")}
-      thumbnailUrl={profile.modes.scan.area && inTauri ? thumbnailUrl(profile) : null}
-      onSelectArea={() => {
-        setCommandError(null);
-        void commands.overlayPickArea().then((r) => {
-          if (r.status === "error") setCommandError(r.error.code);
-        });
-      }}
-      onDesiredHeight={onDesiredHeight}
-      {...windowActions}
-    />
+    <>
+      <MainWindowView
+        profile={profile}
+        locale={settings.locale}
+        engine={engine}
+        countdownTotalMs={countdownTotalMs}
+        shortcut={hotkeyLabel(settings.hotkeys.startStop)}
+        errorCode={engine.state === "error" ? (lastStatus?.errorCode ?? null) : null}
+        commandError={commandError}
+        hotkeyError={startStatus && !startStatus.ok ? hotkeyLabel(startStatus.combo) : null}
+        onEdit={onEdit}
+        onPrimary={() => void primaryAction(engine.state)}
+        onReviewHotkeys={() => go("hotkeys")}
+        onStartAnyway={() => void primaryAction("idle")}
+        onOpenSettings={() => go("settings")}
+        onOpenVariation={() => {
+          setCommandError(null);
+          void commands.windowOpenVariation();
+        }}
+        onOpenPoints={() => go("points")}
+        profiles={profiles}
+        onSelectProfile={(id) => {
+          setCommandError(null);
+          void commands.profileActivate(id).then((r) => {
+            if (r.status === "error") setCommandError(r.error.code);
+          });
+        }}
+        onOpenProfiles={() => go("profiles")}
+        thumbnailUrl={profile.modes.scan.area && inTauri ? thumbnailUrl(profile) : null}
+        onSelectArea={() => {
+          setCommandError(null);
+          void commands.overlayPickArea().then((r) => {
+            if (r.status === "error") setCommandError(r.error.code);
+          });
+        }}
+        onDesiredHeight={onDesiredHeight}
+        {...windowActions}
+      />
+      {commandError === ANTI_CHEAT_ACK && (
+        <AntiCheatDialog
+          onAccept={() => {
+            setCommandError(null);
+            void commands.settingsAcknowledgeAntiCheat().then(() => primaryAction("idle"));
+          }}
+          onCancel={() => setCommandError(null)}
+        />
+      )}
+    </>
   );
 }

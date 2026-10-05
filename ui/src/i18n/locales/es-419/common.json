@@ -133,7 +133,11 @@
     "IMPORT_NOT_CHPROFILE": "El archivo no es un .chprofile.",
     "IMPORT_FUTURE_VERSION": "El archivo fue creado por una versión más nueva de CH. Clicker.",
     "IMPORT_INVALID": "El perfil del archivo tiene valores inválidos.",
-    "IMPORT_UNREADABLE": "No se pudo leer el archivo."
+    "IMPORT_UNREADABLE": "No se pudo leer el archivo.",
+    "ANTI_CHEAT_ACK": "Lee el aviso sobre anti-cheat antes de iniciar.",
+    "AUTOSTART_FAILED": "No se pudo cambiar el inicio con Windows.",
+    "OPEN_FAILED": "No se pudo abrir el navegador.",
+    "BENCHMARK_FAILED": "No se pudo medir el programador."
   },
   "gallery": {
     "title": "Galería de pantallas",
@@ -187,11 +191,31 @@
   "settings": {
     "kicker": "Aplicación",
     "title": "Configuración",
-    "hotkeysLink": "Atajos ›",
-    "comingSoon": "Las demás opciones llegan en la Fase 11.",
     "theme": "Tema",
     "followingSystem": "Siguiendo a Windows · {name}",
-    "language": "Idioma"
+    "language": "Idioma",
+    "autostart": "Iniciar con Windows",
+    "autostartHint": "Se abre minimizado en la bandeja",
+    "tray": "Minimizar a la bandeja",
+    "trayHint": "Sale de la barra de tareas al minimizar",
+    "hud": "Mostrar HUD al ejecutar",
+    "hudHint": "Píldora flotante con estado y contador",
+    "countdown": "Cuenta regresiva antes de iniciar",
+    "countdownHint": "Tiempo para colocar el cursor",
+    "countdownLess": "Menos segundos",
+    "countdownMore": "Más segundos",
+    "onClose": "Al cerrar la ventana",
+    "closeMinimize": "Minimizar",
+    "closeQuit": "Salir",
+    "advanced": "Avanzado",
+    "minReliable": "Intervalo mínimo confiable",
+    "notMeasured": "{ms} ms (aún sin medir)",
+    "benchInterval": "Intervalo",
+    "benchMissed": "Perdidos",
+    "measureHint": "Mide el programador de esta computadora (~3 s).",
+    "measure": "Medir de nuevo",
+    "measuring": "Midiendo…",
+    "footer": "CH. Clicker {version} · Chenoli Labs"
   },
   "languages": {
     "pt-BR": "Português",
@@ -321,5 +345,24 @@
   "themes": {
     "title": "Tema",
     "followSystem": "Seguir a Windows"
+  },
+  "antiCheat": {
+    "title": "Juegos en línea con anti-cheat",
+    "text": "Los sistemas anti-cheat detectan entrada automatizada y pueden suspender o banear tu cuenta. CH. Clicker no oculta su actividad. No lo uses donde los términos de servicio prohíben la automatización.",
+    "accept": "Entendido, iniciar"
+  },
+  "support": {
+    "kicker": "Apoya el proyecto",
+    "title": "¿Te gustó? Invítame un café.",
+    "text": "Gratis y sin anuncios. Tu apoyo mantiene el desarrollo.",
+    "action": "Apoyar ↗"
+  },
+  "hud": {
+    "countdown": "Iniciando",
+    "running": "En ejecución",
+    "paused": "En pausa",
+    "clicks": "clics",
+    "remaining": "Resta",
+    "hint": "Mantén Ctrl para mover"
   }
 }

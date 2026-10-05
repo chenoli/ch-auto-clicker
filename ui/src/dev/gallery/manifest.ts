@@ -20,6 +20,8 @@ export const SCREEN_META: ScreenMeta[] = [
   { id: "profiles-empty", title: "05.B — Perfis · estado vazio", width: 420, height: 640 },
   { id: "hotkeys", title: "06 — Atalhos", width: 420, height: 640, reference: "atalhos" },
   { id: "hotkeys-states", title: "06 — Atalhos · gravando e conflito", width: 420, height: 640 },
+  { id: "settings", title: "08 — Configurações", width: 420, height: 640, reference: "config" },
+  { id: "hud", title: "04 — Mini HUD", width: 1120, height: 230, reference: "hud" },
   { id: "themes", title: "07 — Tema", width: 420, height: 640, reference: "temas" },
   { id: "tokens", title: "11 — Tokens", width: 880, height: 620 },
 ];

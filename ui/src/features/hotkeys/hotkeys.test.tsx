@@ -29,7 +29,6 @@ vi.mock("../../ipc", () => ({
 
 const { HotkeysScreen } = await import("./hotkeys-screen");
 const { useHotkeyRecording } = await import("./use-hotkey-recording");
-const { SettingsScreen } = await import("../settings/settings-screen");
 const { useAppStore } = await import("../../store/app-store");
 
 const bindings: HotkeyBindings = {
@@ -118,35 +117,6 @@ describe("HotkeysScreen", () => {
     expect(screen.getByRole("alert")).toHaveTextContent("Outro aplicativo já usa este atalho");
     fireEvent.click(screen.getByRole("button", { name: "Tentar de novo" }));
     expect(props.onRetry).toHaveBeenCalledOnce();
-  });
-});
-
-describe("SettingsScreen", () => {
-  it("links to the shortcuts screen", () => {
-    const onOpenHotkeys = vi.fn();
-    const onBack = vi.fn();
-    const onOpenThemes = vi.fn();
-    const onLocale = vi.fn();
-    render(
-      <SettingsScreen
-        themeLabel="Grafite"
-        locale="pt-BR"
-        onLocale={onLocale}
-        onOpenThemes={onOpenThemes}
-        onOpenHotkeys={onOpenHotkeys}
-        onBack={onBack}
-        onMinimize={vi.fn()}
-        onClose={vi.fn()}
-      />,
-    );
-    fireEvent.click(screen.getByRole("button", { name: /Grafite ›/ }));
-    expect(onOpenThemes).toHaveBeenCalledOnce();
-    fireEvent.click(screen.getByRole("radio", { name: "Español" }));
-    expect(onLocale).toHaveBeenCalledWith("es-419");
-    fireEvent.click(screen.getByRole("button", { name: /Atalhos ›/ }));
-    fireEvent.click(screen.getByRole("button", { name: "Voltar" }));
-    expect(onOpenHotkeys).toHaveBeenCalledOnce();
-    expect(onBack).toHaveBeenCalledOnce();
   });
 });
 

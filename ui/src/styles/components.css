@@ -994,6 +994,237 @@
     border: 1px solid var(--border);
   }
 
+  /* Settings (Tela 08). */
+  .pref-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 56px;
+    border-top: 1px solid var(--divider);
+  }
+  .link-row {
+    width: 100%;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: var(--text-13);
+    font-weight: 600;
+    color: var(--fg);
+    text-align: left;
+    cursor: pointer;
+  }
+  .bench-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--text-11);
+    font-variant-numeric: tabular-nums;
+    color: var(--fg-2);
+  }
+  .bench-table th {
+    text-align: left;
+    font-weight: 700;
+    color: var(--fg-3);
+    padding-bottom: 4px;
+  }
+  .bench-table td {
+    padding: 2px 0;
+  }
+  .bench-table tr[data-reliable="false"] td {
+    color: var(--warn);
+  }
+  .anti-cheat {
+    display: flex;
+    gap: 12px;
+    padding: 14px;
+    margin: 6px 0 16px;
+    border-radius: 10px;
+    border: 1px solid color-mix(in oklch, var(--warn) 35%, transparent);
+    background: color-mix(in oklch, var(--warn) 6%, transparent);
+  }
+  .anti-cheat__icon {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 10px;
+    border: 1.5px solid var(--warn);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--text-11);
+    font-weight: 700;
+    color: var(--warn);
+  }
+  .support-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px;
+    margin: 0 0 16px;
+    border-radius: 10px;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+  }
+  .support-card__kicker {
+    font-size: var(--text-9);
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent-b);
+  }
+  .support-card__button {
+    flex: none;
+    height: 36px;
+    padding: 0 14px;
+    border-radius: 9px;
+    border: 1px solid color-mix(in oklch, var(--accent-b) 40%, transparent);
+    background: color-mix(in oklch, var(--accent-b) 12%, transparent);
+    font: inherit;
+    font-size: var(--text-12);
+    font-weight: 600;
+    color: var(--accent-b);
+    cursor: pointer;
+  }
+  .support-card__button:hover {
+    background: color-mix(in oklch, var(--accent-b) 20%, transparent);
+  }
+  .dialog-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: color-mix(in oklch, var(--bg) 70%, transparent);
+  }
+  .dialog {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 360px;
+    padding: 20px;
+    border-radius: 12px;
+    background: var(--bg-2);
+    border: 1px solid color-mix(in oklch, var(--warn) 35%, transparent);
+    box-shadow: var(--shadow-popover);
+  }
+
+  /* Mini HUD (Tela 04). The window is transparent; only the pill paints. */
+  .transparent-window,
+  .transparent-window body,
+  .transparent-window #root {
+    background: transparent;
+  }
+  .hud-root {
+    display: flex;
+    justify-content: flex-end;
+  }
+  .hud-pill {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 42px;
+    padding: 0 6px 0 14px;
+    border-radius: 21px;
+    background: color-mix(in oklch, var(--bg) 95%, transparent);
+    border: 1px solid color-mix(in oklch, var(--fg) 16%, transparent);
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.5);
+    white-space: nowrap;
+    transition: opacity 0.15s;
+    --hud-tone: var(--fg-2);
+  }
+  .hud-pill[data-state="countdown"] {
+    --hud-tone: var(--warn);
+    border-color: color-mix(in oklch, var(--warn) 40%, transparent);
+  }
+  .hud-pill[data-state="running"] {
+    --hud-tone: var(--accent);
+    border-color: color-mix(in oklch, var(--accent) 40%, transparent);
+  }
+  .hud-pill[data-hover="true"] {
+    opacity: 0.4;
+  }
+  .hud-pill[data-draggable="true"] {
+    opacity: 1;
+    cursor: move;
+  }
+  .hud-pill__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 4px;
+    background: var(--hud-tone);
+    animation: ch-pulse 1.4s infinite;
+  }
+  .hud-pill[data-state="countdown"] .hud-pill__dot {
+    animation-duration: 1s;
+  }
+  .hud-pill__bars {
+    display: flex;
+    gap: 2px;
+  }
+  .hud-pill__bars span {
+    width: 2.5px;
+    height: 9px;
+    border-radius: 1px;
+    background: var(--fg-2);
+  }
+  .hud-pill__state {
+    font-size: var(--text-10);
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--hud-tone);
+  }
+  .hud-pill__sep {
+    width: 1px;
+    height: 18px;
+    background: color-mix(in oklch, var(--fg) 12%, transparent);
+  }
+  .hud-pill__label {
+    font-size: var(--text-9);
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--fg-2);
+  }
+  .hud-pill__time {
+    font-size: var(--text-13);
+    font-weight: 600;
+    color: var(--fg);
+    font-variant-numeric: tabular-nums;
+  }
+  .hud-pill[data-state="paused"] .hud-pill__time {
+    color: var(--fg-2);
+  }
+  .hud-pill__chip {
+    height: 30px;
+    padding: 0 10px;
+    border-radius: 15px;
+    background: var(--bg-3);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--text-11);
+    color: var(--fg-2);
+  }
+  .hud-hint {
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: color-mix(in oklch, var(--bg) 90%, transparent);
+    font-size: var(--text-10);
+    color: var(--fg-2);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hud-pill__dot {
+      animation: none;
+    }
+  }
+
   /* Themes (Tela 07). The preview reads the tokens of its own nested data-theme. */
   .follow-system {
     height: 30px;
@@ -1891,6 +2122,18 @@
     width: 1px;
     height: 16px;
     background: color-mix(in oklch, var(--fg) 12%, transparent);
+  }
+
+  /* Gallery stand-in for the desktop behind the HUD. */
+  .hud-demo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 40px;
+    height: 100%;
+    padding: 56px 48px;
+    border-radius: 8px;
+    background: repeating-linear-gradient(135deg, #2a2c30 0 10px, #26282c 10px 20px);
   }
 
   /* Gallery stand-in for the OS window frame. */

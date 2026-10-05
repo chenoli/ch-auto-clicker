@@ -133,7 +133,11 @@
     "IMPORT_NOT_CHPROFILE": "The file is not a .chprofile.",
     "IMPORT_FUTURE_VERSION": "The file was made by a newer version of CH. Clicker.",
     "IMPORT_INVALID": "The profile in the file has invalid values.",
-    "IMPORT_UNREADABLE": "Could not read the file."
+    "IMPORT_UNREADABLE": "Could not read the file.",
+    "ANTI_CHEAT_ACK": "Read the anti-cheat notice before starting.",
+    "AUTOSTART_FAILED": "Could not change starting with Windows.",
+    "OPEN_FAILED": "Could not open the browser.",
+    "BENCHMARK_FAILED": "Could not measure the scheduler."
   },
   "gallery": {
     "title": "Screen gallery",
@@ -187,11 +191,31 @@
   "settings": {
     "kicker": "App",
     "title": "Settings",
-    "hotkeysLink": "Shortcuts ›",
-    "comingSoon": "More settings arrive in Phase 11.",
     "theme": "Theme",
     "followingSystem": "Following Windows · {name}",
-    "language": "Language"
+    "language": "Language",
+    "autostart": "Start with Windows",
+    "autostartHint": "Opens minimized in the tray",
+    "tray": "Minimize to tray",
+    "trayHint": "Leaves the taskbar when minimized",
+    "hud": "Show HUD while running",
+    "hudHint": "Floating pill with state and counter",
+    "countdown": "Countdown before starting",
+    "countdownHint": "Time to place the cursor",
+    "countdownLess": "Fewer seconds",
+    "countdownMore": "More seconds",
+    "onClose": "When closing the window",
+    "closeMinimize": "Minimize",
+    "closeQuit": "Quit",
+    "advanced": "Advanced",
+    "minReliable": "Minimum reliable interval",
+    "notMeasured": "{ms} ms (not measured yet)",
+    "benchInterval": "Interval",
+    "benchMissed": "Missed",
+    "measureHint": "Measures this computer's scheduler (~3 s).",
+    "measure": "Measure again",
+    "measuring": "Measuring…",
+    "footer": "CH. Clicker {version} · Chenoli Labs"
   },
   "languages": {
     "pt-BR": "Português",
@@ -321,5 +345,24 @@
   "themes": {
     "title": "Theme",
     "followSystem": "Follow Windows"
+  },
+  "antiCheat": {
+    "title": "Online games with anti-cheat",
+    "text": "Anti-cheat systems detect automated input and may suspend or ban your account. CH. Clicker does not hide its activity. Do not use it where the terms of service forbid automation.",
+    "accept": "Got it, start"
+  },
+  "support": {
+    "kicker": "Support the project",
+    "title": "Like it? Buy me a coffee.",
+    "text": "Free and ad-free. Your support keeps development going.",
+    "action": "Support ↗"
+  },
+  "hud": {
+    "countdown": "Starting",
+    "running": "Running",
+    "paused": "Paused",
+    "clicks": "clicks",
+    "remaining": "Left",
+    "hint": "Hold Ctrl to move"
   }
 }

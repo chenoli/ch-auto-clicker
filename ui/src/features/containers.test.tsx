@@ -38,6 +38,10 @@ const mocks = vi.hoisted(() => ({
     profileImportText: vi.fn(),
     hotkeySet: vi.fn(),
     settingsUpdate: vi.fn(),
+    settingsAcknowledgeAntiCheat: vi.fn(),
+    appOpenSupport: vi.fn(),
+    engineRunBenchmark: vi.fn(),
+    hudResize: vi.fn(),
   },
 }));
 
@@ -58,6 +62,8 @@ vi.mock("../ipc", () => {
       hotkeyActionFailed: event,
       hotkeyRecording: event,
       overlayChanged: event,
+      navigateRequested: event,
+      hudHover: event,
     },
   };
 });
@@ -65,6 +71,7 @@ vi.mock("../ipc", () => {
 const { MainWindow } = await import("./main/main-window");
 const { VariationWindow } = await import("./variation/variation-window");
 const { OverlayWindow } = await import("./overlay/overlay-window");
+const { HudWindow } = await import("./hud/hud-window");
 const { useAppStore } = await import("../store/app-store");
 
 function bootstrap(profile: Profile = prototypeProfile()) {
@@ -122,7 +129,7 @@ describe("MainWindow", () => {
     render(<MainWindow />);
     fireEvent.click(await screen.findByRole("button", { name: "Configurações" }));
     expect(mocks.commands.windowSetContentHeight).toHaveBeenLastCalledWith(640);
-    fireEvent.click(screen.getByRole("button", { name: /Atalhos ›/ }));
+    fireEvent.click(screen.getByRole("button", { name: /^Atalhos/ }));
     expect(screen.getByRole("heading", { name: "Atalhos" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Pausar \/ Retomar/ }));
     expect(mocks.commands.hotkeyBeginRecord).toHaveBeenCalledOnce();
@@ -175,6 +182,79 @@ describe("MainWindow", () => {
   it("renders nothing until the state is loaded", () => {
     mocks.commands.appBootstrap.mockReturnValue(new Promise(() => {}));
     const { container } = render(<MainWindow />);
+    expect(container).toBeEmptyDOMElement();
+  });
+});
+
+describe("Anti-cheat notice and settings", () => {
+  it("asks once before the first start, then starts", async () => {
+    mocks.commands.engineStart
+      .mockResolvedValueOnce({ status: "error", error: { code: "ANTI_CHEAT_ACK", message: "" } })
+      .mockResolvedValueOnce({ status: "ok", data: null });
+    mocks.commands.settingsAcknowledgeAntiCheat.mockResolvedValue(bootstrap().settings);
+    render(<MainWindow />);
+    fireEvent.click(await screen.findByRole("button", { name: /Iniciar/ }));
+    const dialog = await screen.findByRole("alertdialog");
+    expect(dialog).toHaveTextContent("Jogos online com anti-cheat");
+    fireEvent.click(screen.getByRole("button", { name: "Entendi, iniciar" }));
+    await waitFor(() => expect(mocks.commands.engineStart).toHaveBeenCalledTimes(2));
+    expect(mocks.commands.settingsAcknowledgeAntiCheat).toHaveBeenCalledOnce();
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+  });
+
+  it("closes the notice without starting", async () => {
+    mocks.commands.engineStart.mockResolvedValue({ status: "error", error: { code: "ANTI_CHEAT_ACK", message: "" } });
+    render(<MainWindow />);
+    fireEvent.click(await screen.findByRole("button", { name: /Iniciar/ }));
+    await screen.findByRole("alertdialog");
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /Iniciar/ }));
+    await screen.findByRole("alertdialog");
+    fireEvent.click(screen.getByRole("button", { name: "Cancelar" }));
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+    expect(mocks.commands.settingsAcknowledgeAntiCheat).not.toHaveBeenCalled();
+  });
+
+  it("saves preferences, opens Ko-fi and measures again", async () => {
+    mocks.commands.settingsUpdate
+      .mockResolvedValueOnce({ status: "ok", data: null })
+      .mockResolvedValueOnce({ status: "error", error: { code: "AUTOSTART_FAILED", message: "" } });
+    mocks.commands.appOpenSupport.mockResolvedValue({ status: "error", error: { code: "OPEN_FAILED", message: "" } });
+    mocks.commands.engineRunBenchmark
+      .mockResolvedValueOnce({ status: "ok", data: { minReliableIntervalMs: 1, measured: true, results: [] } })
+      .mockResolvedValueOnce({ status: "error", error: "busy" });
+    render(<MainWindow />);
+    fireEvent.click(await screen.findByRole("button", { name: "Configurações" }));
+    fireEvent.click(screen.getByRole("switch", { name: "Mostrar HUD ao rodar" }));
+    expect(mocks.commands.settingsUpdate).toHaveBeenCalledWith(expect.objectContaining({ showHud: true }));
+    fireEvent.click(screen.getByRole("radio", { name: "Español" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("inicialização com o Windows");
+    fireEvent.click(screen.getByRole("button", { name: "Apoiar ↗" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("navegador");
+    fireEvent.click(screen.getByRole("button", { name: /Avançado/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Medir novamente" }));
+    expect(await screen.findByText("1 ms")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Medir novamente" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("medir o agendador");
+  });
+});
+
+describe("HudWindow", () => {
+  it("follows the engine and reports its size", async () => {
+    mocks.commands.appBootstrap.mockResolvedValue({
+      ...bootstrap(),
+      engine: tick({ state: "running", clicks: 42, remainingMs: 60_000 }),
+      settings: { ...bootstrap().settings, hudHintsShown: 1 },
+    });
+    render(<HudWindow />);
+    expect(await screen.findByRole("status")).toHaveTextContent("42");
+    expect(screen.getByText("Segure Ctrl para mover")).toBeInTheDocument();
+  });
+
+  it("renders nothing before the state arrives", () => {
+    mocks.commands.appBootstrap.mockReturnValue(new Promise(() => {}));
+    const { container } = render(<HudWindow />);
     expect(container).toBeEmptyDOMElement();
   });
 });

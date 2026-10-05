@@ -62,6 +62,7 @@ pub fn settings_update(
     if let Some(e) = validate_settings(&settings).into_iter().next() {
         return Err(e.into());
     }
+    let previous = state.data().settings;
     let saved = state.with_data(|data| {
         // Profile bookkeeping is owned by the profile commands, never by a settings edit.
         let mut next = settings;
@@ -74,8 +75,49 @@ pub fn settings_update(
     state.persister.save_settings(&saved);
     emit_settings(&app, &saved);
     crate::theme::apply(&app, &saved);
+    if previous.autostart != saved.autostart {
+        use tauri_plugin_autostart::ManagerExt;
+        let launcher = app.autolaunch();
+        let result = if saved.autostart {
+            launcher.enable()
+        } else {
+            launcher.disable()
+        };
+        if let Err(e) = result {
+            log::warn!("autostart: {e}");
+            return Err(AppError::new("AUTOSTART_FAILED", e.to_string()));
+        }
+    }
     Ok(saved)
 }
+
+pub const ANTI_CHEAT_ACK: &str = "ANTI_CHEAT_ACK";
+
+/// Records that the user read the anti-cheat warning; the next start goes ahead.
+#[tauri::command]
+#[specta::specta]
+pub fn settings_acknowledge_anti_cheat(app: AppHandle, state: State<'_, AppState>) -> Settings {
+    let saved = state.with_data(|data| {
+        data.settings.anti_cheat_acknowledged = true;
+        data.settings.clone()
+    });
+    state.persister.save_settings(&saved);
+    emit_settings(&app, &saved);
+    saved
+}
+
+/// Opens the Ko-fi page in the default browser ("Apoiar ↗" and the tray item). The URL is fixed
+/// here, never taken from the UI.
+#[tauri::command]
+#[specta::specta]
+pub fn app_open_support(app: AppHandle) -> AppResult<()> {
+    use tauri_plugin_opener::OpenerExt;
+    app.opener()
+        .open_url(SUPPORT_URL, None::<&str>)
+        .map_err(|e| AppError::new("OPEN_FAILED", e.to_string()))
+}
+
+pub const SUPPORT_URL: &str = "https://ko-fi.com/chenoli";
 
 /// The current settings, for windows that only need the theme (variation, HUD, overlays).
 #[tauri::command]
@@ -151,6 +193,13 @@ pub fn profile_update(
 /// the F6 shortcut and profile shortcuts.
 pub fn start_profile(state: &AppState, profile_id: Option<String>) -> AppResult<()> {
     let data = state.data();
+    // The anti-cheat warning must be read once before anything clicks (T11.3).
+    if !data.settings.anti_cheat_acknowledged {
+        return Err(AppError::new(
+            ANTI_CHEAT_ACK,
+            "the anti-cheat warning has not been accepted yet",
+        ));
+    }
     let profile = match profile_id.as_deref() {
         Some(id) => data.profile(id),
         None => data.active_profile(),

@@ -11,6 +11,15 @@ export const commands = {
 	settingsUpdate: (settings: Settings) => typedError<Settings, AppError>(__TAURI_INVOKE("settings_update", { settings })),
 	/**  The current settings, for windows that only need the theme (variation, HUD, overlays). */
 	settingsGet: () => __TAURI_INVOKE<Settings>("settings_get"),
+	/**  Records that the user read the anti-cheat warning; the next start goes ahead. */
+	settingsAcknowledgeAntiCheat: () => __TAURI_INVOKE<Settings>("settings_acknowledge_anti_cheat"),
+	/**
+	 *  Opens the Ko-fi page in the default browser ("Apoiar ↗" and the tray item). The URL is fixed
+	 *  here, never taken from the UI.
+	 */
+	appOpenSupport: () => typedError<null, AppError>(__TAURI_INVOKE("app_open_support")),
+	/**  The HUD page reports the pill's size; the window follows it, keeping the right edge. */
+	hudResize: (width: number | null, height: number | null) => __TAURI_INVOKE<void>("hud_resize", { width, height }),
 	/**
 	 *  Replaces a profile. `base_updated_at` is the version the caller edited; if another window saved
 	 *  in between, the update is refused with `STALE_PROFILE` instead of silently overwriting it.
@@ -100,6 +109,8 @@ export const events = {
 	hotkeyActionFailed: makeEvent<HotkeyActionFailed>("hotkey-action-failed"),
 	hotkeyRecording: makeEvent<HotkeyRecording>("hotkey-recording"),
 	hotkeyStatusChanged: makeEvent<HotkeyStatusChanged>("hotkey-status-changed"),
+	hudHover: makeEvent<HudHover>("hud-hover"),
+	navigateRequested: makeEvent<NavigateRequested>("navigate-requested"),
 	overlayChanged: makeEvent<OverlayChanged>("overlay-changed"),
 	profilesChanged: makeEvent<ProfilesChanged>("profiles-changed"),
 	settingsChanged: makeEvent<SettingsChanged>("settings-changed"),
@@ -253,6 +264,12 @@ export type HotkeyStatusChanged = HotkeyStatus[];
 /**  What a shortcut triggers: an app action or a profile's own shortcut (decision D4). */
 export type HotkeyTarget = { kind: "action"; id: HotkeyAction } | { kind: "profile"; id: string };
 
+/**  Cursor over the HUD (it fades) and whether Ctrl currently makes it draggable. */
+export type HudHover = {
+	hover: boolean,
+	draggable: boolean,
+};
+
 /**  What the import had to change, so the UI can tell the user. */
 export type ImportNote = 
 /**  The name was taken; the profile was renamed. */
@@ -285,6 +302,11 @@ export type Modes = {
 export type Modifier = "ctrl" | "alt" | "shift" | "win";
 
 export type MouseButton = "left" | "middle" | "right" | "x1" | "x2";
+
+/**  Navigation request from the tray ("Configurações"). */
+export type NavigateRequested = {
+	screen: string,
+};
 
 /**  The overlay mode changed (Área ↔ Ponto); every overlay window re-reads its state. */
 export type OverlayChanged = {
@@ -380,6 +402,10 @@ export type Settings = {
 	hotkeys: HotkeyBindings,
 	hud: WindowPosition,
 	window: WindowPosition,
+	/**  The one-time anti-cheat warning was accepted (TASKS T11.3). Missing in older files. */
+	antiCheatAcknowledged?: boolean,
+	/**  How many times the "Segure Ctrl para mover" hint was shown on the HUD (D5: first 3). */
+	hudHintsShown?: number,
 };
 
 /**  Settings changed (from any window); every window re-renders from this. */
