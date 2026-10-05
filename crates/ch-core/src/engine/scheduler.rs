@@ -24,6 +24,8 @@ pub struct FireReport {
     pub missed: u64,
     /// The fired timeline ends the run (stop-after timer).
     pub end_run: bool,
+    /// The fired timeline finished and that completes the run (scan without loop).
+    pub complete_run: bool,
 }
 
 pub struct Scheduler {
@@ -81,6 +83,7 @@ impl Scheduler {
         let timeline = &mut self.timelines[due.index];
         let result = timeline.fire(backend);
         let end_run = timeline.ends_run();
+        let complete_run = timeline.completes_run();
 
         let mut missed = 0;
         if lateness_ns > (2 * due.interval).max(SKIP_GRACE_NS)
@@ -94,6 +97,7 @@ impl Scheduler {
             lateness_ns,
             missed,
             end_run,
+            complete_run,
         })
     }
 
@@ -155,7 +159,8 @@ mod tests {
             FireReport {
                 lateness_ns: 400_000,
                 missed: 0,
-                end_run: false
+                end_run: false,
+                complete_run: false
             }
         );
         assert_eq!(

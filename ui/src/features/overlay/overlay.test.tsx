@@ -45,6 +45,8 @@ const state: OverlayState = {
     { number: 2, x: 5000, y: 236 },
   ],
   nextNumber: 3,
+  mode: "points",
+  area: null,
 };
 const viewport = { width: 1920, height: 1080 };
 

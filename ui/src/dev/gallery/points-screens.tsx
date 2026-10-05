@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { AreaView } from "../../features/overlay/area-view";
 import { OverlayView } from "../../features/overlay/overlay-view";
 import { PointsScreen } from "../../features/points/points-screen";
 
@@ -51,6 +52,8 @@ const OVERLAY_STATE: OverlayState = {
     { number: 4, x: 520, y: 700 },
   ],
   nextNumber: 5,
+  mode: "points",
+  area: null,
 };
 
 /** A stand-in capture: dark stripes with a blue bar under the crosshair, like the handoff loupe. */
@@ -92,6 +95,22 @@ export function OverlayScreenDemo(): ReactElement {
         cursor={{ x: 1520, y: 400 }}
         viewport={{ width: 960, height: 540 }}
         fallbackColor="#5C8CEB"
+      />
+    </div>
+  );
+}
+
+/** Tela 03.A at the handoff's 50% artboard size: 776 × 260 at X 480 · Y 300. */
+export function AreaOverlayScreenDemo(): ReactElement {
+  return (
+    <div className="relative overflow-hidden" style={{ width: 960, height: 540, transform: "translateZ(0)" }}>
+      <AreaView
+        state={{ ...OVERLAY_STATE, mode: "area", points: [] }}
+        imageUrl={null}
+        rect={{ x: 240, y: 150, w: 388, h: 130 }}
+        viewport={{ width: 960, height: 540 }}
+        onMode={noop}
+        onFinish={noop}
       />
     </div>
   );

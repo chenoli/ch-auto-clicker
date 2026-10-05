@@ -5,9 +5,8 @@ import { useTranslation } from "react-i18next";
 import { Segmented } from "../../components/segmented";
 import { Toggle } from "../../components/toggle";
 
-import { cpsFromInterval, formatCps } from "../../i18n/format";
-
 import { StopRow } from "../main/click-panel";
+import { InheritedRate } from "./inherited-rate";
 import { effectiveAmplitude, formatAmplitude, parseAmplitude, previewHalfWidth, SLIDER_MAX } from "./wiggle-math";
 
 import type { Profile } from "../../ipc";
@@ -131,16 +130,8 @@ export function WigglePanel({
 }: WigglePanelProps): ReactElement {
   const { t } = useTranslation();
   const wiggle = profile.modes.wiggle;
-  const click = profile.click;
   const setWiggle = (patch: Partial<Profile["modes"]["wiggle"]>) =>
     onChange((p) => ({ ...p, modes: { ...p.modes, wiggle: { ...p.modes.wiggle, ...patch } } }));
-  const double = click.kind === "double";
-  const rate = [
-    `${click.intervalMs} ms`,
-    `${formatCps(cpsFromInterval(click.intervalMs, double), locale)} ${t("click.cps")}`,
-    t(`wiggle.button.${click.button}`),
-    ...(double ? [t("wiggle.double")] : []),
-  ].join(" · ");
 
   return (
     <div className="flex flex-col">
@@ -170,17 +161,7 @@ export function WigglePanel({
               onChange={(clickWhileWiggling) => setWiggle({ clickWhileWiggling })}
             />
           </div>
-          {wiggle.clickWhileWiggling && (
-            <div className="inherited-rate">
-              <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                <span className="text-12 font-semibold text-fg tabular-nums">{rate}</span>
-                <span className="text-11 leading-snug text-fg-3">{t("wiggle.rateFromClick")}</span>
-              </div>
-              <button type="button" className="link flex-none" onClick={onAdjustClick}>
-                {t("wiggle.adjust")}
-              </button>
-            </div>
-          )}
+          {wiggle.clickWhileWiggling && <InheritedRate profile={profile} locale={locale} onAdjust={onAdjustClick} />}
         </div>
       </div>
       <StopRow profile={profile} onChange={onChange} />

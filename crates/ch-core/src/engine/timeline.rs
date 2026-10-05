@@ -25,6 +25,12 @@ pub trait Timeline: Send {
         false
     }
 
+    /// Checked after firing: this timeline has finished and its end completes the run (a scan
+    /// without loop), even if other timelines (its clicks) could go on.
+    fn completes_run(&self) -> bool {
+        false
+    }
+
     /// The run pauses or ends: undo anything visible (the wiggle returns the cursor to its origin).
     fn halt(&mut self, _backend: &mut dyn InputBackend) {}
 }

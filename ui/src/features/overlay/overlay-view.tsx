@@ -3,8 +3,9 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { hexColor, loupePosition, scaleOf, toOverlay } from "../points/geometry";
+import { OverlayBar } from "./overlay-bar";
 
-import type { OverlayState } from "../../ipc";
+import type { OverlayMode, OverlayState } from "../../ipc";
 import type { ReactElement } from "react";
 
 /** Physical pixels shown by the loupe (11 × 11) and the size of each cell. */
@@ -15,6 +16,7 @@ const LOUPE_SIZE = LOUPE_PIXELS * LOUPE_CELL;
 export interface OverlayViewProps {
   state: OverlayState;
   onFinish?: () => void;
+  onMode?: (mode: OverlayMode) => void;
   /** The frozen capture of this monitor, or null while it loads (gallery: none). */
   image: CanvasImageSource | null;
   imageUrl: string | null;
@@ -56,6 +58,7 @@ export function OverlayView({
   viewport,
   fallbackColor,
   onFinish,
+  onMode,
 }: OverlayViewProps): ReactElement {
   const { t } = useTranslation();
   const { canvasRef, color } = useLoupe(image, cursor);
@@ -109,7 +112,7 @@ export function OverlayView({
           </div>
         </>
       )}
-      <div className="overlay-bar" role="status">
+      <OverlayBar mode="points" onMode={onMode} onFinish={onFinish}>
         <span>
           {t("overlay.addPoint")}{" "}
           <span className="font-bold text-accent">{String(state.nextNumber).padStart(2, "0")}</span>
@@ -119,17 +122,7 @@ export function OverlayView({
         <span className="overlay-bar__sep" />
         <span>{t("overlay.undo")}</span>
         <span className="overlay-bar__sep" />
-        {/* Clickable too, so the capture can be finished without the keyboard. */}
-        <button
-          type="button"
-          className="overlay-bar__finish"
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={onFinish}
-        >
-          <kbd className="kbd">Esc</kbd>
-          {t("overlay.finish")}
-        </button>
-      </div>
+      </OverlayBar>
     </div>
   );
 }

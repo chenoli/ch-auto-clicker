@@ -340,12 +340,39 @@ pub fn hotkey_retry(app: AppHandle, state: State<'_, AppState>) -> Vec<HotkeySta
     state.hotkeys().apply(&app, &state.data())
 }
 
-/// Opens the point capture overlays (Tela 03.B) and resolves with the points added once the user
-/// presses Enter or Esc. Async: it creates windows and then waits.
+/// Opens the point capture overlays (Tela 03.B); resolves when the user finishes. Points are saved
+/// to the active profile as they are added.
 #[tauri::command]
 #[specta::specta]
-pub async fn overlay_pick_points(app: AppHandle) -> AppResult<Vec<ch_core::model::ScreenPoint>> {
-    crate::overlay::pick_points(app).await
+pub async fn overlay_pick_points(app: AppHandle) -> AppResult<()> {
+    crate::overlay::pick(app, crate::overlay::OverlayMode::Points).await
+}
+
+/// Opens the area selection overlays (Tela 03.A); resolves when the user confirms or cancels.
+#[tauri::command]
+#[specta::specta]
+pub async fn overlay_pick_area(app: AppHandle) -> AppResult<()> {
+    crate::overlay::pick(app, crate::overlay::OverlayMode::Area).await
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn overlay_set_mode(app: AppHandle, mode: crate::overlay::OverlayMode) -> AppResult<()> {
+    crate::overlay::set_mode(&app, mode)
+}
+
+/// Saves the rectangle drawn on overlay `monitor` (CSS pixels) as the scan area and closes.
+#[tauri::command]
+#[specta::specta]
+pub fn overlay_confirm_area(
+    app: AppHandle,
+    monitor: u32,
+    x: f64,
+    y: f64,
+    width: f64,
+    height: f64,
+) -> AppResult<ch_core::model::Area> {
+    crate::overlay::confirm_area(&app, monitor as usize, (x, y, width, height))
 }
 
 #[tauri::command]

@@ -6,7 +6,8 @@ use ch_core::engine::scheduler::Scheduler;
 use ch_core::engine::timeline::{IntervalTimeline, StopTimeline, Timeline};
 use ch_core::geometry::{DisplayLayout, Point, Rect};
 use ch_core::input::{InputBackend, TargetGuard};
-use ch_core::model::{Mode, Position, Profile};
+use ch_core::model::{Mode, Position, Profile, ScanAction};
+use ch_core::scan::{ScanPath, ScanTimeline};
 use ch_core::validate::{ValidationError, validate_profile};
 use ch_core::wiggle::{MOTION_INTERVAL_NS, WiggleTimeline};
 
@@ -18,23 +19,26 @@ const NANOS_PER_SEC: u64 = 1_000_000_000;
 pub enum PlanError {
     #[error("profile is invalid: {0:?}")]
     Invalid(Vec<ValidationError>),
-    /// Modes that arrive in later phases (scan: 7).
-    #[error("{0} is not available yet")]
-    NotAvailableYet(&'static str),
     #[error("the points list is empty")]
     NoPoints,
     /// A point is outside the current virtual desktop (a monitor was unplugged or moved).
     #[error("point ({x}, {y}) is outside the screens")]
     PointsOffscreen { x: i32, y: i32 },
+    #[error("no scan area selected")]
+    NoArea,
+    /// The scan area is no longer fully on the screens.
+    #[error("the scan area is outside the screens")]
+    AreaOffscreen,
 }
 
 impl PlanError {
     pub fn code(&self) -> &'static str {
         match self {
             Self::Invalid(_) => "PROFILE_INVALID",
-            Self::NotAvailableYet(_) => "MODE_NOT_AVAILABLE",
             Self::NoPoints => "NO_POINTS",
             Self::PointsOffscreen { .. } => "POINTS_OFFSCREEN",
+            Self::NoArea => "NO_AREA",
+            Self::AreaOffscreen => "AREA_OFFSCREEN",
         }
     }
 }
@@ -60,6 +64,7 @@ impl From<&DisplayLayout> for Screens {
 enum Motion {
     None,
     Wiggle { amplitude_pct: f64, speed_hz: u8 },
+    Scan { path: ScanPath, speed_px_s: u32 },
 }
 
 pub fn build_plan(
@@ -102,7 +107,25 @@ pub fn build_plan(
             clicks = w.click_while_wiggling;
             Vec::new()
         }
-        (Mode::Scan, _) => return Err(PlanError::NotAvailableYet("scan")),
+        (Mode::Scan, _) => {
+            let s = &profile.modes.scan;
+            let area = s.area.ok_or(PlanError::NoArea)?;
+            let rect = Rect::new(
+                area.x,
+                area.y,
+                i32::try_from(area.w).unwrap_or(i32::MAX),
+                i32::try_from(area.h).unwrap_or(i32::MAX),
+            );
+            if !desktop.contains_rect(&rect) {
+                return Err(PlanError::AreaOffscreen);
+            }
+            motion = Motion::Scan {
+                path: ScanPath::new(area, s.line_spacing_px, s.loop_),
+                speed_px_s: s.speed_px_s,
+            };
+            clicks = s.action == ScanAction::MoveClick;
+            Vec::new()
+        }
     };
 
     let click = profile.click.clone();
@@ -130,17 +153,20 @@ pub fn build_plan(
         move |start, shared| {
             let clicks_per_tick = u64::from(click.kind.clicks());
             let mut timelines: Vec<Box<dyn Timeline>> = Vec::new();
-            if let Motion::Wiggle {
-                amplitude_pct,
-                speed_hz,
-            } = motion
-            {
-                timelines.push(Box::new(WiggleTimeline::new(
+            match motion {
+                Motion::None => {}
+                Motion::Wiggle {
+                    amplitude_pct,
+                    speed_hz,
+                } => timelines.push(Box::new(WiggleTimeline::new(
                     start,
                     monitors,
                     amplitude_pct,
                     speed_hz,
-                )));
+                ))),
+                Motion::Scan { path, speed_px_s } => {
+                    timelines.push(Box::new(ScanTimeline::new(start, path, speed_px_s)));
+                }
             }
             let click_timeline: Box<dyn Timeline> = if points.is_empty() {
                 let action = Box::new(move |backend: &mut dyn InputBackend| {
@@ -180,7 +206,7 @@ pub fn build_plan(
                 });
                 Box::new(IntervalTimeline::new(start, gaps, action))
             };
-            // The wiggle clicks wherever the motion has the cursor ("Clicar enquanto oscila").
+            // Wiggle and scan click wherever the motion has the cursor, at the Click tab's rate.
             if clicks {
                 timelines.push(click_timeline);
             }
@@ -203,7 +229,7 @@ mod tests {
     use ch_core::engine::wait::fake::FakeWaiter;
     use ch_core::input::fake::{Call, RecordingBackend};
     use ch_core::input::{AllowAll, ClickKind, MouseButton};
-    use ch_core::model::ScreenPoint;
+    use ch_core::model::{Area, ScreenPoint};
 
     use super::*;
     use crate::engine::Shared;
@@ -490,11 +516,80 @@ mod tests {
         assert_eq!(err.code(), "POINTS_OFFSCREEN");
         assert_eq!(PlanError::NoPoints.code(), "NO_POINTS");
         p.mode = Mode::Scan;
-        assert!(
-            build_plan(&p, 3, desk(), Box::new(AllowAll))
-                .expect_err("scan")
-                .to_string()
-                .contains("scan")
+        let err = build_plan(&p, 3, desk(), Box::new(AllowAll)).expect_err("no area");
+        assert_eq!(
+            (err.code(), err.to_string().contains("area")),
+            ("NO_AREA", true)
         );
+        p.modes.scan.area = Some(Area {
+            x: 1800,
+            y: 0,
+            w: 400,
+            h: 100,
+        });
+        let err = build_plan(&p, 3, desk(), Box::new(AllowAll)).expect_err("offscreen area");
+        assert_eq!(err.code(), "AREA_OFFSCREEN");
+    }
+
+    fn scan_profile(action: ScanAction, looped: bool) -> Profile {
+        let mut p = profile();
+        p.mode = Mode::Scan;
+        p.stop_after.enabled = false;
+        p.click.interval_ms = 20;
+        p.click.variation.enabled = false;
+        p.modes.scan.area = Some(Area {
+            x: 100,
+            y: 100,
+            w: 101,
+            h: 17,
+        });
+        p.modes.scan.line_spacing_px = 8;
+        p.modes.scan.speed_px_s = 2400;
+        p.modes.scan.action = action;
+        p.modes.scan.loop_ = looped;
+        p
+    }
+
+    #[test]
+    fn scan_without_loop_covers_the_area_and_completes() {
+        let plan = build_plan(
+            &scan_profile(ScanAction::Move, false),
+            0,
+            desk(),
+            Box::new(AllowAll),
+        )
+        .expect("plan");
+        assert_eq!(plan.nominal_interval_ns, 4 * MS);
+        let (calls, _, shared, end) = simulate(plan, 1_000);
+        assert_eq!(end, RunEnd::Completed);
+        assert_eq!(shared.clicks(), 0);
+        assert_eq!(calls.first(), Some(&Call::MoveTo(Point::new(100, 100))));
+        assert_eq!(calls.last(), Some(&Call::MoveTo(Point::new(200, 116))));
+        assert!(calls.iter().all(|c| matches!(c, Call::MoveTo(p)
+            if (100..=200).contains(&p.x) && (100..=116).contains(&p.y))));
+    }
+
+    #[test]
+    fn scan_can_move_and_click_in_a_loop() {
+        let plan = build_plan(
+            &scan_profile(ScanAction::MoveClick, true),
+            0,
+            desk(),
+            Box::new(AllowAll),
+        )
+        .expect("plan");
+        assert_eq!(plan.nominal_interval_ns, 20 * MS);
+        let (calls, _, shared, end) = simulate(plan, 300);
+        assert_eq!(
+            end,
+            RunEnd::Stopped,
+            "a looping scan only ends when stopped"
+        );
+        let clicks = calls
+            .iter()
+            .filter(|c| matches!(c, Call::Click(..)))
+            .count();
+        assert!(clicks > 10, "clicks {clicks}");
+        assert_eq!(shared.clicks(), clicks as u64);
     }
 }

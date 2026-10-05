@@ -2,7 +2,7 @@
 
 use tauri_specta::{Builder, collect_commands, collect_events};
 
-use crate::{capabilities, commands, events, hotkeys};
+use crate::{capabilities, commands, events, hotkeys, overlay};
 
 const BINDINGS_PATH: &str = "../ui/src/ipc/bindings.ts";
 const BINDINGS_HEADER: &str = "// Regenerate with `cargo test -p ch-clicker export_bindings`.";
@@ -28,6 +28,9 @@ pub fn builder() -> Builder<tauri::Wry> {
             commands::hotkey_retry,
             commands::screen_layout,
             commands::overlay_pick_points,
+            commands::overlay_pick_area,
+            commands::overlay_set_mode,
+            commands::overlay_confirm_area,
             commands::overlay_state,
             commands::overlay_add_point,
             commands::overlay_undo,
@@ -46,7 +49,8 @@ pub fn builder() -> Builder<tauri::Wry> {
             hotkeys::HotkeyStatusChanged,
             hotkeys::HotkeyRecording,
             hotkeys::HotkeyActionFailed,
-            capabilities::Capabilities
+            capabilities::Capabilities,
+            overlay::OverlayChanged
         ])
 }
 

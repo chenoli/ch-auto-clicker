@@ -52,8 +52,8 @@ mod tests {
     fn converts_domain_errors_keeping_their_codes() {
         let e: AppError = ch_core::validate::ValidationError::IntervalRange.into();
         assert_eq!(e.code, "INTERVAL_RANGE");
-        let e: AppError = ch_engine::plan::PlanError::NotAvailableYet("scan").into();
-        assert_eq!(e.code, "MODE_NOT_AVAILABLE");
+        let e: AppError = ch_engine::plan::PlanError::NoArea.into();
+        assert_eq!(e.code, "NO_AREA");
         let e: AppError = ch_storage::StorageError::Io {
             path: "x".into(),
             source: std::io::Error::other("disk"),

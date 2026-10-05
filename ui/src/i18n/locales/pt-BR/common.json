@@ -12,8 +12,7 @@
   "modes": {
     "click": "Click",
     "wiggle": "Wiggle",
-    "scan": "Scan",
-    "comingSoon": "O modo {mode} chega em uma próxima fase."
+    "scan": "Scan"
   },
   "button": {
     "shortcut": "atalho",
@@ -108,7 +107,6 @@
   "errors": {
     "INPUT_BLOCKED": "Entrada bloqueada",
     "OUTSIDE_DESKTOP": "Ponto fora da tela",
-    "MODE_NOT_AVAILABLE": "Este modo ainda não está disponível nesta versão.",
     "PROFILE_INVALID": "O perfil tem valores inválidos.",
     "PROFILE_NOT_FOUND": "Perfil não encontrado.",
     "STALE_PROFILE": "O perfil foi alterado em outra janela. Recarregamos a versão mais recente.",
@@ -119,8 +117,10 @@
     "HOTKEY_EMERGENCY_REQUIRED": "A parada de emergência precisa de um atalho.",
     "NO_POINTS": "Adicione pelo menos um ponto antes de iniciar.",
     "POINTS_OFFSCREEN": "Há pontos fora das telas conectadas. Revise a lista de pontos.",
-    "OVERLAY_OPEN": "A captura de pontos já está aberta.",
-    "CAPTURE_FAILED": "Não foi possível capturar a tela."
+    "OVERLAY_OPEN": "A captura de tela já está aberta.",
+    "CAPTURE_FAILED": "Não foi possível capturar a tela.",
+    "NO_AREA": "Selecione a área do scan antes de iniciar.",
+    "AREA_OFFSCREEN": "A área do scan saiu das telas conectadas. Selecione de novo."
   },
   "gallery": {
     "title": "Galeria de telas",
@@ -203,7 +203,13 @@
     "arrows": "Setas movem 1 px",
     "space": "Espaço adiciona",
     "undo": "Ctrl Z desfaz",
-    "finish": "para concluir"
+    "finish": "para concluir",
+    "mode": "Modo de captura",
+    "modeArea": "Área",
+    "modePoint": "Ponto",
+    "dragToSelect": "Arraste para selecionar",
+    "cancel": "para cancelar",
+    "confirm": "Confirmar ↵"
   },
   "wiggle": {
     "amplitude": "Amplitude · % da largura",
@@ -228,5 +234,23 @@
       "x1": "X1",
       "x2": "X2"
     }
+  },
+  "scan": {
+    "selectArea": "Selecionar área",
+    "areaMeta": "{w} × {h} · X {x} Y {y}",
+    "noArea": "Nenhuma área selecionada",
+    "thumbPlaceholder": "miniatura da área capturada",
+    "selectHint": "Selecione uma área para ver o trajeto",
+    "badge": "{rows, plural, one {# linha} other {# linhas}} · ciclo {cycle} s",
+    "lines": "Linhas",
+    "spacing": "Espaçamento",
+    "speed": "Velocidade",
+    "action": "Ação",
+    "moveOnly": "Só mover",
+    "moveClick": "Mover e clicar",
+    "loop": "Loop",
+    "loopHint": "Recomeçar do topo ao terminar",
+    "decrease": "Diminuir espaçamento",
+    "increase": "Aumentar espaçamento"
   }
 }

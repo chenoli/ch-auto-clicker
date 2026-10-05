@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 
 import { Callout } from "../../components/callout";
 
+import { ScanPanel } from "../scan/scan-panel";
 import { useMonitorWidth } from "../wiggle/use-monitor-width";
 import { WigglePanel } from "../wiggle/wiggle-panel";
 import { ClickPanel } from "./click-panel";
@@ -13,7 +14,7 @@ import { MainButton, buttonStateFor } from "./main-button";
 import { ModeTabs } from "./mode-tabs";
 import { TitleBar } from "./title-bar";
 
-import type { EngineTick, Mode, Profile } from "../../ipc";
+import type { EngineTick, Profile } from "../../ipc";
 import type { ReactElement } from "react";
 
 /** Bottom padding of the scrolling panel (handoff: `padding: 0 16px 8px`). */
@@ -35,6 +36,9 @@ export interface MainWindowViewProps {
   onOpenPoints?: () => void;
   /** Fixed monitor width (gallery); the window measures its own monitor otherwise. */
   monitorWidth?: number;
+  /** Scan area thumbnail (served by Rust), or null for the placeholder. */
+  thumbnailUrl?: string | null;
+  onSelectArea?: () => void;
   onMinimize: () => void;
   onClose: () => void;
   /** Height the window needs to show the whole panel without scrolling. */
@@ -44,15 +48,6 @@ export interface MainWindowViewProps {
   onReviewHotkeys?: () => void;
   onStartAnyway?: () => void;
   onOpenSettings?: () => void;
-}
-
-function ComingSoon({ mode }: { mode: Mode }) {
-  const { t } = useTranslation();
-  return (
-    <div className="flex min-h-40 items-center border-t border-divider text-12 text-fg-3">
-      {t("modes.comingSoon", { mode: t(`modes.${mode}`) })}
-    </div>
-  );
 }
 
 export function MainWindowView({
@@ -68,6 +63,8 @@ export function MainWindowView({
   onOpenVariation,
   onOpenPoints,
   monitorWidth: fixedMonitorWidth,
+  thumbnailUrl,
+  onSelectArea,
   onMinimize,
   onClose,
   onDesiredHeight,
@@ -168,7 +165,14 @@ export function MainWindowView({
               onAdjustClick={() => onEdit((p) => ({ ...p, mode: "click" }))}
             />
           ) : (
-            <ComingSoon mode={profile.mode} />
+            <ScanPanel
+              profile={profile}
+              locale={locale}
+              thumbnailUrl={thumbnailUrl ?? null}
+              onChange={onEdit}
+              onSelectArea={() => onSelectArea?.()}
+              onAdjustClick={() => onEdit((p) => ({ ...p, mode: "click" }))}
+            />
           )}
         </div>
       </div>

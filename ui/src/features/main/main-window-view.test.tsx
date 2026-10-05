@@ -99,9 +99,9 @@ describe("MainWindowView", () => {
   });
 
   it("explains engine and command errors", () => {
-    setup({ engine: tick({ state: "error" }), errorCode: "INPUT_BLOCKED", commandError: "MODE_NOT_AVAILABLE" });
+    setup({ engine: tick({ state: "error" }), errorCode: "INPUT_BLOCKED", commandError: "NO_AREA" });
     expect(screen.getAllByText("Entrada bloqueada")).toHaveLength(2);
-    expect(screen.getByRole("alert")).toHaveTextContent("Este modo ainda não está disponível");
+    expect(screen.getByRole("alert")).toHaveTextContent("Selecione a área do scan");
   });
 
   it("falls back to a generic message for unknown command errors", () => {
@@ -109,11 +109,28 @@ describe("MainWindowView", () => {
     expect(screen.getByRole("alert")).toHaveTextContent("Algo deu errado: WEIRD");
   });
 
-  it("shows a placeholder for modes from later phases and dashes for move-only modes", () => {
-    const profile = { ...prototypeProfile(), mode: "scan" as const };
-    setup({ profile });
-    expect(screen.getByText("O modo Scan chega em uma próxima fase.")).toBeInTheDocument();
+  it("shows the scan panel, with dashes for clicks while it only moves", () => {
+    const onSelectArea = vi.fn();
+    const base = prototypeProfile();
+    const profile = { ...base, mode: "scan" as const };
+    const { latest } = setup({ profile, onSelectArea, thumbnailUrl: null });
     expect(screen.getByText("—")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Selecionar área" }));
+    expect(onSelectArea).toHaveBeenCalledOnce();
+    fireEvent.click(screen.getByRole("radio", { name: "Mover e clicar" }));
+    expect(latest().modes.scan.action).toBe("move_click");
+  });
+
+  it("goes back to the Click tab from the scan rate card", () => {
+    const base = prototypeProfile();
+    const profile = {
+      ...base,
+      mode: "scan" as const,
+      modes: { ...base.modes, scan: { ...base.modes.scan, action: "move_click" as const } },
+    };
+    const { latest } = setup({ profile });
+    fireEvent.click(screen.getByRole("button", { name: "Ajustar ›" }));
+    expect(latest().mode).toBe("click");
   });
 
   it("shows the wiggle panel, whose Ajustar link goes back to the Click tab", () => {

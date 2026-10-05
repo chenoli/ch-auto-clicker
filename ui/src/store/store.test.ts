@@ -167,8 +167,8 @@ describe("connectStore", () => {
     ipc.listeners.capabilities?.({ payload: { minReliableIntervalMs: 2 } });
     ipc.listeners.hotkeyStatusChanged?.({ payload: [{ ok: false }] });
     expect(useAppStore.getState().hotkeys).toEqual([{ ok: false }]);
-    ipc.listeners.hotkeyActionFailed?.({ payload: { code: "MODE_NOT_AVAILABLE" } });
-    expect(useAppStore.getState().commandError).toBe("MODE_NOT_AVAILABLE");
+    ipc.listeners.hotkeyActionFailed?.({ payload: { code: "NO_AREA" } });
+    expect(useAppStore.getState().commandError).toBe("NO_AREA");
     expect(useAppStore.getState().capabilities?.minReliableIntervalMs).toBe(2);
     ipc.listeners.profilesChanged?.({ payload: { profiles: [profile("b", "v5")], activeProfileId: "b" } });
     expect(useAppStore.getState().profiles[0]?.updatedAt).toBe("v5");
@@ -203,9 +203,9 @@ describe("primaryAction", () => {
   });
 
   it("surfaces start errors", async () => {
-    ipc.commands.engineStart.mockResolvedValue({ status: "error", error: { code: "MODE_NOT_AVAILABLE", message: "" } });
+    ipc.commands.engineStart.mockResolvedValue({ status: "error", error: { code: "NO_AREA", message: "" } });
     await primaryAction("idle");
-    expect(useAppStore.getState().commandError).toBe("MODE_NOT_AVAILABLE");
+    expect(useAppStore.getState().commandError).toBe("NO_AREA");
   });
 
   it("status updates the engine state immediately", () => {

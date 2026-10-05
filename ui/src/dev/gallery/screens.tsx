@@ -2,12 +2,13 @@ import {
   HotkeysScreenDemo,
   HotkeysStatesDemo,
   MainIdleScreen,
+  MainScanScreen,
   MainStatesScreen,
   MainWiggleScreen,
   VariationScreen,
 } from "./main-window-screens";
 import { SCREEN_META } from "./manifest";
-import { OverlayScreenDemo, PointsScreenDemo } from "./points-screens";
+import { AreaOverlayScreenDemo, OverlayScreenDemo, PointsScreenDemo } from "./points-screens";
 import { TokensScreen } from "./tokens-screen";
 
 import type { ScreenMeta } from "./manifest";
@@ -20,10 +21,12 @@ export interface GalleryScreen extends ScreenMeta {
 const RENDERERS: Record<string, () => ReactNode> = {
   "main-idle": () => <MainIdleScreen />,
   "main-wiggle": () => <MainWiggleScreen />,
+  "main-scan": () => <MainScanScreen />,
   "main-states": () => <MainStatesScreen />,
   points: () => <PointsScreenDemo />,
   variation: () => <VariationScreen />,
   overlay: () => <OverlayScreenDemo />,
+  "area-overlay": () => <AreaOverlayScreenDemo />,
   hotkeys: () => <HotkeysScreenDemo />,
   "hotkeys-states": () => <HotkeysStatesDemo />,
   tokens: () => <TokensScreen />,

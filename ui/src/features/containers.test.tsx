@@ -25,6 +25,9 @@ const mocks = vi.hoisted(() => ({
     overlayAddPoint: vi.fn(),
     overlayUndo: vi.fn(),
     overlayFinish: vi.fn(),
+    overlayPickArea: vi.fn(),
+    overlaySetMode: vi.fn(),
+    overlayConfirmArea: vi.fn(),
   },
 }));
 
@@ -44,6 +47,7 @@ vi.mock("../ipc", () => {
       hotkeyStatusChanged: event,
       hotkeyActionFailed: event,
       hotkeyRecording: event,
+      overlayChanged: event,
     },
   };
 });
@@ -204,6 +208,22 @@ describe("PointsRoute", () => {
     expect(await screen.findByText(/As telas mudaram/)).toBeInTheDocument();
   });
 
+  it("opens the area overlay from the scan panel and explains a failure", async () => {
+    const profile = { ...prototypeProfile(), mode: "scan" as const };
+    mocks.commands.appBootstrap.mockResolvedValue(bootstrap(profile));
+    mocks.commands.overlayPickArea.mockResolvedValue({
+      status: "error",
+      error: { code: "OVERLAY_OPEN", message: "open" },
+    });
+    render(<MainWindow />);
+    fireEvent.click(await screen.findByRole("button", { name: "Selecionar área" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("A captura de tela já está aberta.");
+    mocks.commands.overlayPickArea.mockResolvedValue({ status: "ok", data: null });
+    fireEvent.click(screen.getByRole("button", { name: "Selecionar área" }));
+    await act(async () => {});
+    expect(mocks.commands.overlayPickArea).toHaveBeenCalledTimes(2);
+  });
+
   it("opens the capture overlay and explains a failure", async () => {
     await openPoints();
     mocks.commands.overlayPickPoints.mockResolvedValue({
@@ -265,6 +285,76 @@ describe("OverlayWindow", () => {
     fireEvent.pointerLeave(root);
     expect(screen.queryByText("30, 40")).toBeNull();
     await act(async () => {});
+  });
+
+  it("draws, moves and resizes an area, then confirms it", async () => {
+    mocks.commands.overlayState.mockResolvedValue({
+      status: "ok",
+      data: { ...state, mode: "area", area: { x: 100, y: 100, w: 200, h: 100 } },
+    });
+    const view = render(<OverlayWindow />);
+    expect(await screen.findByText("Arraste para selecionar")).toBeInTheDocument();
+    // The saved area is shown pre-selected.
+    expect(screen.getByText("200 × 100")).toBeInTheDocument();
+    const root = view.container.firstElementChild as HTMLElement;
+
+    fireEvent.pointerDown(root, { button: 0, clientX: 10, clientY: 20 });
+    fireEvent.pointerMove(root, { clientX: 410, clientY: 220 });
+    fireEvent.pointerUp(root);
+    expect(screen.getByText("400 × 200")).toBeInTheDocument();
+    fireEvent.pointerMove(root, { clientX: 900, clientY: 900 });
+    expect(screen.getByText("400 × 200"), "moves without a drag do nothing").toBeInTheDocument();
+
+    fireEvent.pointerDown(view.container.querySelector(".area-rect") as Element, { clientX: 100, clientY: 100 });
+    fireEvent.pointerMove(root, { clientX: 150, clientY: 130 });
+    fireEvent.pointerUp(root);
+    expect(screen.getByText("X 60 · Y 50")).toBeInTheDocument();
+
+    fireEvent.pointerDown(view.container.querySelector('[data-handle="se"]') as Element, {
+      clientX: 460,
+      clientY: 250,
+    });
+    fireEvent.pointerMove(root, { clientX: 500, clientY: 260 });
+    fireEvent.pointerUp(root);
+    expect(screen.getByText("440 × 210")).toBeInTheDocument();
+
+    // A click without dragging keeps the rectangle.
+    fireEvent.pointerDown(root, { button: 0, clientX: 800, clientY: 800 });
+    fireEvent.pointerMove(root, { clientX: 801, clientY: 801 });
+    fireEvent.pointerUp(root);
+    expect(screen.getByText("440 × 210")).toBeInTheDocument();
+    fireEvent.pointerDown(root, { button: 2 });
+    fireEvent.keyDown(window, { key: "a" });
+    fireEvent.keyDown(window, { key: "Enter" });
+    expect(mocks.commands.overlayConfirmArea).toHaveBeenCalledWith(0, 60, 50, 440, 210);
+    fireEvent.click(screen.getByRole("radio", { name: "Ponto" }));
+    expect(mocks.commands.overlaySetMode).toHaveBeenCalledWith("points");
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(mocks.commands.overlayFinish).toHaveBeenCalledOnce();
+    await act(async () => {});
+  });
+
+  it("ignores Enter until a usable area exists", async () => {
+    mocks.commands.overlayState.mockResolvedValue({ status: "ok", data: { ...state, mode: "area", area: null } });
+    const view = render(<OverlayWindow />);
+    await screen.findByText("Arraste para selecionar");
+    fireEvent.keyDown(window, { key: "Enter" });
+    const root = view.container.firstElementChild as HTMLElement;
+    fireEvent.pointerDown(root, { button: 0, clientX: 10, clientY: 10 });
+    fireEvent.pointerMove(root, { clientX: 15, clientY: 15 });
+    fireEvent.keyDown(window, { key: "Enter" });
+    expect(mocks.commands.overlayConfirmArea).not.toHaveBeenCalled();
+    await act(async () => {});
+  });
+
+  it("does not pre-select an area that belongs to another monitor", async () => {
+    mocks.commands.overlayState.mockResolvedValue({
+      status: "ok",
+      data: { ...state, mode: "area", area: { x: 5000, y: 0, w: 100, h: 100 } },
+    });
+    const view = render(<OverlayWindow />);
+    await screen.findByText("Arraste para selecionar");
+    expect(view.container.querySelector(".area-rect")).toBeNull();
   });
 
   it("renders nothing until the session state arrives", () => {

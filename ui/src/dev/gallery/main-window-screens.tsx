@@ -69,6 +69,25 @@ export function MainWiggleScreen(): ReactElement {
   );
 }
 
+function scanProfile(action: "move" | "move_click"): Profile {
+  const p = prototypeProfile();
+  return {
+    ...p,
+    mode: "scan",
+    modes: { ...p.modes, scan: { ...p.modes.scan, area: { x: 412, y: 236, w: 776, h: 260 }, action } },
+  };
+}
+
+/** Tela 01.C: the scan panel, moving only and moving with clicks. */
+export function MainScanScreen(): ReactElement {
+  return (
+    <div className="flex gap-10">
+      <Window engine={tick()} initialProfile={scanProfile("move")} />
+      <Window engine={tick()} initialProfile={scanProfile("move_click")} />
+    </div>
+  );
+}
+
 /** Tela 10: every state of the main button and footer. */
 export function MainStatesScreen(): ReactElement {
   return (

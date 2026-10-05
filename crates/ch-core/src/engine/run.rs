@@ -88,6 +88,9 @@ fn run_until_end<C: Clock + ?Sized, W: CoarseWaiter + ?Sized>(
                 if report.end_run {
                     return RunEnd::TimerElapsed;
                 }
+                if report.complete_run {
+                    return RunEnd::Completed;
+                }
             }
             Err(e) => return RunEnd::Failed(e),
         }
@@ -177,6 +180,39 @@ mod tests {
         fn halt(&mut self, _backend: &mut dyn InputBackend) {
             self.log.lock().expect("log").push("halt");
         }
+    }
+
+    #[test]
+    fn a_finished_scan_completes_the_run_despite_endless_clicks() {
+        use crate::model::Area;
+        use crate::scan::{ScanPath, ScanTimeline};
+
+        let clock = FakeClock::with_auto_step(1_000);
+        let mut waiter = FakeWaiter::new(clock.clone());
+        let path = ScanPath::new(
+            Area {
+                x: 0,
+                y: 0,
+                w: 101,
+                h: 17,
+            },
+            8,
+            false,
+        );
+        let mut scheduler = Scheduler::new(vec![
+            Box::new(ScanTimeline::new(0, path, 2400)),
+            Box::new(IntervalTimeline::noop(0, 10 * MS)),
+        ]);
+        let mut control = Control::default();
+        let end = run(
+            &mut scheduler,
+            &clock,
+            &mut waiter,
+            &mut crate::input::NoopBackend,
+            &mut control,
+        );
+        assert_eq!(end, RunEnd::Completed);
+        assert!(control.fires.last().is_some_and(|r| r.complete_run));
     }
 
     #[test]

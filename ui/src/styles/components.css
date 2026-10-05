@@ -991,6 +991,91 @@
     border: 1px solid var(--border);
   }
 
+  /* Scan panel (Tela 01.C). */
+  .select-area {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 32px;
+    padding: 0 12px;
+    border-radius: 7px;
+    border: 1px solid color-mix(in oklch, var(--fg) 16%, transparent);
+    background: none;
+    font: inherit;
+    font-size: var(--text-12);
+    font-weight: 600;
+    color: var(--fg);
+    cursor: pointer;
+  }
+  .select-area:hover {
+    background: color-mix(in oklch, var(--fg) 5%, transparent);
+  }
+  .select-area__icon {
+    width: 10px;
+    height: 10px;
+    border: 1.5px dashed var(--accent);
+    border-radius: 2px;
+  }
+  .scan-thumb {
+    position: relative;
+    width: 388px;
+    height: 130px;
+    border-radius: var(--radius-control);
+    overflow: hidden;
+    border: 1px solid color-mix(in oklch, var(--fg) 12%, transparent);
+    background: repeating-linear-gradient(
+      135deg,
+      var(--bg-2) 0 8px,
+      color-mix(in oklch, var(--bg-2) 70%, var(--bg)) 8px 16px
+    );
+  }
+  .scan-thumb__image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: fill;
+    opacity: 0.55;
+  }
+  .scan-thumb__placeholder {
+    position: absolute;
+    right: 8px;
+    bottom: 6px;
+    font-family: ui-monospace, monospace;
+    font-size: var(--text-9);
+    color: var(--fg-3);
+  }
+  .scan-thumb__empty {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--text-12);
+    color: var(--fg-3);
+  }
+  .scan-thumb__start {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 8px;
+    height: 8px;
+    border-radius: 4px;
+    background: var(--fg);
+  }
+  .scan-thumb__badge {
+    position: absolute;
+    left: 8px;
+    top: 8px;
+    padding: 2px 7px;
+    border-radius: 5px;
+    background: color-mix(in oklch, var(--bg) 85%, transparent);
+    font-size: var(--text-10);
+    font-weight: 600;
+    color: var(--fg);
+    font-variant-numeric: tabular-nums;
+  }
+
   /* Points editor (Tela 02.A). */
   .minimap {
     position: relative;
@@ -1277,6 +1362,150 @@
     color: var(--fg);
   }
   .overlay-bar {
+    cursor: default;
+  }
+  .overlay-modes {
+    display: grid;
+    grid-template-columns: repeat(2, auto);
+    gap: 2px;
+    padding: 2px;
+    margin-left: -8px;
+    border-radius: 8px;
+    background: var(--bg-2);
+  }
+  .overlay-modes button {
+    height: 26px;
+    padding: 0 12px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    background: none;
+    font: inherit;
+    font-weight: 600;
+    color: var(--fg-2);
+    cursor: pointer;
+  }
+  .overlay-modes button[data-active="true"] {
+    background: var(--bg-3);
+    border-color: color-mix(in oklch, var(--fg) 14%, transparent);
+    color: var(--fg);
+  }
+
+  /* Area selection overlay (Tela 03.A). */
+  .overlay-root--area {
+    cursor: crosshair;
+  }
+  .overlay-dim--area {
+    background: rgba(8, 8, 7, 0.64);
+  }
+  .area-rect {
+    position: absolute;
+    border: 1px solid var(--accent);
+    box-shadow: 0 0 0 9999px rgba(8, 8, 7, 0.64);
+    cursor: move;
+  }
+  .area-rect__grid {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    pointer-events: none;
+  }
+  .area-rect__grid span {
+    border-right: 1px solid color-mix(in oklch, var(--fg) 18%, transparent);
+    border-bottom: 1px solid color-mix(in oklch, var(--fg) 18%, transparent);
+  }
+  .area-rect__grid span:nth-child(3n) {
+    border-right: 0;
+  }
+  .area-rect__grid span:nth-child(n + 7) {
+    border-bottom: 0;
+  }
+  .area-handle {
+    position: absolute;
+    width: 9px;
+    height: 9px;
+    background: var(--fg);
+    border: 1px solid var(--accent);
+  }
+  .area-handle[data-handle="nw"] {
+    left: -5px;
+    top: -5px;
+    cursor: nwse-resize;
+  }
+  .area-handle[data-handle="n"] {
+    left: calc(50% - 4px);
+    top: -5px;
+    cursor: ns-resize;
+  }
+  .area-handle[data-handle="ne"] {
+    right: -5px;
+    top: -5px;
+    cursor: nesw-resize;
+  }
+  .area-handle[data-handle="e"] {
+    right: -5px;
+    top: calc(50% - 4px);
+    cursor: ew-resize;
+  }
+  .area-handle[data-handle="se"] {
+    right: -5px;
+    bottom: -5px;
+    cursor: nwse-resize;
+  }
+  .area-handle[data-handle="s"] {
+    left: calc(50% - 4px);
+    bottom: -5px;
+    cursor: ns-resize;
+  }
+  .area-handle[data-handle="sw"] {
+    left: -5px;
+    bottom: -5px;
+    cursor: nesw-resize;
+  }
+  .area-handle[data-handle="w"] {
+    left: -5px;
+    top: calc(50% - 4px);
+    cursor: ew-resize;
+  }
+  .area-rect__origin {
+    position: absolute;
+    left: 0;
+    top: -22px;
+    font-size: var(--text-10);
+    font-weight: 600;
+    color: var(--fg-2);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .area-hud {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    height: 40px;
+    padding: 0 6px 0 14px;
+    border-radius: 10px;
+    background: var(--bg);
+    border: 1px solid color-mix(in oklch, var(--fg) 14%, transparent);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+    cursor: default;
+    white-space: nowrap;
+  }
+  .area-hud__confirm {
+    height: 28px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 7px;
+    background: var(--fg);
+    color: var(--bg);
+    font: inherit;
+    font-size: var(--text-12);
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .area-hud__confirm:disabled {
+    opacity: 0.4;
     cursor: default;
   }
   .overlay-bar__sep {

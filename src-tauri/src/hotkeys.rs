@@ -240,7 +240,9 @@ fn on_triggered<R: Runtime>(app: &AppHandle<R>, id: u32) {
         HotkeyTarget::Action(HotkeyAction::CapturePoint) => {
             let app = app.clone();
             tauri::async_runtime::spawn(async move {
-                if let Err(e) = crate::overlay::pick_points(app.clone()).await {
+                if let Err(e) =
+                    crate::overlay::pick(app.clone(), crate::overlay::OverlayMode::Points).await
+                {
                     let _ = HotkeyActionFailed { code: e.code }.emit(&app);
                 }
             });

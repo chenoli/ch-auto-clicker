@@ -8,6 +8,7 @@ pub mod geometry;
 pub mod hotkeys;
 pub mod input;
 pub mod model;
+pub mod scan;
 pub mod schema;
 pub mod stats;
 pub mod time;

@@ -37,7 +37,12 @@ export function clampToMonitor(
   };
 }
 
-/** `chcap` URL of a monitor capture; WebView2 serves custom schemes as `http://<scheme>.localhost`. */
+/** URL of a `chcap` resource; WebView2 serves custom schemes as `http://<scheme>.localhost`. */
+export function chcapUrl(path: string, userAgent: string = navigator.userAgent): string {
+  return userAgent.includes("Windows") ? `http://chcap.localhost/${path}` : `chcap://localhost/${path}`;
+}
+
+/** Frozen capture of monitor `index` during an overlay session. */
 export function captureUrl(index: number, userAgent: string = navigator.userAgent): string {
-  return userAgent.includes("Windows") ? `http://chcap.localhost/${index}.bmp` : `chcap://localhost/${index}.bmp`;
+  return chcapUrl(`${index}.bmp`, userAgent);
 }

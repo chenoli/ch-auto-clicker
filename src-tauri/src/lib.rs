@@ -11,6 +11,7 @@ mod overlay;
 mod paths;
 mod persist;
 mod state;
+mod thumbs;
 #[allow(dead_code)] // consumed by the tray icons in Phase 11
 mod tokens;
 mod windowing;

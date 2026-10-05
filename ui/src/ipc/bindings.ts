@@ -45,10 +45,15 @@ export const commands = {
 	hotkeyRetry: () => __TAURI_INVOKE<HotkeyStatus[]>("hotkey_retry"),
 	screenLayout: () => __TAURI_INVOKE<ScreenLayout>("screen_layout"),
 	/**
-	 *  Opens the point capture overlays (Tela 03.B) and resolves with the points added once the user
-	 *  presses Enter or Esc. Async: it creates windows and then waits.
+	 *  Opens the point capture overlays (Tela 03.B); resolves when the user finishes. Points are saved
+	 *  to the active profile as they are added.
 	 */
-	overlayPickPoints: () => typedError<ScreenPoint[], AppError>(__TAURI_INVOKE("overlay_pick_points")),
+	overlayPickPoints: () => typedError<null, AppError>(__TAURI_INVOKE("overlay_pick_points")),
+	/**  Opens the area selection overlays (Tela 03.A); resolves when the user confirms or cancels. */
+	overlayPickArea: () => typedError<null, AppError>(__TAURI_INVOKE("overlay_pick_area")),
+	overlaySetMode: (mode: OverlayMode) => typedError<null, AppError>(__TAURI_INVOKE("overlay_set_mode", { mode })),
+	/**  Saves the rectangle drawn on overlay `monitor` (CSS pixels) as the scan area and closes. */
+	overlayConfirmArea: (monitor: number, x: number | null, y: number | null, width: number | null, height: number | null) => typedError<Area, AppError>(__TAURI_INVOKE("overlay_confirm_area", { monitor, x, y, width, height })),
 	overlayState: (monitor: number) => typedError<OverlayState, AppError>(__TAURI_INVOKE("overlay_state", { monitor })),
 	/**  Adds a point at a CSS position of overlay `monitor`. */
 	overlayAddPoint: (monitor: number, x: number | null, y: number | null) => typedError<OverlayState, AppError>(__TAURI_INVOKE("overlay_add_point", { monitor, x, y })),
@@ -75,6 +80,7 @@ export const events = {
 	hotkeyActionFailed: makeEvent<HotkeyActionFailed>("hotkey-action-failed"),
 	hotkeyRecording: makeEvent<HotkeyRecording>("hotkey-recording"),
 	hotkeyStatusChanged: makeEvent<HotkeyStatusChanged>("hotkey-status-changed"),
+	overlayChanged: makeEvent<OverlayChanged>("overlay-changed"),
 	profilesChanged: makeEvent<ProfilesChanged>("profiles-changed"),
 	settingsChanged: makeEvent<SettingsChanged>("settings-changed"),
 };
@@ -243,6 +249,13 @@ export type Modifier = "ctrl" | "alt" | "shift" | "win";
 
 export type MouseButton = "left" | "middle" | "right" | "x1" | "x2";
 
+/**  The overlay mode changed (Área ↔ Ponto); every overlay window re-reads its state. */
+export type OverlayChanged = {
+	mode: OverlayMode,
+};
+
+export type OverlayMode = "points" | "area";
+
 /**  A monitor as the overlay page needs it (physical pixels). */
 export type OverlayMonitor = {
 	index: number,
@@ -262,9 +275,12 @@ export type OverlayPoint = {
 /**  Everything one overlay window renders. */
 export type OverlayState = {
 	monitor: OverlayMonitor,
+	mode: OverlayMode,
 	points: OverlayPoint[],
 	/**  Number the next click will get ("Clique para adicionar o ponto 05"). */
 	nextNumber: number,
+	/**  The profile's scan area (desktop pixels), shown pre-selected in area mode. */
+	area: Area | null,
 };
 
 export type Position = "cursor" | "points";

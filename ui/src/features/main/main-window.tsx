@@ -12,6 +12,7 @@ import { editProfile } from "../../store/profile-sync";
 import { hotkeyLabel } from "../hotkeys/format-hotkey";
 import { HotkeysScreen } from "../hotkeys/hotkeys-screen";
 import { useHotkeyRecording } from "../hotkeys/use-hotkey-recording";
+import { chcapUrl } from "../overlay/overlay-keys";
 import { PointsRoute } from "../points/points-route";
 import { SettingsScreen } from "../settings/settings-screen";
 import { ConnectFailure } from "../shell/connect-failure";
@@ -23,6 +24,11 @@ import type { ReactElement } from "react";
 type Screen = "main" | "settings" | "hotkeys" | "points";
 
 const MIN_HEIGHT = 640;
+
+/** The scan thumbnail; `updatedAt` busts the webview cache when a new area is saved. */
+function thumbnailUrl(profile: Profile): string {
+  return `${chcapUrl(`thumb/${profile.id}.bmp`)}?v=${encodeURIComponent(profile.updatedAt)}`;
+}
 
 /** The main window (Tela 01) and its sub-screens, connected to the Rust state. */
 export function MainWindow(): ReactElement | null {
@@ -131,6 +137,13 @@ export function MainWindow(): ReactElement | null {
         void commands.windowOpenVariation();
       }}
       onOpenPoints={() => go("points")}
+      thumbnailUrl={profile.modes.scan.area && inTauri ? thumbnailUrl(profile) : null}
+      onSelectArea={() => {
+        setCommandError(null);
+        void commands.overlayPickArea().then((r) => {
+          if (r.status === "error") setCommandError(r.error.code);
+        });
+      }}
       onDesiredHeight={onDesiredHeight}
       {...windowActions}
     />
