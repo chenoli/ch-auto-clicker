@@ -91,7 +91,9 @@ fn today() -> String {
 }
 
 fn table(out: &mut String, results: &[IntervalResult]) {
-    out.push_str("| Intervalo | Amostras | p50 (µs) | p95 (µs) | p99 (µs) | máx (µs) | perdidos | confiável |\n");
+    out.push_str(
+        "| Interval | Samples | p50 (µs) | p95 (µs) | p99 (µs) | max (µs) | missed | reliable |\n",
+    );
     out.push_str("|---:|---:|---:|---:|---:|---:|---:|:---:|\n");
     for r in results {
         let s = r.stats;
@@ -105,7 +107,7 @@ fn table(out: &mut String, results: &[IntervalResult]) {
             s.p99_us,
             s.max_us,
             s.missed,
-            if r.is_reliable() { "sim" } else { "não" }
+            if r.is_reliable() { "yes" } else { "no" }
         );
     }
 }
@@ -126,13 +128,13 @@ fn run(seconds: u64) -> Result<(BenchmarkReport, BenchmarkReport), String> {
     let per_interval = Duration::from_secs(seconds);
     let bench = |label: &str| {
         eprintln!(
-            "cenário {label}: {} intervalos × {seconds} s…",
+            "scenario {label}: {} intervals × {seconds} s…",
             BENCH_INTERVALS_MS.len()
         );
         ch_engine::benchmark::run_system_benchmark(&BENCH_INTERVALS_MS, per_interval)
             .map_err(|e| e.to_string())
     };
-    let idle = bench("ocioso")?;
+    let idle = bench("idle")?;
     let stressed = {
         let _stress = CpuStress::start();
         bench("CPU 100%")?
@@ -159,52 +161,49 @@ fn main() {
     let (machine, power) = (
         ch_win::system::machine_fingerprint(),
         match ch_win::system::on_battery() {
-            Some(true) => "bateria",
-            Some(false) => "tomada",
-            None => "desconhecida",
+            Some(true) => "battery",
+            Some(false) => "plugged in",
+            None => "unknown",
         },
     );
     #[cfg(not(windows))]
-    let (machine, power) = (String::from("?"), "desconhecida");
+    let (machine, power) = (String::from("?"), "unknown");
 
     let host = std::env::var("COMPUTERNAME")
-        .unwrap_or_else(|_| "maquina".into())
+        .unwrap_or_else(|_| "machine".into())
         .to_lowercase();
     let date = today();
     let mut md = String::new();
-    let _ = writeln!(md, "# Benchmark de jitter — {date}\n");
-    let _ = writeln!(md, "- Máquina: {machine}");
-    let _ = writeln!(md, "- Energia: {power}");
+    let _ = writeln!(md, "# Jitter benchmark — {date}\n");
+    let _ = writeln!(md, "- Machine: {machine}");
+    let _ = writeln!(md, "- Power: {power}");
     let _ = writeln!(
         md,
         "- Timer: {} · MMCSS: {}",
         idle.timer_kind,
-        if idle.mmcss { "ativo" } else { "inativo" }
+        if idle.mmcss { "on" } else { "off" }
     );
     let _ = writeln!(
         md,
-        "- Duração: {} s por intervalo; ação no-op (nenhum input injetado)",
+        "- Duration: {} s per interval; no-op action (no input injected)",
         args.seconds
     );
     let _ = writeln!(
         md,
-        "- Critério de confiável: p99 do atraso < 25% do intervalo e nenhum evento perdido\n"
+        "- Reliable means: p99 delay < 25% of the interval and no missed events\n"
     );
-    for (label, report) in [
-        ("Ocioso", &idle),
-        ("CPU 100% em todos os núcleos", &stressed),
-    ] {
+    for (label, report) in [("Idle", &idle), ("CPU at 100% on every core", &stressed)] {
         let _ = writeln!(md, "## {label}\n");
         table(&mut md, &report.results);
         let min = min_reliable_interval_ms(&report.results)
-            .map_or("nenhum".into(), |ms| format!("{ms} ms"));
-        let _ = writeln!(md, "\nMenor intervalo confiável: **{min}**\n");
+            .map_or("none".into(), |ms| format!("{ms} ms"));
+        let _ = writeln!(md, "\nShortest reliable interval: **{min}**\n");
     }
     let _ = writeln!(
         md,
-        "## CSV\n\n```csv\ncenario,intervalo_ms,amostras,p50_us,p95_us,p99_us,max_us,perdidos"
+        "## CSV\n\n```csv\nscenario,interval_ms,samples,p50_us,p95_us,p99_us,max_us,missed"
     );
-    csv(&mut md, "ocioso", &idle.results);
+    csv(&mut md, "idle", &idle.results);
     csv(&mut md, "stress", &stressed.results);
     md.push_str("```\n");
 
@@ -214,7 +213,7 @@ fn main() {
     }
     let path = args.out_dir.join(format!("{date}-{host}.md"));
     match std::fs::write(&path, &md) {
-        Ok(()) => println!("{md}\nrelatório: {}", path.display()),
+        Ok(()) => println!("{md}\nreport: {}", path.display()),
         Err(e) => {
             eprintln!("cannot write {}: {e}", path.display());
             std::process::exit(1);

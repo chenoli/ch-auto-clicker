@@ -12,17 +12,17 @@ jobs:
     uses: ./.github/workflows/ci.yml
 
   release:
-    name: Build e publicação
+    name: Build and publish
     needs: checks
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v5
-      - name: Tag igual à versão do app
+      - name: Tag matches the app version
         shell: bash
         run: |
           version=$(node -p "require('./src-tauri/tauri.conf.json').version")
           if [ "v$version" != "$GITHUB_REF_NAME" ]; then
-            echo "A tag $GITHUB_REF_NAME não bate com a versão $version do tauri.conf.json"; exit 1
+            echo "Tag $GITHUB_REF_NAME does not match version $version in tauri.conf.json"; exit 1
           fi
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
@@ -41,13 +41,13 @@ jobs:
           tagName: ${{ github.ref_name }}
           releaseName: CH. Clicker ${{ github.ref_name }}
           releaseBody: |
-            Instale com o `CH Clicker_*_x64-setup.exe` (por usuário, sem precisar de administrador).
+            Install with `CH Clicker_*_x64-setup.exe` (per user, no admin rights needed).
 
-            **Aviso:** este build ainda não tem assinatura de código. O Windows mostra "Editor desconhecido":
-            clique em "Mais informações" → "Executar assim mesmo". Com o Controle Inteligente de Aplicativos
-            ligado, o Windows 11 bloqueia o app até a assinatura chegar.
+            **Note:** this build is not code-signed yet. Windows shows "Unknown publisher":
+            click "More info" → "Run anyway". With Smart App Control turned on, Windows 11
+            blocks the app until it is signed.
 
-            Sistemas anti-cheat detectam entrada automatizada. Não use onde os termos de serviço proíbem automação.
+            Anti-cheat systems detect automated input. Do not use it where the terms of service forbid automation.
           releaseDraft: false
           prerelease: false
           includeUpdaterJson: true

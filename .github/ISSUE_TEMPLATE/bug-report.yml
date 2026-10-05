@@ -1,0 +1,47 @@
+name: Bug report
+description: Something does not work as expected.
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What you did, what you expected and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open the Scan tab
+        2. Select an area
+        3. Press F6
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: App version
+      description: Shown at the bottom of Settings.
+      placeholder: 0.1.0
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      placeholder: Windows 11 24H2
+    validations:
+      required: true
+  - type: textarea
+    id: monitors
+    attributes:
+      label: Monitor setup
+      description: Number of monitors, resolution and scale of each, if the problem involves positions or overlays.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Relevant lines from %LOCALAPPDATA%\Chenoli\CH Clicker\logs\ch-clicker.log
+      render: text

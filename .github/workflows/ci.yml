@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   frontend:
-    name: Frontend (formato, lint, tipos, testes + cobertura, build, visual)
+    name: Frontend (format, lint, types, tests + coverage, build, visual)
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v5
@@ -22,16 +22,16 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Tokens gerados em dia
+      - name: Generated tokens up to date
         run: pnpm tokens:check
       - run: pnpm format:check
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
-      - name: Auditoria de dependências
+      - name: Dependency audit
         run: pnpm audit --prod
-      - name: Paridade visual
+      - name: Visual parity
         run: |
           pnpm exec playwright install --with-deps chromium
           pnpm test:visual
@@ -44,7 +44,7 @@ jobs:
             test-results
 
   rust:
-    name: Rust (fmt, clippy, testes + cobertura, bindings)
+    name: Rust (fmt, clippy, tests + coverage, bindings)
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v5
@@ -63,16 +63,16 @@ jobs:
       - run: cargo clippy --workspace --all-targets -- -D warnings
       - run: cargo test --workspace
       - uses: taiki-e/install-action@cargo-llvm-cov
-      - name: Cobertura Rust (mínimo 80%)
+      - name: Rust coverage (80% minimum)
         run: cargo llvm-cov --workspace --exclude ch-clicker --exclude jitter-bench --fail-under-lines 80 --fail-under-functions 80
-      - name: Bindings TypeScript em dia
+      - name: TypeScript bindings up to date
         shell: bash
         run: git diff --exit-code -- ui/src/ipc/bindings.ts
-      - name: ch-core sem dependência de Windows
+      - name: ch-core has no Windows dependency
         shell: bash
         run: |
           if cargo tree -p ch-core -e normal | grep -q windows; then
-            echo "ch-core não pode depender do crate windows (ARCHITECTURE §2)"; exit 1
+            echo "ch-core must not depend on the windows crate (ARCHITECTURE §2)"; exit 1
           fi
       - uses: taiki-e/install-action@cargo-audit
       - run: cargo audit

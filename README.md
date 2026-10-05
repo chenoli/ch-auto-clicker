@@ -1,63 +1,74 @@
 # CH. Clicker
 
-Auto clicker nativo para Windows 10/11, da Chenoli Labs. Núcleo em Rust (injeção via `SendInput`, scheduler de alta precisão) e interface em React sobre Tauri 2.
+A native auto clicker for Windows 10/11 by Chenoli Labs. The core is written in Rust (input injection through `SendInput` and a high-precision scheduler) and the interface is React on Tauri 2.
 
-- Arquitetura: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
-- Backlog em fases: [`docs/TASKS.md`](docs/TASKS.md)
-- Regras de trabalho: [`CLAUDE.md`](CLAUDE.md)
+- **Patterns:** single point, multiple points, wiggle and area scan
+- **Profiles:** global hotkeys, import/export (`.chprofile`), tray menu and an always-on-top HUD
+- **Themes and languages:** four themes; English, Brazilian Portuguese and Latin American Spanish
+- **Safety:** an emergency stop that can never be disabled, and the app never clicks its own window
 
-## Instalação
+## Installation
 
-Baixe o `CH Clicker_*_x64-setup.exe` em [Releases](https://github.com/chenoli/chenoli-auto-clicker/releases). Ele instala só para o seu usuário, sem pedir administrador, e o app se atualiza sozinho.
+Download `CH Clicker_*_x64-setup.exe` from [Releases](https://github.com/chenoli/chenoli-auto-clicker/releases). It installs for your user only, without admin rights, and the app keeps itself up to date. The installer asks for your language and the app starts in it.
 
-> **Ainda sem assinatura de código.** O Windows mostra "Editor desconhecido": clique em **Mais informações → Executar assim mesmo**. Com o **Controle Inteligente de Aplicativos** ligado, o Windows 11 bloqueia o app até a assinatura chegar (estamos pedindo a assinatura gratuita para projetos open source; veja [`docs/release.md`](docs/release.md)).
+> **Not code-signed yet.** Windows shows "Unknown publisher": click **More info → Run anyway**. With **Smart App Control** turned on, Windows 11 blocks the app until it is signed. We are applying for free open-source signing; see [`docs/release.md`](docs/release.md).
 
-> **Jogos online com anti-cheat** detectam entrada automatizada e podem suspender ou banir a conta. O CH. Clicker não oculta sua atividade. Não use onde os termos de serviço proíbem automação.
+> **Online games with anti-cheat** detect automated input and may suspend or ban your account. CH. Clicker does not hide its activity. Do not use it where the terms of service forbid automation.
 
-## Desenvolvimento
+## Development
 
-### Pré-requisitos
+### Requirements
 
-- Windows 10 1803+ ou Windows 11
-- [Rust](https://rustup.rs) stable (MSVC) e Visual Studio Build Tools com a carga "Desenvolvimento para desktop com C++"
-- Node.js 24 e pnpm 12
-- WebView2 (já vem no Windows 11)
+- Windows 10 1803+ or Windows 11
+- [Rust](https://rustup.rs) stable (MSVC) and Visual Studio Build Tools with the "Desktop development with C++" workload
+- Node.js 24 and pnpm 12
+- WebView2 (preinstalled on Windows 11)
 
-O **Controle Inteligente de Aplicativos** do Windows 11 bloqueia os executáveis gerados pelo build. Para desenvolver, ele precisa estar desligado.
+Windows 11 **Smart App Control** blocks the executables produced by local builds, so it must be off for development.
 
-### Comandos
+### Commands
 
-| Comando                                                                  | O que faz                                                                     |
-| ------------------------------------------------------------------------ | ----------------------------------------------------------------------------- |
-| `pnpm install`                                                           | Instala as dependências do frontend                                           |
-| `pnpm tauri dev`                                                         | Abre o app em modo de desenvolvimento                                         |
-| `pnpm dev`                                                               | Só o frontend, no navegador (galeria em `http://localhost:1420/gallery.html`) |
-| `pnpm test`                                                              | Testes do frontend com cobertura (mínimo 80%)                                 |
-| `pnpm test:visual`                                                       | Paridade visual com Playwright                                                |
-| `pnpm lint` / `pnpm lint:fix`                                            | ESLint estrito (zero warnings)                                                |
-| `pnpm format`                                                            | Prettier                                                                      |
-| `pnpm typecheck`                                                         | TypeScript                                                                    |
-| `pnpm tokens`                                                            | Regenera temas a partir de `design/tokens.json`                               |
-| `cargo test --workspace`                                                 | Testes Rust (também regenera `ui/src/ipc/bindings.ts`)                        |
-| `cargo clippy --workspace --all-targets -- -D warnings`                  | Lint Rust                                                                     |
-| `cargo llvm-cov --workspace --exclude ch-clicker --exclude jitter-bench` | Cobertura Rust (mínimo 80%)                                                   |
-| `cargo test -p ch-win --test injection -- --ignored`                     | Testes que injetam cliques reais (só com jogos e apps sensíveis fechados)     |
-| `cargo run -p jitter-bench --release -- --seconds 10`                    | Benchmark de jitter do scheduler (relatório em `docs/bench/`)                 |
+| Command                                                                  | What it does                                                                    |
+| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
+| `pnpm install`                                                           | Installs the frontend dependencies                                              |
+| `pnpm tauri dev`                                                         | Runs the app in development mode                                                |
+| `pnpm dev`                                                               | Frontend only, in the browser (gallery at `http://localhost:1420/gallery.html`) |
+| `pnpm test`                                                              | Frontend tests with coverage (80% minimum)                                      |
+| `pnpm test:visual`                                                       | Visual parity with Playwright                                                   |
+| `pnpm lint` / `pnpm lint:fix`                                            | Strict ESLint (zero warnings)                                                   |
+| `pnpm format`                                                            | Prettier                                                                        |
+| `pnpm typecheck`                                                         | TypeScript                                                                      |
+| `pnpm tokens`                                                            | Regenerates the themes from `design/tokens.json`                                |
+| `cargo test --workspace`                                                 | Rust tests (also regenerates `ui/src/ipc/bindings.ts`)                          |
+| `cargo clippy --workspace --all-targets -- -D warnings`                  | Rust lint                                                                       |
+| `cargo llvm-cov --workspace --exclude ch-clicker --exclude jitter-bench` | Rust coverage (80% minimum)                                                     |
+| `cargo test -p ch-win --test injection -- --ignored`                     | Tests that inject real clicks (only with games and sensitive apps closed)       |
+| `cargo run -p jitter-bench --release -- --seconds 10`                    | Scheduler jitter benchmark (report in `docs/bench/`)                            |
 
-### Estrutura
+### Layout
 
 ```
-crates/ch-core     domínio puro (sem Windows): modelos, padrões, scheduler
-crates/ch-win      camada Windows: input, timers, DPI, hotkeys, captura
-crates/ch-engine   runtime do motor
-crates/ch-storage  persistência em %APPDATA%
-tools/jitter-bench benchmark de timing do scheduler
-src-tauri/         app Tauri: comandos, eventos, janelas
-ui/                interface React (uma página por janela)
-design/            tokens (fonte da verdade) e ícone
-tools/             gerador de tokens e regras de lint locais
+crates/ch-core     pure domain (no Windows): models, patterns, scheduler
+crates/ch-win      Windows layer: input, timers, DPI, hotkeys, capture
+crates/ch-engine   engine runtime
+crates/ch-storage  persistence in %APPDATA%
+tools/jitter-bench scheduler timing benchmark
+src-tauri/         Tauri app: commands, events, windows
+ui/                React interface (one page per window)
+design/            design tokens (source of truth) and icon
+tools/             token generator and local lint rules
 ```
 
-## Licença
+More detail:
 
-[MIT](LICENSE) © 2026 Chenoli Labs. As fontes Syne e Space Grotesk são distribuídas sob a SIL Open Font License 1.1.
+- Architecture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+- Phased backlog: [`docs/TASKS.md`](docs/TASKS.md)
+- Releasing: [`docs/release.md`](docs/release.md)
+
+## Contributing
+
+Issues and pull requests are welcome. Read [`CONTRIBUTING.md`](CONTRIBUTING.md) first. To report a vulnerability, follow [`SECURITY.md`](SECURITY.md) instead of opening a public issue. This project follows the [Contributor Covenant](CODE_OF_CONDUCT.md).
+
+## License
+
+[MIT](LICENSE) © 2026 Chenoli Labs. The Syne and Space Grotesk fonts are distributed under the SIL Open Font License 1.1.
