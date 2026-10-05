@@ -1,0 +1,15 @@
+dist
+target
+coverage
+refs
+src-tauri/gen
+ui/src/ipc/bindings.ts
+ui/src/styles/themes.css
+ui/src/styles/tokens.ts
+pnpm-lock.yaml
+playwright-report
+test-results
+ui/tests/visual/__screenshots__
+ui/tests/visual/references
+design/themes.reference.css
+design/tokens.json

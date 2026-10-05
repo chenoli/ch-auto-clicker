@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- Placeholder icon (final one in T12.1): "CH." monogram on the Grafite background. -->
+  <rect width="1024" height="1024" rx="200" fill="#141412"/>
+  <path d="M447 362 A190 190 0 1 0 447 662" fill="none" stroke="#F0EDE5" stroke-width="110"/>
+  <rect x="505" y="322" width="110" height="380" fill="#F0EDE5"/>
+  <rect x="705" y="322" width="110" height="380" fill="#F0EDE5"/>
+  <rect x="615" y="457" width="90" height="110" fill="#F0EDE5"/>
+  <circle cx="885" cy="647" r="55" fill="#00DA7E"/>
+</svg>

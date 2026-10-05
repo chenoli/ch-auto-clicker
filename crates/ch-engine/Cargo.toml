@@ -1,0 +1,14 @@
+[package]
+name = "ch-engine"
+description = "CH. Clicker engine runtime: high-priority thread, run plan, executors and telemetry."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[dependencies]
+ch-core.workspace = true
+
+[lints]
+workspace = true

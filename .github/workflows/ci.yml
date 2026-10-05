@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    name: Frontend (formato, lint, tipos, testes + cobertura, build, visual)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Tokens gerados em dia
+        run: pnpm tokens:check
+      - run: pnpm format:check
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+      - name: Auditoria de dependências
+        run: pnpm audit --prod
+      - name: Paridade visual
+        run: |
+          pnpm exec playwright install --with-deps chromium
+          pnpm test:visual
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report
+            test-results
+
+  rust:
+    name: Rust (fmt, clippy, testes, bindings)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+      # generate_context! exige o frontendDist (dist/) existente.
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: cargo fmt --all --check
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+      - run: cargo test --workspace
+      - name: Bindings TypeScript em dia
+        shell: bash
+        run: git diff --exit-code -- ui/src/ipc/bindings.ts
+      - name: ch-core sem dependência de Windows
+        shell: bash
+        run: |
+          if cargo tree -p ch-core -e normal | grep -q windows; then
+            echo "ch-core não pode depender do crate windows (ARCHITECTURE §2)"; exit 1
+          fi
+      - uses: taiki-e/install-action@cargo-audit
+      - run: cargo audit

@@ -1,0 +1,45 @@
+import { act, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it } from "vitest";
+
+import "../../i18n";
+
+import { Gallery, parseGalleryHash } from "./gallery";
+
+describe("parseGalleryHash", () => {
+  it("reads screen and theme", () => {
+    expect(parseGalleryHash("#/tokens?theme=papel")).toEqual({ screen: "tokens", theme: "papel" });
+  });
+
+  it("falls back to the default theme and the index", () => {
+    expect(parseGalleryHash("")).toEqual({ screen: null, theme: "grafite" });
+    expect(parseGalleryHash("#/tokens?theme=neon")).toEqual({ screen: "tokens", theme: "grafite" });
+  });
+});
+
+describe("Gallery", () => {
+  afterEach(() => {
+    window.location.hash = "";
+  });
+
+  it("lists every screen on the index", () => {
+    render(<Gallery />);
+    expect(screen.getByRole("heading", { name: "Galeria de telas" })).toBeInTheDocument();
+    expect(screen.getByTestId("screen-tokens")).toBeInTheDocument();
+  });
+
+  it("isolates one screen and applies the theme from the hash", () => {
+    window.location.hash = "#/tokens?theme=papel";
+    render(<Gallery />);
+    expect(screen.queryByRole("heading", { name: "Galeria de telas" })).not.toBeInTheDocument();
+    expect(document.documentElement.dataset.theme).toBe("papel");
+  });
+
+  it("follows hash changes", () => {
+    render(<Gallery />);
+    act(() => {
+      window.location.hash = "#/tokens?theme=contraste";
+      window.dispatchEvent(new HashChangeEvent("hashchange"));
+    });
+    expect(document.documentElement.dataset.theme).toBe("contraste");
+  });
+});

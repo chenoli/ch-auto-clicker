@@ -1,0 +1,17 @@
+{
+  "appName": "Clicker",
+  "placeholder": {
+    "kicker": "Fase 0",
+    "title": "Estrutura pronta.",
+    "body": "A interface da janela principal chega na Fase 3."
+  },
+  "gallery": {
+    "title": "Galeria de telas",
+    "tokens": "Tokens",
+    "theme": "Tema"
+  },
+  "units": {
+    "cps": "CPS",
+    "ms": "ms"
+  }
+}

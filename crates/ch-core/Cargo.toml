@@ -1,0 +1,13 @@
+[package]
+name = "ch-core"
+description = "CH. Clicker domain: models, movement patterns, scheduler and state machine. No Windows dependency."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[dependencies]
+
+[lints]
+workspace = true

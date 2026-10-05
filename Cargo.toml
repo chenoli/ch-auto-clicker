@@ -1,0 +1,36 @@
+[workspace]
+resolver = "3"
+members = ["crates/ch-core", "crates/ch-win", "crates/ch-engine", "crates/ch-storage", "src-tauri"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.90"
+authors = ["Chenoli Labs"]
+publish = false
+
+[workspace.dependencies]
+ch-core = { path = "crates/ch-core" }
+ch-win = { path = "crates/ch-win" }
+ch-engine = { path = "crates/ch-engine" }
+ch-storage = { path = "crates/ch-storage" }
+log = "0.4"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+windows = "0.62"
+
+[workspace.lints.rust]
+unsafe_op_in_unsafe_fn = "deny"
+missing_debug_implementations = "warn"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+undocumented_unsafe_blocks = "warn"
+
+[profile.release]
+# Timing engine: optimize for speed, not size.
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+strip = true

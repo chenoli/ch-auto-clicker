@@ -1,0 +1,15 @@
+node_modules/
+dist/
+target/
+src-tauri/gen/
+coverage/
+playwright-report/
+test-results/
+*.log
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+
+# Apoio local (dev-flow): handoff de design, andamento e planos. Fora do git.
+refs/
