@@ -24,11 +24,12 @@
         "decorations": false,
         "shadow": true,
         "center": true,
-        "backgroundColor": "#141412"
+        "backgroundColor": "#141412",
+        "dragDropEnabled": false
       }
     ],
     "security": {
-      "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src ipc: http://ipc.localhost"
+      "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: chcap: http://chcap.localhost; connect-src ipc: http://ipc.localhost chcap: http://chcap.localhost"
     }
   },
   "bundle": {
@@ -40,8 +41,12 @@
     "shortDescription": "Auto clicker de precisão para Windows",
     "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.ico"],
     "windows": {
-      "webviewInstallMode": { "type": "downloadBootstrapper" },
-      "nsis": { "installMode": "currentUser" }
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper"
+      },
+      "nsis": {
+        "installMode": "currentUser"
+      }
     }
   }
 }

@@ -116,7 +116,11 @@
     "connect": "Não foi possível carregar o estado do aplicativo.",
     "HOTKEY_UNKNOWN_KEY": "Esta tecla não pode ser usada como atalho.",
     "HOTKEY_PRIMARY_MOUSE": "Os botões esquerdo e direito do mouse não podem ser atalhos.",
-    "HOTKEY_EMERGENCY_REQUIRED": "A parada de emergência precisa de um atalho."
+    "HOTKEY_EMERGENCY_REQUIRED": "A parada de emergência precisa de um atalho.",
+    "NO_POINTS": "Adicione pelo menos um ponto antes de iniciar.",
+    "POINTS_OFFSCREEN": "Há pontos fora das telas conectadas. Revise a lista de pontos.",
+    "OVERLAY_OPEN": "A captura de pontos já está aberta.",
+    "CAPTURE_FAILED": "Não foi possível capturar a tela."
   },
   "gallery": {
     "title": "Galeria de telas",
@@ -174,5 +178,31 @@
   },
   "common": {
     "back": "Voltar"
+  },
+  "points": {
+    "kicker": "Modo click · Posição",
+    "title": "Pontos na tela",
+    "count": "{count, plural, =0 {0 pontos} one {# ponto} other {# pontos}}",
+    "number": "#",
+    "x": "X",
+    "y": "Y",
+    "delay": "Delay",
+    "noDelay": "—",
+    "remove": "Remover ponto {n}",
+    "drag": "Mover ponto {n} (arraste ou use ↑ ↓)",
+    "capture": "Capturar na tela",
+    "manual": "+ Manual",
+    "footer": "Executa 01 → {last} e repete. Delay é somado ao intervalo.",
+    "empty": "Nenhum ponto ainda. Capture na tela ou adicione manualmente.",
+    "oneScreen": "tela 1 · {width} × {height}",
+    "manyScreens": "{count} telas · {width} × {height}",
+    "layoutChanged": "As telas mudaram desde a captura. Confira se os pontos ainda estão no lugar certo."
+  },
+  "overlay": {
+    "addPoint": "Clique para adicionar o ponto",
+    "arrows": "Setas movem 1 px",
+    "space": "Espaço adiciona",
+    "undo": "Ctrl Z desfaz",
+    "finish": "para concluir"
   }
 }

@@ -12,6 +12,7 @@ import { editProfile } from "../../store/profile-sync";
 import { hotkeyLabel } from "../hotkeys/format-hotkey";
 import { HotkeysScreen } from "../hotkeys/hotkeys-screen";
 import { useHotkeyRecording } from "../hotkeys/use-hotkey-recording";
+import { PointsRoute } from "../points/points-route";
 import { SettingsScreen } from "../settings/settings-screen";
 import { ConnectFailure } from "../shell/connect-failure";
 import { MainWindowView } from "./main-window-view";
@@ -19,7 +20,7 @@ import { MainWindowView } from "./main-window-view";
 import type { Profile } from "../../ipc";
 import type { ReactElement } from "react";
 
-type Screen = "main" | "settings" | "hotkeys";
+type Screen = "main" | "settings" | "hotkeys" | "points";
 
 const MIN_HEIGHT = 640;
 
@@ -98,6 +99,17 @@ export function MainWindow(): ReactElement | null {
     );
   }
 
+  if (screen === "points") {
+    return (
+      <PointsRoute
+        profile={profile}
+        captureHotkey={settings.hotkeys.capturePoint}
+        onBack={() => go("main")}
+        {...windowActions}
+      />
+    );
+  }
+
   const startStatus = hotkeys.find((h) => h.target.kind === "action" && h.target.id === "startStop");
   return (
     <MainWindowView
@@ -118,6 +130,7 @@ export function MainWindow(): ReactElement | null {
         setCommandError(null);
         void commands.windowOpenVariation();
       }}
+      onOpenPoints={() => go("points")}
       onDesiredHeight={onDesiredHeight}
       {...windowActions}
     />

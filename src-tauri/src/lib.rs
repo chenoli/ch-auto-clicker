@@ -7,6 +7,7 @@ mod events;
 mod hotkeys;
 mod ipc;
 mod logging;
+mod overlay;
 mod paths;
 mod persist;
 mod state;
@@ -31,6 +32,9 @@ pub fn run() {
             }
         }))
         .plugin(logging::plugin())
+        .register_uri_scheme_protocol(overlay::SCHEME, |ctx, request| {
+            overlay::handle_protocol(ctx.app_handle(), request.uri().path())
+        })
         .invoke_handler(specta.invoke_handler())
         .setup(move |app| {
             logging::install_panic_hook();

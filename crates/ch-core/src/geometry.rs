@@ -149,6 +149,18 @@ impl DisplayLayout {
     pub fn primary(&self) -> Option<&Monitor> {
         self.monitors.iter().find(|m| m.primary)
     }
+
+    /// Stable description of the monitor arrangement, saved with captured points so a later run can
+    /// tell the screens moved: `2mon:1920x1080@0,0;1920x1080@1920,0`.
+    pub fn fingerprint(&self) -> String {
+        let mut rects: Vec<Rect> = self.monitors.iter().map(|m| m.rect).collect();
+        rects.sort_by_key(|r| (r.left, r.top));
+        let parts: Vec<String> = rects
+            .iter()
+            .map(|r| format!("{}x{}@{},{}", r.width, r.height, r.left, r.top))
+            .collect();
+        format!("{}mon:{}", rects.len(), parts.join(";"))
+    }
 }
 
 #[cfg(test)]
@@ -242,6 +254,7 @@ mod tests {
             layout.primary().map(|m| m.id.as_str()),
             Some("\\\\.\\DISPLAY1")
         );
+        assert_eq!(layout.fingerprint(), "2mon:1680x1050@-1680,0;1920x1080@0,0");
     }
 
     fn desktop_and_point() -> impl Strategy<Value = (Rect, Point)> {

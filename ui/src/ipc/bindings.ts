@@ -43,6 +43,17 @@ export const commands = {
 	hotkeyResetDefaults: () => __TAURI_INVOKE<HotkeyStatus[]>("hotkey_reset_defaults"),
 	/**  Tries every registration again (after the user freed a combo in another app). */
 	hotkeyRetry: () => __TAURI_INVOKE<HotkeyStatus[]>("hotkey_retry"),
+	screenLayout: () => __TAURI_INVOKE<ScreenLayout>("screen_layout"),
+	/**
+	 *  Opens the point capture overlays (Tela 03.B) and resolves with the points added once the user
+	 *  presses Enter or Esc. Async: it creates windows and then waits.
+	 */
+	overlayPickPoints: () => typedError<ScreenPoint[], AppError>(__TAURI_INVOKE("overlay_pick_points")),
+	overlayState: (monitor: number) => typedError<OverlayState, AppError>(__TAURI_INVOKE("overlay_state", { monitor })),
+	/**  Adds a point at a CSS position of overlay `monitor`. */
+	overlayAddPoint: (monitor: number, x: number | null, y: number | null) => typedError<OverlayState, AppError>(__TAURI_INVOKE("overlay_add_point", { monitor, x, y })),
+	overlayUndo: () => typedError<null, AppError>(__TAURI_INVOKE("overlay_undo")),
+	overlayFinish: () => __TAURI_INVOKE<void>("overlay_finish"),
 	/**  The main window asks for the height its content needs; Rust animates to it (640–900 px). */
 	windowSetContentHeight: (height: number | null) => typedError<number | null, AppError>(__TAURI_INVOKE("window_set_content_height", { height })),
 	/**
@@ -232,6 +243,30 @@ export type Modifier = "ctrl" | "alt" | "shift" | "win";
 
 export type MouseButton = "left" | "middle" | "right" | "x1" | "x2";
 
+/**  A monitor as the overlay page needs it (physical pixels). */
+export type OverlayMonitor = {
+	index: number,
+	x: number,
+	y: number,
+	width: number,
+	height: number,
+	scale: number | null,
+};
+
+export type OverlayPoint = {
+	number: number,
+	x: number,
+	y: number,
+};
+
+/**  Everything one overlay window renders. */
+export type OverlayState = {
+	monitor: OverlayMonitor,
+	points: OverlayPoint[],
+	/**  Number the next click will get ("Clique para adicionar o ponto 05"). */
+	nextNumber: number,
+};
+
 export type Position = "cursor" | "points";
 
 export type Profile = {
@@ -261,6 +296,12 @@ export type ScanMode = {
 	speedPxS: number,
 	action: ScanAction,
 	loop: boolean,
+};
+
+/**  The monitors and the arrangement fingerprint, for the points minimap. */
+export type ScreenLayout = {
+	monitors: OverlayMonitor[],
+	fingerprint: string,
 };
 
 export type ScreenPoint = {

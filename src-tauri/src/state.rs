@@ -36,6 +36,7 @@ impl AppData {
 pub struct AppState {
     pub engine: Engine,
     hotkeys: crate::hotkeys::HotkeyManager,
+    overlays: crate::overlay::OverlayManager,
     _telemetry: Telemetry,
     data: Mutex<AppData>,
     pub persister: Persister,
@@ -91,6 +92,7 @@ impl AppState {
         Ok(Self {
             engine,
             hotkeys,
+            overlays: crate::overlay::OverlayManager::default(),
             _telemetry: telemetry,
             data: Mutex::new(AppData {
                 settings: loaded.settings,
@@ -105,6 +107,10 @@ impl AppState {
 
     pub fn hotkeys(&self) -> &crate::hotkeys::HotkeyManager {
         &self.hotkeys
+    }
+
+    pub fn overlays(&self) -> &crate::overlay::OverlayManager {
+        &self.overlays
     }
 
     pub fn data(&self) -> AppData {

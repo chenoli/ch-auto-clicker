@@ -4,7 +4,8 @@
 use ch_core::engine::clock::NANOS_PER_MS;
 use ch_core::engine::scheduler::Scheduler;
 use ch_core::engine::timeline::{IntervalTimeline, StopTimeline, Timeline};
-use ch_core::input::TargetGuard;
+use ch_core::geometry::{Point, Rect};
+use ch_core::input::{InputBackend, TargetGuard};
 use ch_core::model::{Mode, Position, Profile};
 use ch_core::validate::{ValidationError, validate_profile};
 
@@ -16,9 +17,14 @@ const NANOS_PER_SEC: u64 = 1_000_000_000;
 pub enum PlanError {
     #[error("profile is invalid: {0:?}")]
     Invalid(Vec<ValidationError>),
-    /// Modes that arrive in later phases (points: 5, wiggle: 6, scan: 7).
+    /// Modes that arrive in later phases (wiggle: 6, scan: 7).
     #[error("{0} is not available yet")]
     NotAvailableYet(&'static str),
+    #[error("the points list is empty")]
+    NoPoints,
+    /// A point is outside the current virtual desktop (a monitor was unplugged or moved).
+    #[error("point ({x}, {y}) is outside the screens")]
+    PointsOffscreen { x: i32, y: i32 },
 }
 
 impl PlanError {
@@ -26,6 +32,8 @@ impl PlanError {
         match self {
             Self::Invalid(_) => "PROFILE_INVALID",
             Self::NotAvailableYet(_) => "MODE_NOT_AVAILABLE",
+            Self::NoPoints => "NO_POINTS",
+            Self::PointsOffscreen { .. } => "POINTS_OFFSCREEN",
         }
     }
 }
@@ -33,18 +41,34 @@ impl PlanError {
 pub fn build_plan(
     profile: &Profile,
     countdown_sec: u8,
+    desktop: Rect,
     guard: Box<dyn TargetGuard>,
 ) -> Result<RunPlan, PlanError> {
     let errors = validate_profile(profile);
     if !errors.is_empty() {
         return Err(PlanError::Invalid(errors));
     }
-    match (profile.mode, profile.modes.click.position) {
-        (Mode::Click, Position::Cursor) => {}
-        (Mode::Click, Position::Points) => return Err(PlanError::NotAvailableYet("points")),
+    let points: Vec<(Point, u64)> = match (profile.mode, profile.modes.click.position) {
+        (Mode::Click, Position::Cursor) => Vec::new(),
+        (Mode::Click, Position::Points) => {
+            let points = &profile.modes.click.points;
+            if points.is_empty() {
+                return Err(PlanError::NoPoints);
+            }
+            if let Some(p) = points
+                .iter()
+                .find(|p| !desktop.contains(Point::new(p.x, p.y)))
+            {
+                return Err(PlanError::PointsOffscreen { x: p.x, y: p.y });
+            }
+            points
+                .iter()
+                .map(|p| (Point::new(p.x, p.y), u64::from(p.delay_ms) * NANOS_PER_MS))
+                .collect()
+        }
         (Mode::Wiggle, _) => return Err(PlanError::NotAvailableYet("wiggle")),
         (Mode::Scan, _) => return Err(PlanError::NotAvailableYet("scan")),
-    }
+    };
 
     let click = profile.click.clone();
     let intervals_ns: Vec<u64> = click
@@ -65,22 +89,47 @@ pub fn build_plan(
         stop_after_ns,
         move |start, shared| {
             let clicks_per_tick = u64::from(click.kind.clicks());
-            let action = Box::new(move |backend: &mut dyn ch_core::input::InputBackend| {
-                if guard.blocks_click() {
-                    shared.add_skipped_self();
-                    return Ok(());
-                }
-                backend.click(click.button, click.kind)?;
-                shared.add_clicks(clicks_per_tick);
-                Ok(())
-            });
-            let mut timelines: Vec<Box<dyn Timeline>> = vec![Box::new(IntervalTimeline::new(
-                start,
-                intervals_ns.into_iter().cycle(),
-                action,
-            ))];
+            let click_timeline: Box<dyn Timeline> = if points.is_empty() {
+                let action = Box::new(move |backend: &mut dyn InputBackend| {
+                    if guard.blocks_click() {
+                        shared.add_skipped_self();
+                        return Ok(());
+                    }
+                    backend.click(click.button, click.kind)?;
+                    shared.add_clicks(clicks_per_tick);
+                    Ok(())
+                });
+                Box::new(IntervalTimeline::new(
+                    start,
+                    intervals_ns.into_iter().cycle(),
+                    action,
+                ))
+            } else {
+                // Gap before point n = next interval + that point's delay ("Delay é somado ao intervalo").
+                let delays: Vec<u64> = points.iter().map(|(_, d)| *d).collect();
+                let mut cycle = intervals_ns.into_iter().cycle();
+                let gaps = (1usize..)
+                    .map(move |n| cycle.next().unwrap_or(NANOS_PER_MS) + delays[n % delays.len()]);
+                let targets: Vec<Point> = points.iter().map(|(p, _)| *p).collect();
+                let mut next = 0usize;
+                let action = Box::new(move |backend: &mut dyn InputBackend| {
+                    let target = targets[next];
+                    next = (next + 1) % targets.len();
+                    backend.move_to(target)?;
+                    // Checked after the move: the cursor is now exactly where the click would land.
+                    if guard.blocks_click() {
+                        shared.add_skipped_self();
+                        return Ok(());
+                    }
+                    backend.click(click.button, click.kind)?;
+                    shared.add_clicks(clicks_per_tick);
+                    Ok(())
+                });
+                Box::new(IntervalTimeline::new(start, gaps, action))
+            };
+            let mut timelines = vec![click_timeline];
             if let Some(after) = stop_after_ns {
-                timelines.push(Box::new(StopTimeline::new(start + after)));
+                timelines.push(Box::new(StopTimeline::new(start + after)) as Box<dyn Timeline>);
             }
             Scheduler::new(timelines)
         },
@@ -98,11 +147,13 @@ mod tests {
     use ch_core::engine::wait::fake::FakeWaiter;
     use ch_core::input::fake::{Call, RecordingBackend};
     use ch_core::input::{AllowAll, ClickKind, MouseButton};
+    use ch_core::model::ScreenPoint;
 
     use super::*;
     use crate::engine::Shared;
 
     const MS: u64 = NANOS_PER_MS;
+    const DESK: Rect = Rect::new(-1680, 0, 3600, 1080);
 
     struct Fires(Vec<u64>, FakeClock, usize);
 
@@ -146,7 +197,7 @@ mod tests {
         let mut p = profile();
         p.click.button = MouseButton::Right;
         p.click.kind = ClickKind::Double;
-        let plan = build_plan(&p, 3, Box::new(AllowAll)).expect("plan");
+        let plan = build_plan(&p, 3, DESK, Box::new(AllowAll)).expect("plan");
         assert_eq!(plan.countdown_ns, 3_000 * MS);
         assert_eq!(plan.nominal_interval_ns, 100 * MS);
         assert_eq!(plan.stop_after_ns, None);
@@ -168,7 +219,7 @@ mod tests {
     fn follows_the_variation_cycle() {
         let mut p = profile();
         p.click.variation.enabled = true;
-        let plan = build_plan(&p, 0, Box::new(AllowAll)).expect("plan");
+        let plan = build_plan(&p, 0, DESK, Box::new(AllowAll)).expect("plan");
         assert_eq!(plan.nominal_interval_ns, MS, "shortest block");
         let (_, times, _, _) = simulate(plan, 5);
         let gaps: Vec<_> = times
@@ -184,7 +235,7 @@ mod tests {
         p.stop_after.enabled = true;
         p.stop_after.seconds = 30;
         p.click.interval_ms = 10_000;
-        let plan = build_plan(&p, 0, Box::new(AllowAll)).expect("plan");
+        let plan = build_plan(&p, 0, DESK, Box::new(AllowAll)).expect("plan");
         assert_eq!(plan.stop_after_ns, Some(30_000 * MS));
         let (calls, _, _, end) = simulate(plan, usize::MAX);
         assert_eq!(end, RunEnd::TimerElapsed);
@@ -204,7 +255,8 @@ mod tests {
             }
         }
         let blocked = Arc::new(AtomicBool::new(true));
-        let plan = build_plan(&profile(), 0, Box::new(Toggle(Arc::clone(&blocked)))).expect("plan");
+        let plan =
+            build_plan(&profile(), 0, DESK, Box::new(Toggle(Arc::clone(&blocked)))).expect("plan");
         let (calls, _, shared, _) = simulate(plan, 3);
         assert!(calls.is_empty(), "nothing injected while over our window");
         assert_eq!(shared.clicks(), 0);
@@ -212,28 +264,109 @@ mod tests {
     }
 
     #[test]
+    fn multi_point_moves_then_clicks_each_point_in_a_loop() {
+        let mut p = profile();
+        p.modes.click.position = Position::Points;
+        p.modes.click.points = vec![
+            ScreenPoint {
+                id: "a".into(),
+                x: 10,
+                y: 20,
+                delay_ms: 0,
+            },
+            ScreenPoint {
+                id: "b".into(),
+                x: -840,
+                y: 610,
+                delay_ms: 120,
+            },
+        ];
+        let plan = build_plan(&p, 0, DESK, Box::new(AllowAll)).expect("plan");
+        let (calls, times, shared, _) = simulate(plan, 4);
+        let click = Call::Click(MouseButton::Left, ClickKind::Single);
+        assert_eq!(
+            calls,
+            vec![
+                Call::MoveTo(ch_core::geometry::Point::new(10, 20)),
+                click.clone(),
+                Call::MoveTo(ch_core::geometry::Point::new(-840, 610)),
+                click.clone(),
+                Call::MoveTo(ch_core::geometry::Point::new(10, 20)),
+                click.clone(),
+                Call::MoveTo(ch_core::geometry::Point::new(-840, 610)),
+                click,
+            ]
+        );
+        let gaps: Vec<_> = times
+            .windows(2)
+            .map(|w| (w[1] - w[0] + MS / 2) / MS)
+            .collect();
+        assert_eq!(
+            gaps,
+            vec![220, 100, 220],
+            "the delay of the point being reached is added to the interval"
+        );
+        assert_eq!(shared.clicks(), 4);
+    }
+
+    #[test]
+    fn multi_point_skips_points_over_our_window() {
+        struct Always;
+        impl TargetGuard for Always {
+            fn blocks_click(&self) -> bool {
+                true
+            }
+        }
+        let mut p = profile();
+        p.modes.click.position = Position::Points;
+        p.modes.click.points = vec![ScreenPoint {
+            id: "a".into(),
+            x: 1,
+            y: 1,
+            delay_ms: 0,
+        }];
+        let plan = build_plan(&p, 0, DESK, Box::new(Always)).expect("plan");
+        let (calls, _, shared, _) = simulate(plan, 2);
+        assert!(
+            calls.iter().all(|c| matches!(c, Call::MoveTo(_))),
+            "moves but never clicks: {calls:?}"
+        );
+        assert_eq!(shared.snapshot(0).skipped_self, 2);
+    }
+
+    #[test]
     fn rejects_invalid_profiles_and_later_modes() {
         let mut p = profile();
         p.click.interval_ms = 0;
-        let err = build_plan(&p, 3, Box::new(AllowAll)).expect_err("invalid");
+        let err = build_plan(&p, 3, DESK, Box::new(AllowAll)).expect_err("invalid");
         assert_eq!(err.code(), "PROFILE_INVALID");
 
         let mut p = profile();
         p.modes.click.position = Position::Points;
         assert_eq!(
-            build_plan(&p, 3, Box::new(AllowAll)).expect_err("points"),
-            PlanError::NotAvailableYet("points")
+            build_plan(&p, 3, DESK, Box::new(AllowAll)).expect_err("no points"),
+            PlanError::NoPoints
         );
+        p.modes.click.points = vec![ScreenPoint {
+            id: "far".into(),
+            x: 5000,
+            y: 10,
+            delay_ms: 0,
+        }];
+        let err = build_plan(&p, 3, DESK, Box::new(AllowAll)).expect_err("offscreen");
+        assert_eq!(err, PlanError::PointsOffscreen { x: 5000, y: 10 });
+        assert_eq!(err.code(), "POINTS_OFFSCREEN");
+        assert_eq!(PlanError::NoPoints.code(), "NO_POINTS");
         p.mode = Mode::Wiggle;
         assert_eq!(
-            build_plan(&p, 3, Box::new(AllowAll))
+            build_plan(&p, 3, DESK, Box::new(AllowAll))
                 .expect_err("wiggle")
                 .code(),
             "MODE_NOT_AVAILABLE"
         );
         p.mode = Mode::Scan;
         assert!(
-            build_plan(&p, 3, Box::new(AllowAll))
+            build_plan(&p, 3, DESK, Box::new(AllowAll))
                 .expect_err("scan")
                 .to_string()
                 .contains("scan")

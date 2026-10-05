@@ -80,7 +80,7 @@ pub fn settings_update(
 static LAST_VERSION_MS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
 /// Next profile version stamp: millisecond ISO time, never equal to an earlier one.
-fn next_version() -> String {
+pub fn next_version() -> String {
     use std::sync::atomic::Ordering;
     let now = ch_core::time::now_epoch_ms();
     let mut last = LAST_VERSION_MS.load(Ordering::Relaxed);
@@ -153,7 +153,11 @@ pub fn start_profile(state: &AppState, profile_id: Option<String>) -> AppResult<
         Box::new(ch_win::guard::OwnWindowGuard::new());
     #[cfg(not(windows))]
     let guard: Box<dyn ch_core::input::TargetGuard> = Box::new(ch_core::input::AllowAll);
-    let plan = ch_engine::plan::build_plan(profile, data.settings.countdown_sec, guard)?;
+    #[cfg(windows)]
+    let desktop = ch_win::display::virtual_desktop();
+    #[cfg(not(windows))]
+    let desktop = ch_core::geometry::Rect::new(0, 0, 1920, 1080);
+    let plan = ch_engine::plan::build_plan(profile, data.settings.countdown_sec, desktop, guard)?;
     state.engine.start(plan);
     Ok(())
 }
@@ -331,6 +335,50 @@ pub fn hotkey_reset_defaults(app: AppHandle, state: State<'_, AppState>) -> Vec<
 #[specta::specta]
 pub fn hotkey_retry(app: AppHandle, state: State<'_, AppState>) -> Vec<HotkeyStatus> {
     state.hotkeys().apply(&app, &state.data())
+}
+
+/// Opens the point capture overlays (Tela 03.B) and resolves with the points added once the user
+/// presses Enter or Esc. Async: it creates windows and then waits.
+#[tauri::command]
+#[specta::specta]
+pub async fn overlay_pick_points(app: AppHandle) -> AppResult<Vec<ch_core::model::ScreenPoint>> {
+    crate::overlay::pick_points(app).await
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn screen_layout() -> crate::overlay::ScreenLayout {
+    crate::overlay::screen_layout()
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn overlay_state(app: AppHandle, monitor: u32) -> AppResult<crate::overlay::OverlayState> {
+    crate::overlay::overlay_state(&app, monitor as usize)
+}
+
+/// Adds a point at a CSS position of overlay `monitor`.
+#[tauri::command]
+#[specta::specta]
+pub fn overlay_add_point(
+    app: AppHandle,
+    monitor: u32,
+    x: f64,
+    y: f64,
+) -> AppResult<crate::overlay::OverlayState> {
+    crate::overlay::add_point(&app, monitor as usize, x, y)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn overlay_undo(app: AppHandle) -> AppResult<()> {
+    crate::overlay::undo(&app)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn overlay_finish(app: AppHandle) {
+    crate::overlay::finish(&app);
 }
 
 /// The main window asks for the height its content needs; Rust animates to it (640–900 px).

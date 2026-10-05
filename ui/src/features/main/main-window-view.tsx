@@ -30,6 +30,7 @@ export interface MainWindowViewProps {
   onEdit: (mutate: (p: Profile) => Profile) => void;
   onPrimary: () => void;
   onOpenVariation: () => void;
+  onOpenPoints?: () => void;
   onMinimize: () => void;
   onClose: () => void;
   /** Height the window needs to show the whole panel without scrolling. */
@@ -61,6 +62,7 @@ export function MainWindowView({
   onEdit,
   onPrimary,
   onOpenVariation,
+  onOpenPoints,
   onMinimize,
   onClose,
   onDesiredHeight,
@@ -143,7 +145,13 @@ export function MainWindowView({
       <div ref={panelRef} className="panel-scroll px-4 pb-2">
         <div ref={innerRef}>
           {profile.mode === "click" ? (
-            <ClickPanel profile={profile} locale={locale} onChange={onEdit} onOpenVariation={onOpenVariation} />
+            <ClickPanel
+              profile={profile}
+              locale={locale}
+              onChange={onEdit}
+              onOpenVariation={onOpenVariation}
+              onOpenPoints={onOpenPoints}
+            />
           ) : (
             <ComingSoon mode={profile.mode} />
           )}

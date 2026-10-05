@@ -842,6 +842,300 @@
     color: var(--bg);
   }
 
+  /* Points editor (Tela 02.A). */
+  .minimap {
+    position: relative;
+    width: 388px;
+    height: 170px;
+    border-radius: var(--radius-control);
+    overflow: hidden;
+    border: 1px solid color-mix(in oklch, var(--fg) 12%, transparent);
+    /* Striped placeholder for the screen, as in the handoff. */
+    background: repeating-linear-gradient(
+      135deg,
+      var(--bg-2) 0 8px,
+      color-mix(in oklch, var(--bg-2) 70%, var(--bg)) 8px 16px
+    );
+  }
+  .minimap__grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(color-mix(in oklch, var(--fg) 4%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in oklch, var(--fg) 4%, transparent) 1px, transparent 1px);
+    background-size: 38.8px 34px;
+  }
+  .minimap__monitor {
+    position: absolute;
+    border: 1px solid color-mix(in oklch, var(--fg) 14%, transparent);
+  }
+  .minimap__legend {
+    position: absolute;
+    left: 8px;
+    bottom: 6px;
+    font-family: ui-monospace, monospace;
+    font-size: var(--text-9);
+    color: var(--fg-3);
+  }
+  .minimap__arrow {
+    position: absolute;
+    width: 0;
+    height: 0;
+    margin: -4px 0 0 -3px;
+    border-left: 7px solid var(--accent);
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+  }
+  .point-marker {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border-radius: 10px;
+    background: var(--bg);
+    border: 1.5px solid var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--text-9);
+    font-weight: 700;
+    color: var(--fg);
+  }
+  .point-marker--large {
+    width: 22px;
+    height: 22px;
+    margin: -11px 0 0 -11px;
+    border-radius: 11px;
+    font-size: var(--text-10);
+  }
+  .points-grid {
+    display: grid;
+    grid-template-columns: 22px 34px 1fr 1fr 74px 26px;
+    gap: 8px;
+    align-items: center;
+  }
+  .point-row {
+    height: 44px;
+    border-top: 1px solid var(--divider);
+    cursor: grab;
+  }
+  .point-row[data-dragging="true"] {
+    opacity: 0.35;
+  }
+  .point-row[data-drop-target="true"] {
+    box-shadow: inset 0 2px 0 var(--accent);
+  }
+  .drag-handle {
+    padding: 4px;
+    border: 0;
+    border-radius: 4px;
+    background: none;
+    cursor: grab;
+    display: grid;
+    grid-template-columns: repeat(2, 3px);
+    gap: 3px;
+  }
+  .drag-handle span {
+    width: 3px;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--fg-3);
+  }
+  .cell-input {
+    height: 30px;
+    width: 100%;
+    min-width: 0;
+    padding: 0 9px;
+    border-radius: 6px;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    font-size: var(--text-13);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--fg);
+    outline: none;
+  }
+  .cell-input:focus {
+    border-color: color-mix(in oklch, var(--accent) 45%, transparent);
+  }
+  .cell-input--dashed {
+    background: transparent;
+    border-style: dashed;
+    border-color: color-mix(in oklch, var(--fg) 14%, transparent);
+    font-size: var(--text-12);
+    font-weight: 500;
+  }
+  .row-remove {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    border: 0;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--fg-3);
+    cursor: pointer;
+  }
+  .row-remove:hover {
+    background: color-mix(in oklch, var(--fg) 6%, transparent);
+    color: var(--danger);
+  }
+  .capture-button {
+    flex: 1;
+    height: 44px;
+    border-radius: 10px;
+    border: 0;
+    background: var(--fg);
+    color: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 10px 0 16px;
+    font-size: var(--text-14);
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .capture-button__keys {
+    font-size: var(--text-11);
+    font-weight: 700;
+    padding: 3px 7px;
+    border-radius: 5px;
+    border: 1px solid color-mix(in oklch, var(--bg) 20%, transparent);
+  }
+
+  /* Point capture overlay (Tela 03.B). */
+  .overlay-root {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    cursor: none;
+    background-color: var(--bg-2);
+    background-size: 100% 100%;
+    user-select: none;
+  }
+  /* Gallery and loading: striped stand-in for the frozen capture. */
+  .overlay-root--placeholder {
+    background: repeating-linear-gradient(135deg, #2a2c30 0 10px, #26282c 10px 20px);
+  }
+  .overlay-dim {
+    position: absolute;
+    inset: 0;
+    background: rgba(8, 8, 7, 0.52);
+  }
+  .crosshair-v,
+  .crosshair-h {
+    position: absolute;
+    background: color-mix(in oklch, var(--accent) 55%, transparent);
+    pointer-events: none;
+  }
+  .crosshair-v {
+    top: 0;
+    bottom: 0;
+    width: 1px;
+  }
+  .crosshair-h {
+    left: 0;
+    right: 0;
+    height: 1px;
+  }
+  .crosshair-label {
+    position: absolute;
+    font-size: var(--text-10);
+    font-weight: 600;
+    color: var(--fg-2);
+    font-variant-numeric: tabular-nums;
+    pointer-events: none;
+  }
+  .cursor-ring {
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    margin: -7px 0 0 -7px;
+    border-radius: 8px;
+    border: 1.5px solid var(--fg);
+    pointer-events: none;
+  }
+  .loupe {
+    position: relative;
+    width: 136px;
+    height: 136px;
+    border-radius: 68px;
+    overflow: hidden;
+    border: 2px solid var(--fg);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+  }
+  .loupe canvas {
+    display: block;
+    image-rendering: pixelated;
+  }
+  .loupe::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 66px;
+    height: 1px;
+    background: color-mix(in oklch, var(--accent) 40%, transparent);
+  }
+  .loupe__center {
+    position: absolute;
+    left: 60px;
+    top: 60px;
+    width: 12px;
+    height: 12px;
+    outline: 2px solid var(--fg);
+  }
+  .floating-card {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px 12px;
+    border-radius: 9px;
+    background: var(--bg);
+    border: 1px solid color-mix(in oklch, var(--fg) 14%, transparent);
+  }
+  .overlay-bar {
+    position: absolute;
+    left: 50%;
+    top: 18px;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    height: 40px;
+    padding: 0 14px;
+    border-radius: 12px;
+    background: var(--bg);
+    border: 1px solid color-mix(in oklch, var(--fg) 14%, transparent);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+    font-size: var(--text-12);
+    color: var(--fg-2);
+    white-space: nowrap;
+  }
+  .overlay-bar__finish {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+  }
+  .overlay-bar__finish:hover {
+    color: var(--fg);
+  }
+  .overlay-bar {
+    cursor: default;
+  }
+  .overlay-bar__sep {
+    width: 1px;
+    height: 16px;
+    background: color-mix(in oklch, var(--fg) 12%, transparent);
+  }
+
   /* Gallery stand-in for the OS window frame. */
   .window-frame {
     border: 1px solid color-mix(in oklch, var(--fg) 12%, transparent);

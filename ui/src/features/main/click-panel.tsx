@@ -26,7 +26,7 @@ interface ClickPanelProps {
   locale: string;
   onChange: Edit;
   onOpenVariation: () => void;
-  onOpenPoints?: () => void;
+  onOpenPoints?: (() => void) | undefined;
 }
 
 /** Digits only, clamped to 1–60000 ms; `null` when nothing usable was typed. */

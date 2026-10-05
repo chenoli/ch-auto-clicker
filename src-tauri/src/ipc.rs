@@ -26,6 +26,12 @@ pub fn builder() -> Builder<tauri::Wry> {
             commands::hotkey_set,
             commands::hotkey_reset_defaults,
             commands::hotkey_retry,
+            commands::screen_layout,
+            commands::overlay_pick_points,
+            commands::overlay_state,
+            commands::overlay_add_point,
+            commands::overlay_undo,
+            commands::overlay_finish,
             commands::window_set_content_height,
             commands::window_open_variation,
             commands::debug_click_once

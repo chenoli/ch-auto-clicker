@@ -238,7 +238,12 @@ fn on_triggered<R: Runtime>(app: &AppHandle<R>, id: u32) {
             Ok(())
         }
         HotkeyTarget::Action(HotkeyAction::CapturePoint) => {
-            log::info!("capture point shortcut: the point overlay arrives in Phase 5");
+            let app = app.clone();
+            tauri::async_runtime::spawn(async move {
+                if let Err(e) = crate::overlay::pick_points(app.clone()).await {
+                    let _ = HotkeyActionFailed { code: e.code }.emit(&app);
+                }
+            });
             Ok(())
         }
         // Handled by the emergency callback; never registered under a regular id.
