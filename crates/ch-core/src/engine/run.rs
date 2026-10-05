@@ -5,17 +5,31 @@ use crate::input::{InputBackend, InputError};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RunEnd {
-    /// Stop requested (command, emergency stop, timer).
+    /// Stop requested (command or emergency stop).
     Stopped,
-    /// Every timeline finished on its own.
+    /// Every timeline finished on its own (e.g. a scan without loop).
     Completed,
+    /// The stop-after timer fired.
+    TimerElapsed,
     Failed(InputError),
 }
 
-/// Hooks the engine thread plugs into the loop. Must not block or allocate.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Poll {
+    Continue,
+    Stop,
+    Pause,
+}
+
+/// Hooks the engine thread plugs into the loop. `poll` and `on_fire` must not block or allocate.
 pub trait RunControl {
-    /// Polled before every wait and after every wake; `true` ends the run.
-    fn should_stop(&mut self) -> bool;
+    /// Polled before every wait and after every wake.
+    fn poll(&mut self) -> Poll;
+
+    /// Blocks while paused. Returns `true` to resume, `false` to stop.
+    fn wait_while_paused(&mut self) -> bool {
+        false
+    }
 
     fn on_fire(&mut self, report: &FireReport);
 }
@@ -29,8 +43,18 @@ pub fn run<C: Clock + ?Sized, W: CoarseWaiter + ?Sized>(
     control: &mut dyn RunControl,
 ) -> RunEnd {
     loop {
-        if control.should_stop() {
-            return RunEnd::Stopped;
+        match control.poll() {
+            Poll::Continue => {}
+            Poll::Stop => return RunEnd::Stopped,
+            Poll::Pause => {
+                let paused_at = clock.now();
+                if !control.wait_while_paused() {
+                    return RunEnd::Stopped;
+                }
+                // Resume where we left off: every deadline moves by the time spent paused.
+                scheduler.shift_all(clock.now().saturating_sub(paused_at));
+                continue;
+            }
         }
         let Some(due) = scheduler.next_due() else {
             return RunEnd::Completed;
@@ -45,7 +69,12 @@ pub fn run<C: Clock + ?Sized, W: CoarseWaiter + ?Sized>(
             continue;
         }
         match scheduler.fire(due, clock.now(), backend) {
-            Ok(report) => control.on_fire(&report),
+            Ok(report) => {
+                control.on_fire(&report);
+                if report.end_run {
+                    return RunEnd::TimerElapsed;
+                }
+            }
             Err(e) => return RunEnd::Failed(e),
         }
     }
@@ -66,11 +95,30 @@ mod tests {
     struct Control {
         fires: Vec<FireReport>,
         stop_after: Option<usize>,
+        pause_at: Option<usize>,
+        pause_for: u64,
+        resume: bool,
+        clock: Option<FakeClock>,
     }
 
     impl RunControl for Control {
-        fn should_stop(&mut self) -> bool {
-            self.stop_after.is_some_and(|n| self.fires.len() >= n)
+        fn poll(&mut self) -> Poll {
+            if self.pause_at.is_some_and(|n| self.fires.len() == n) {
+                self.pause_at = None;
+                return Poll::Pause;
+            }
+            if self.stop_after.is_some_and(|n| self.fires.len() >= n) {
+                Poll::Stop
+            } else {
+                Poll::Continue
+            }
+        }
+
+        fn wait_while_paused(&mut self) -> bool {
+            if let Some(c) = &self.clock {
+                c.advance(self.pause_for);
+            }
+            self.resume
         }
 
         fn on_fire(&mut self, report: &FireReport) {
@@ -237,6 +285,116 @@ mod tests {
             RunEnd::Stopped
         );
         assert_eq!(backend.calls.len(), 1, "the second click never fired");
+    }
+
+    #[test]
+    fn pausing_shifts_the_schedule_instead_of_bursting() {
+        let clock = FakeClock::with_auto_step(100);
+        let mut waiter = FakeWaiter::new(clock.clone());
+        let mut scheduler = Scheduler::new(vec![clicks(0, MS, 6)]);
+        let mut backend = RecordingBackend::default();
+        let mut control = Control {
+            pause_at: Some(3),
+            pause_for: 500 * MS,
+            resume: true,
+            clock: Some(clock.clone()),
+            ..Default::default()
+        };
+        assert_eq!(
+            run(
+                &mut scheduler,
+                &clock,
+                &mut waiter,
+                &mut backend,
+                &mut control
+            ),
+            RunEnd::Completed
+        );
+        assert_eq!(backend.calls.len(), 6);
+        assert!(
+            control
+                .fires
+                .iter()
+                .all(|r| r.missed == 0 && r.lateness_ns < 10_000),
+            "{:?}",
+            control.fires
+        );
+        assert!(clock.peek() >= 505 * MS, "last fire after the pause");
+    }
+
+    #[test]
+    fn stopping_while_paused_ends_the_run() {
+        let clock = FakeClock::with_auto_step(100);
+        let mut waiter = FakeWaiter::new(clock.clone());
+        let mut scheduler = Scheduler::new(vec![clicks(0, MS, 6)]);
+        let mut backend = RecordingBackend::default();
+        let mut control = Control {
+            pause_at: Some(2),
+            resume: false,
+            ..Default::default()
+        };
+        assert_eq!(
+            run(
+                &mut scheduler,
+                &clock,
+                &mut waiter,
+                &mut backend,
+                &mut control
+            ),
+            RunEnd::Stopped
+        );
+        assert_eq!(backend.calls.len(), 2);
+    }
+
+    #[test]
+    fn a_terminal_timeline_ends_the_run_as_timer_elapsed() {
+        use crate::engine::timeline::StopTimeline;
+        let clock = FakeClock::with_auto_step(100);
+        let mut waiter = FakeWaiter::new(clock.clone());
+        let mut scheduler = Scheduler::new(vec![
+            clicks(0, MS, u64::MAX),
+            Box::new(StopTimeline::new(10 * MS)),
+        ]);
+        let mut backend = RecordingBackend::default();
+        assert_eq!(
+            run(
+                &mut scheduler,
+                &clock,
+                &mut waiter,
+                &mut backend,
+                &mut Control::default()
+            ),
+            RunEnd::TimerElapsed
+        );
+        assert_eq!(
+            backend.calls.len(),
+            11,
+            "clicks at 0..=10 ms, the click at 10 ms goes first"
+        );
+    }
+
+    #[test]
+    fn default_pause_handler_stops() {
+        struct Minimal;
+        impl RunControl for Minimal {
+            fn poll(&mut self) -> Poll {
+                Poll::Pause
+            }
+            fn on_fire(&mut self, _report: &FireReport) {}
+        }
+        let clock = FakeClock::with_auto_step(100);
+        let mut waiter = FakeWaiter::new(clock.clone());
+        let mut scheduler = Scheduler::new(vec![clicks(0, MS, 3)]);
+        assert_eq!(
+            run(
+                &mut scheduler,
+                &clock,
+                &mut waiter,
+                &mut RecordingBackend::default(),
+                &mut Minimal
+            ),
+            RunEnd::Stopped
+        );
     }
 
     #[test]

@@ -2,7 +2,7 @@
 //! several intervals and finds the shortest one this machine sustains reliably.
 
 use ch_core::engine::clock::{Clock, NANOS_PER_MS, NANOS_PER_US};
-use ch_core::engine::run::{RunControl, run};
+use ch_core::engine::run::{Poll, RunControl, run};
 use ch_core::engine::scheduler::{FireReport, Scheduler};
 use ch_core::engine::timeline::IntervalTimeline;
 use ch_core::engine::wait::CoarseWaiter;
@@ -31,8 +31,8 @@ impl IntervalResult {
 struct Collect(Histogram);
 
 impl RunControl for Collect {
-    fn should_stop(&mut self) -> bool {
-        false
+    fn poll(&mut self) -> Poll {
+        Poll::Continue
     }
 
     fn on_fire(&mut self, report: &FireReport) {

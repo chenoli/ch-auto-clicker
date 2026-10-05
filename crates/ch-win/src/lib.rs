@@ -3,6 +3,7 @@
 #![cfg(windows)]
 
 pub mod display;
+pub mod guard;
 pub mod input;
 pub mod system;
 pub mod timing;

@@ -19,6 +19,54 @@ pub trait Timeline: Send {
 
     /// Pushes every future deadline back by `delta` (resume after pause).
     fn shift(&mut self, delta: u64);
+
+    /// Firing this timeline ends the run (the stop-after timer).
+    fn ends_run(&self) -> bool {
+        false
+    }
+}
+
+/// Fires once at `deadline` and ends the run ("Parar após").
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct StopTimeline {
+    deadline: Option<u64>,
+}
+
+impl StopTimeline {
+    pub fn new(deadline: u64) -> Self {
+        Self {
+            deadline: Some(deadline),
+        }
+    }
+}
+
+impl Timeline for StopTimeline {
+    fn deadline(&self) -> Option<u64> {
+        self.deadline
+    }
+
+    /// Long enough that the scheduler only spins briefly before it.
+    fn interval(&self) -> u64 {
+        u64::MAX / 4
+    }
+
+    fn fire(&mut self, _backend: &mut dyn InputBackend) -> Result<(), InputError> {
+        self.deadline = None;
+        Ok(())
+    }
+
+    /// The timer is absolute: a stall never moves it.
+    fn rebase(&mut self, _now: u64) {}
+
+    fn shift(&mut self, delta: u64) {
+        if let Some(d) = self.deadline.as_mut() {
+            *d += delta;
+        }
+    }
+
+    fn ends_run(&self) -> bool {
+        true
+    }
 }
 
 pub type Action = Box<dyn FnMut(&mut dyn InputBackend) -> Result<(), InputError> + Send>;
@@ -181,6 +229,21 @@ mod tests {
         assert_eq!(t.deadline(), Some(1_010));
         t.shift(500);
         assert_eq!(t.deadline(), Some(1_510));
+    }
+
+    #[test]
+    fn stop_timeline_fires_once_and_ends_the_run() {
+        let mut t = StopTimeline::new(1_000);
+        assert!(t.ends_run());
+        assert!(t.interval() > 1_000_000_000);
+        t.rebase(5_000);
+        assert_eq!(t.deadline(), Some(1_000), "rebase never moves the timer");
+        t.shift(500);
+        assert_eq!(t.deadline(), Some(1_500), "pauses do");
+        t.fire(&mut RecordingBackend::default()).expect("ok");
+        assert_eq!(t.deadline(), None);
+        t.shift(10);
+        assert!(!IntervalTimeline::noop(0, 1).ends_run());
     }
 
     #[test]

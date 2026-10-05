@@ -258,8 +258,8 @@ Um atalho desativado é `null` (aparece como "—"). `emergencyStop` nunca pode 
 ```
 %APPDATA%\Chenoli\CH Clicker\
 ├─ settings.json
-├─ profiles\{id}.json            # um arquivo por perfil: corrupção isolada, escrita atômica pequena
-├─ backups\                      # cópia pré-migração e .bak rotativos (últimos 5)
+├─ profiles\{id}.json            # um arquivo por perfil (+ {id}.json.bak com a versão anterior): corrupção isolada
+├─ backups\                      # cópias pré-migração (perfil.vN.json), excluídos e arquivos corrompidos em quarentena
 %LOCALAPPDATA%\Chenoli\CH Clicker\
 ├─ cache\capabilities.json       # resultado do benchmark (chave: build do Windows + CPU)
 ├─ cache\thumbs\{profileId}.png  # miniatura da área do scan
@@ -510,7 +510,7 @@ Todos os comandos retornam `Result<T, AppError>`, com `AppError = { code: string
 
 ### 7.2 Eventos (Rust → UI)
 
-O tauri-specta nomeia cada evento em kebab-case a partir do tipo (`EngineTick` → `engine-tick`). O resultado do benchmark sai no evento `capabilities`.
+O tauri-specta nomeia cada evento em kebab-case a partir do tipo (`EngineTick` → `engine-tick`). Na implementação, as transições saem em `engine-status` (`EngineStatus`), a telemetria em `engine-tick`, as mudanças de dados em `settings-changed` e `profiles-changed`, e o resultado do benchmark em `capabilities`.
 
 | Evento                | Payload                                                                                               | Frequência                        | Alimenta                                                                                               |
 | --------------------- | ----------------------------------------------------------------------------------------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------ |

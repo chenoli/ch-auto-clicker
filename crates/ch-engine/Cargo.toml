@@ -9,6 +9,7 @@ publish.workspace = true
 
 [dependencies]
 ch-core.workspace = true
+thiserror.workspace = true
 
 [target.'cfg(windows)'.dependencies]
 ch-win.workspace = true

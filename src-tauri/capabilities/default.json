@@ -1,8 +1,8 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Permissões da janela principal.",
-  "windows": ["main"],
+  "description": "Permissions for the main window and the variation editor.",
+  "windows": ["main", "variation"],
   "permissions": [
     "core:default",
     "core:window:allow-start-dragging",

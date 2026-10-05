@@ -7,10 +7,31 @@ import * as __TAURI_EVENT from "@tauri-apps/api/event";
 /** Commands */
 export const commands = {
 	appBootstrap: () => __TAURI_INVOKE<Bootstrap>("app_bootstrap"),
+	/**  Replaces the settings (the UI always sends the full object) and notifies every window. */
+	settingsUpdate: (settings: Settings) => typedError<Settings, AppError>(__TAURI_INVOKE("settings_update", { settings })),
+	/**
+	 *  Replaces a profile. `base_updated_at` is the version the caller edited; if another window saved
+	 *  in between, the update is refused with `STALE_PROFILE` instead of silently overwriting it.
+	 */
+	profileUpdate: (profile: Profile, baseUpdatedAt: string) => typedError<Profile, AppError>(__TAURI_INVOKE("profile_update", { profile, baseUpdatedAt })),
+	/**  Starts the given (or active) profile after the configured countdown. */
+	engineStart: (profileId: string | null) => typedError<null, AppError>(__TAURI_INVOKE("engine_start", { profileId })),
+	/**  Stops the run or cancels the countdown. */
+	engineStop: () => __TAURI_INVOKE<void>("engine_stop"),
+	engineTogglePause: () => __TAURI_INVOKE<void>("engine_toggle_pause"),
+	engineAckError: () => __TAURI_INVOKE<void>("engine_ack_error"),
+	engineSnapshot: () => __TAURI_INVOKE<EngineTick>("engine_snapshot"),
 	/**  Shortest reliable interval on this machine (provisional 4 ms until measured). */
 	engineCapabilities: () => __TAURI_INVOKE<Capabilities>("engine_capabilities"),
 	/**  Re-runs the timing benchmark (~3 s) and returns the new capabilities. */
 	engineRunBenchmark: () => typedError<Capabilities, string>(__TAURI_INVOKE("engine_run_benchmark")),
+	/**  The main window asks for the height its content needs; Rust animates to it (640–900 px). */
+	windowSetContentHeight: (height: number | null) => typedError<number | null, AppError>(__TAURI_INVOKE("window_set_content_height", { height })),
+	/**
+	 *  Async on purpose: building a webview inside a synchronous command deadlocks WebView2 on
+	 *  Windows (the window frame appears but its content never loads).
+	 */
+	windowOpenVariation: () => typedError<null, AppError>(__TAURI_INVOKE("window_open_variation")),
 	/**  Dev-only (T1.7): one left click at the cursor after a short delay. */
 	debugClickOnce: () => typedError<null, string>(__TAURI_INVOKE("debug_click_once")),
 };
@@ -20,10 +41,25 @@ export const events = {
 	capabilities: makeEvent<Capabilities>("capabilities"),
 	engineDegraded: makeEvent<EngineDegraded>("engine-degraded"),
 	engineJitter: makeEvent<EngineJitter>("engine-jitter"),
+	engineStatus: makeEvent<EngineStatus>("engine-status"),
 	engineTick: makeEvent<EngineTick>("engine-tick"),
+	profilesChanged: makeEvent<ProfilesChanged>("profiles-changed"),
+	settingsChanged: makeEvent<SettingsChanged>("settings-changed"),
 };
 
 /* Types */
+export type AppError = {
+	code: string,
+	message: string,
+};
+
+export type Area = {
+	x: number,
+	y: number,
+	w: number,
+	h: number,
+};
+
 export type BenchResult = {
 	intervalMs: number,
 	p99Us: number | null,
@@ -31,10 +67,14 @@ export type BenchResult = {
 	reliable: boolean,
 };
 
-/**  Initial state for a window; grows settings, profiles and engine state in later phases. */
+/**  Everything a window needs to render its first frame. */
 export type Bootstrap = {
 	version: string,
 	dpiAwareness: string,
+	settings: Settings,
+	profiles: Profile[],
+	engine: EngineTick,
+	capabilities: Capabilities,
 };
 
 export type Capabilities = {
@@ -47,6 +87,24 @@ export type Capabilities = {
 	fingerprint: string,
 	results: BenchResult[],
 };
+
+export type ClickKind = "single" | "double";
+
+export type ClickMode = {
+	position: Position,
+	points: ScreenPoint[],
+	layoutFingerprint: string | null,
+};
+
+/**  Shared by every mode (design decision 1): Wiggle and Scan click with these settings too. */
+export type ClickSettings = {
+	button: MouseButton,
+	kind: ClickKind,
+	intervalMs: number,
+	variation: Variation,
+};
+
+export type CloseAction = "minimize" | "quit";
 
 export type DegradedReason = "timing";
 
@@ -66,11 +124,142 @@ export type EngineJitter = {
 	missed: number,
 };
 
-/**  10 Hz while a run is active: counters and elapsed time for the footer, HUD and tray. */
+export type EngineState = "idle" | "countdown" | "running" | "paused" | "stopping" | "error";
+
+/**  Every engine state transition (the main button, footer, HUD and tray follow it). */
+export type EngineStatus = {
+	state: EngineState,
+	prevState: EngineState,
+	reason: StopReason | null,
+	countdownTotalMs: number | null,
+	errorCode: string | null,
+};
+
+/**  10 Hz while active: counters and times for the footer, HUD and tray. Also the snapshot shape. */
 export type EngineTick = {
+	state: EngineState,
 	fires: number,
+	clicks: number,
+	skippedSelf: number,
 	missed: number,
 	elapsedMs: number | null,
+	countdownRemainingMs: number | null,
+	remainingMs: number | null,
+};
+
+export type Hotkey = {
+	mods: Modifier[],
+	/**  Canonical virtual-key name (`F6`, `Escape`, `Right`, `P`) or `MouseMiddle`/`MouseX1`/`MouseX2`. */
+	key: string,
+};
+
+export type HotkeyBindings = {
+	startStop: Hotkey | null,
+	pauseResume: Hotkey | null,
+	capturePoint: Hotkey | null,
+	nextProfile: Hotkey | null,
+	/**  Never optional: the emergency stop cannot be disabled (ARCHITECTURE §10.1). */
+	emergencyStop: Hotkey,
+};
+
+export type InputBackendKind = "sendinput" | "interception";
+
+export type Locale = "pt-BR" | "en-US";
+
+export type Mode = "click" | "wiggle" | "scan";
+
+export type Modes = {
+	click: ClickMode,
+	wiggle: WiggleMode,
+	scan: ScanMode,
+};
+
+export type Modifier = "ctrl" | "alt" | "shift" | "win";
+
+export type MouseButton = "left" | "middle" | "right" | "x1" | "x2";
+
+export type Position = "cursor" | "points";
+
+export type Profile = {
+	schemaVersion: number,
+	id: string,
+	name: string,
+	mode: Mode,
+	hotkey: Hotkey | null,
+	createdAt: string,
+	updatedAt: string,
+	click: ClickSettings,
+	stopAfter: StopAfter,
+	modes: Modes,
+};
+
+/**  Profiles or the active profile changed. */
+export type ProfilesChanged = {
+	profiles: Profile[],
+	activeProfileId: string | null,
+};
+
+export type ScanAction = "move" | "move_click";
+
+export type ScanMode = {
+	area: Area | null,
+	lineSpacingPx: number,
+	speedPxS: number,
+	action: ScanAction,
+	loop: boolean,
+};
+
+export type ScreenPoint = {
+	id: string,
+	x: number,
+	y: number,
+	delayMs: number,
+};
+
+export type Settings = {
+	schemaVersion: number,
+	locale: Locale,
+	theme: ThemeId,
+	followSystemTheme: boolean,
+	autostart: boolean,
+	minimizeToTray: boolean,
+	showHud: boolean,
+	closeAction: CloseAction,
+	countdownSec: number,
+	inputBackend: InputBackendKind,
+	activeProfileId: string | null,
+	profileOrder: string[],
+	hotkeys: HotkeyBindings,
+	hud: WindowPosition,
+	window: WindowPosition,
+};
+
+/**  Settings changed (from any window); every window re-renders from this. */
+export type SettingsChanged = Settings;
+
+export type StopAfter = {
+	enabled: boolean,
+	seconds: number,
+};
+
+export type StopReason = "user" | "timer" | "emergency" | "completed" | "error" | "profileSwitch";
+
+export type ThemeId = "grafite" | "blueprint" | "fosforo" | "bancada" | "papel" | "contraste";
+
+export type Variation = {
+	enabled: boolean,
+	blocksMs: number[],
+};
+
+export type WiggleMode = {
+	amplitudePct: number | null,
+	speedHz: number,
+	clickWhileWiggling: boolean,
+};
+
+export type WindowPosition = {
+	x: number | null,
+	y: number | null,
 };
 
 /* Tauri Specta runtime */

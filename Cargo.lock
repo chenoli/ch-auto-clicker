@@ -489,6 +489,7 @@ version = "0.1.0"
 dependencies = [
  "ch-core",
  "ch-engine",
+ "ch-storage",
  "ch-win",
  "log",
  "serde",
@@ -500,6 +501,7 @@ dependencies = [
  "tauri-plugin-log",
  "tauri-plugin-single-instance",
  "tauri-specta",
+ "uuid",
 ]
 
 [[package]]
@@ -508,6 +510,9 @@ version = "0.1.0"
 dependencies = [
  "ch-core",
  "proptest",
+ "serde",
+ "serde_json",
+ "specta",
  "thiserror 2.0.21",
 ]
 
@@ -517,6 +522,7 @@ version = "0.1.0"
 dependencies = [
  "ch-core",
  "ch-win",
+ "thiserror 2.0.21",
  "windows",
 ]
 
@@ -525,6 +531,8 @@ name = "ch-storage"
 version = "0.1.0"
 dependencies = [
  "ch-core",
+ "serde_json",
+ "thiserror 2.0.21",
 ]
 
 [[package]]

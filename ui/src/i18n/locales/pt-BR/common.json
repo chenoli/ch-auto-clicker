@@ -1,9 +1,113 @@
 {
   "appName": "Clicker",
-  "placeholder": {
-    "kicker": "Fase 0",
-    "title": "Estrutura pronta.",
-    "body": "A interface da janela principal chega na Fase 3."
+  "window": {
+    "minimize": "Minimizar",
+    "close": "Fechar"
+  },
+  "header": {
+    "profile": "Perfil",
+    "profiles": "Perfis",
+    "settings": "Configurações"
+  },
+  "modes": {
+    "click": "Click",
+    "wiggle": "Wiggle",
+    "scan": "Scan",
+    "comingSoon": "O modo {mode} chega em uma próxima fase."
+  },
+  "button": {
+    "shortcut": "atalho",
+    "cancels": "cancela",
+    "stops": "para",
+    "resumes": "retoma",
+    "review": "revisar",
+    "idle": {
+      "kicker": "Pronto",
+      "label": "Iniciar"
+    },
+    "countdown": {
+      "kicker": "Iniciando em"
+    },
+    "running": {
+      "kicker": "Em execução",
+      "label": "Parar"
+    },
+    "paused": {
+      "kicker": "Pausado",
+      "label": "Retomar"
+    },
+    "error": {
+      "label": "Iniciar"
+    }
+  },
+  "status": {
+    "idle": "Parado",
+    "countdown": "Iniciando em {seconds} s",
+    "running": "Rodando",
+    "paused": "Pausado",
+    "stopping": "Parando",
+    "clicks": "Cliques",
+    "time": "Tempo"
+  },
+  "click": {
+    "button": "Botão",
+    "left": "Esquerdo",
+    "middle": "Meio",
+    "right": "Direito",
+    "side": "Lateral",
+    "x1": "X1 · Voltar",
+    "x2": "X2 · Avançar",
+    "clickType": "Clique",
+    "single": "Simples",
+    "double": "Duplo",
+    "interval": "Intervalo",
+    "cps": "CPS",
+    "variation": "Variação",
+    "variationSummary": "{blocks} ms em ciclo",
+    "variationOff": "Desligada · {interval} ms fixo",
+    "edit": "Editar ›",
+    "position": "Posição",
+    "cursor": "Posição atual do cursor",
+    "points": "Pontos na tela",
+    "pointsLink": "{count, plural, =0 {0 pontos ›} one {# ponto ›} other {# pontos ›}}",
+    "stop": "Parada",
+    "stopAfter": "Parar após",
+    "decrease": "Diminuir",
+    "increase": "Aumentar",
+    "editsApplyOnRestart": "Alterações valem ao reiniciar."
+  },
+  "variation": {
+    "kicker": "Modo click · Intervalo",
+    "title": "Variação de intervalo",
+    "sequence": "Sequência · repete em ciclo",
+    "widthHint": "Largura ∝ duração",
+    "back": "↺ volta ao B01",
+    "add": "Adicionar bloco",
+    "block": "Bloco",
+    "moveLeft": "← Mover",
+    "moveRight": "Mover →",
+    "remove": "Remover",
+    "rhythm": "Prévia do ritmo · 600 ms",
+    "cycle": "Ciclo",
+    "average": "Média",
+    "effective": "Efetivo",
+    "disable": "Desativar variação",
+    "apply": "Aplicar ao perfil",
+    "close": "Voltar",
+    "rhythmHint": "traço alto = início do ciclo",
+    "warningPrefix": "Intervalos abaixo de",
+    "warningLimit": "{limit} ms",
+    "warningSuffix": "não são garantidos pelo agendador do Windows e podem ser agrupados ou atrasados."
+  },
+  "errors": {
+    "INPUT_BLOCKED": "Entrada bloqueada",
+    "OUTSIDE_DESKTOP": "Ponto fora da tela",
+    "MODE_NOT_AVAILABLE": "Este modo ainda não está disponível nesta versão.",
+    "PROFILE_INVALID": "O perfil tem valores inválidos.",
+    "PROFILE_NOT_FOUND": "Perfil não encontrado.",
+    "STALE_PROFILE": "O perfil foi alterado em outra janela. Recarregamos a versão mais recente.",
+    "generic": "Algo deu errado: {code}",
+    "connect": "Não foi possível carregar o estado do aplicativo."
   },
   "gallery": {
     "title": "Galeria de telas",

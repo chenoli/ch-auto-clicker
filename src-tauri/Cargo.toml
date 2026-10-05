@@ -16,16 +16,18 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2.7", features = [] }
 
 [dependencies]
-ch-core.workspace = true
+ch-core = { workspace = true, features = ["specta"] }
 ch-engine.workspace = true
+ch-storage.workspace = true
 log.workspace = true
 serde.workspace = true
 serde_json.workspace = true
-specta = { version = "=2.0.0-rc.25", features = ["derive"] }
+specta.workspace = true
 specta-typescript = "0.0.12"
 tauri = { version = "2.12", features = [] }
 tauri-plugin-log = "2.10"
 tauri-plugin-single-instance = "2.5"
+uuid = { version = "1.27", features = ["v4"] }
 tauri-specta = { version = "=2.0.0-rc.25", features = ["derive", "typescript"] }
 
 [target.'cfg(windows)'.dependencies]

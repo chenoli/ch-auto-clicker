@@ -3,7 +3,9 @@
 
 use crate::geometry::Point;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "lowercase")]
 pub enum MouseButton {
     Left,
     Middle,
@@ -16,7 +18,9 @@ impl MouseButton {
     pub const ALL: [MouseButton; 5] = [Self::Left, Self::Middle, Self::Right, Self::X1, Self::X2];
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "lowercase")]
 pub enum ClickKind {
     Single,
     Double,
@@ -52,6 +56,22 @@ pub trait InputBackend {
     fn button_down(&mut self, button: MouseButton) -> Result<(), InputError>;
 
     fn button_up(&mut self, button: MouseButton) -> Result<(), InputError>;
+}
+
+/// Decides whether a click right now must be skipped because it would land on one of the app's
+/// own windows (ARCHITECTURE §6.6).
+pub trait TargetGuard: Send {
+    fn blocks_click(&self) -> bool;
+}
+
+/// Never blocks; for tests and the benchmark.
+#[derive(Debug, Default, Clone, Copy)]
+pub struct AllowAll;
+
+impl TargetGuard for AllowAll {
+    fn blocks_click(&self) -> bool {
+        false
+    }
 }
 
 /// Accepts every call and does nothing; the timing benchmark measures the scheduler with it.
@@ -189,6 +209,11 @@ mod tests {
         assert!(b.click(MouseButton::Left, ClickKind::Double).is_ok());
         assert!(b.button_down(MouseButton::X1).is_ok());
         assert!(b.button_up(MouseButton::X1).is_ok());
+    }
+
+    #[test]
+    fn allow_all_never_blocks() {
+        assert!(!AllowAll.blocks_click());
     }
 
     #[test]

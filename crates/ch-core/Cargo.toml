@@ -10,8 +10,13 @@ publish.workspace = true
 [features]
 # Exposes the recording input backend to other crates' tests.
 test-util = []
+# Derives specta::Type so the app can export these types to TypeScript.
+specta = ["dep:specta"]
 
 [dependencies]
+serde.workspace = true
+serde_json.workspace = true
+specta = { workspace = true, optional = true }
 thiserror.workspace = true
 
 [dev-dependencies]

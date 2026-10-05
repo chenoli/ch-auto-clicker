@@ -1,0 +1,138 @@
+import { useLayoutEffect, useRef } from "react";
+
+import { useTranslation } from "react-i18next";
+
+import { Callout } from "../../components/callout";
+
+import { ClickPanel } from "./click-panel";
+import { Footer } from "./footer";
+import { Header } from "./header";
+import { MainButton, buttonStateFor } from "./main-button";
+import { ModeTabs } from "./mode-tabs";
+import { TitleBar } from "./title-bar";
+
+import type { EngineTick, Mode, Profile } from "../../ipc";
+import type { ReactElement } from "react";
+
+/** Bottom padding of the scrolling panel (handoff: `padding: 0 16px 8px`). */
+const PANEL_PADDING_BOTTOM = 8;
+
+export interface MainWindowViewProps {
+  profile: Profile;
+  locale: string;
+  engine: EngineTick;
+  countdownTotalMs: number;
+  shortcut: string;
+  /** Engine error code while in the error state. */
+  errorCode?: string | null;
+  /** Error from the last command (e.g. a mode not available yet). */
+  commandError?: string | null;
+  onEdit: (mutate: (p: Profile) => Profile) => void;
+  onPrimary: () => void;
+  onOpenVariation: () => void;
+  onMinimize: () => void;
+  onClose: () => void;
+  /** Height the window needs to show the whole panel without scrolling. */
+  onDesiredHeight?: (px: number) => void;
+}
+
+function ComingSoon({ mode }: { mode: Mode }) {
+  const { t } = useTranslation();
+  return (
+    <div className="flex min-h-40 items-center border-t border-divider text-12 text-fg-3">
+      {t("modes.comingSoon", { mode: t(`modes.${mode}`) })}
+    </div>
+  );
+}
+
+export function MainWindowView({
+  profile,
+  locale,
+  engine,
+  countdownTotalMs,
+  shortcut,
+  errorCode,
+  commandError,
+  onEdit,
+  onPrimary,
+  onOpenVariation,
+  onMinimize,
+  onClose,
+  onDesiredHeight,
+}: MainWindowViewProps): ReactElement {
+  const { t } = useTranslation();
+  const rootRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const innerRef = useRef<HTMLDivElement>(null);
+  const lastHeight = useRef(0);
+
+  useLayoutEffect(() => {
+    const root = rootRef.current;
+    const panel = panelRef.current;
+    const inner = innerRef.current;
+    if (!root || !panel || !inner || !onDesiredHeight) return;
+    const measure = () => {
+      const desired = Math.ceil(root.offsetHeight - panel.clientHeight + inner.offsetHeight + PANEL_PADDING_BOTTOM);
+      if (Math.abs(desired - lastHeight.current) >= 1) {
+        lastHeight.current = desired;
+        onDesiredHeight(desired);
+      }
+    };
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(inner);
+    return () => observer.disconnect();
+  }, [onDesiredHeight]);
+
+  const errorText = errorCode ? t(`errors.${errorCode}`, { defaultValue: errorCode }) : "";
+  const noClicks =
+    (profile.mode === "wiggle" && !profile.modes.wiggle.clickWhileWiggling) ||
+    (profile.mode === "scan" && profile.modes.scan.action === "move");
+  const active = engine.state === "countdown" || engine.state === "running" || engine.state === "paused";
+
+  return (
+    <div ref={rootRef} className="flex h-full flex-col bg-bg">
+      <TitleBar onMinimize={onMinimize} onClose={onClose} />
+      <Header profileName={profile.name} />
+      <ModeTabs mode={profile.mode} onChange={(mode) => onEdit((p) => ({ ...p, mode }))} />
+      <MainButton
+        state={buttonStateFor(engine.state)}
+        shortcut={shortcut}
+        countdownRemainingMs={engine.countdownRemainingMs}
+        countdownTotalMs={countdownTotalMs}
+        errorKicker={errorText}
+        onPress={onPrimary}
+      />
+      {(commandError || active) && (
+        <div className="flex-none px-4 pb-3">
+          {commandError ? (
+            <Callout tone="danger">
+              {t(`errors.${commandError}`, { defaultValue: t("errors.generic", { code: commandError }) })}
+            </Callout>
+          ) : (
+            <p className="m-0 text-11 text-fg-3">{t("click.editsApplyOnRestart")}</p>
+          )}
+        </div>
+      )}
+      <div ref={panelRef} className="panel-scroll px-4 pb-2">
+        <div ref={innerRef}>
+          {profile.mode === "click" ? (
+            <ClickPanel profile={profile} locale={locale} onChange={onEdit} onOpenVariation={onOpenVariation} />
+          ) : (
+            <ComingSoon mode={profile.mode} />
+          )}
+        </div>
+      </div>
+      <Footer
+        state={engine.state}
+        locale={locale}
+        clicks={engine.clicks}
+        elapsedMs={engine.elapsedMs ?? 0}
+        countdownRemainingMs={engine.countdownRemainingMs}
+        noClicks={noClicks}
+        errorText={errorText}
+      />
+    </div>
+  );
+}

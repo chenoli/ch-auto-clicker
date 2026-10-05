@@ -6,7 +6,7 @@ use std::alloc::{GlobalAlloc, Layout, System};
 use std::cell::Cell;
 
 use ch_core::engine::clock::{FakeClock, NANOS_PER_MS};
-use ch_core::engine::run::{RunControl, RunEnd, run};
+use ch_core::engine::run::{Poll, RunControl, RunEnd, run};
 use ch_core::engine::scheduler::{FireReport, Scheduler};
 use ch_core::engine::timeline::IntervalTimeline;
 use ch_core::engine::wait::fake::FakeWaiter;
@@ -47,8 +47,8 @@ struct EngineLikeControl<'a> {
 }
 
 impl RunControl for EngineLikeControl<'_> {
-    fn should_stop(&mut self) -> bool {
-        false
+    fn poll(&mut self) -> Poll {
+        Poll::Continue
     }
 
     fn on_fire(&mut self, report: &FireReport) {

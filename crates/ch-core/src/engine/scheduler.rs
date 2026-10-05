@@ -22,6 +22,8 @@ pub struct FireReport {
     pub lateness_ns: u64,
     /// Events dropped by the skip policy after a stall.
     pub missed: u64,
+    /// The fired timeline ends the run (stop-after timer).
+    pub end_run: bool,
 }
 
 pub struct Scheduler {
@@ -78,6 +80,7 @@ impl Scheduler {
         let lateness_ns = now.saturating_sub(due.deadline);
         let timeline = &mut self.timelines[due.index];
         let result = timeline.fire(backend);
+        let end_run = timeline.ends_run();
 
         let mut missed = 0;
         if lateness_ns > (2 * due.interval).max(SKIP_GRACE_NS)
@@ -90,6 +93,7 @@ impl Scheduler {
         result.map(|()| FireReport {
             lateness_ns,
             missed,
+            end_run,
         })
     }
 
@@ -143,7 +147,8 @@ mod tests {
             report,
             FireReport {
                 lateness_ns: 400_000,
-                missed: 0
+                missed: 0,
+                end_run: false
             }
         );
         assert_eq!(

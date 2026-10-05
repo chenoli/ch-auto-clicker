@@ -11,14 +11,26 @@ pub fn builder() -> Builder<tauri::Wry> {
     Builder::<tauri::Wry>::new()
         .commands(collect_commands![
             commands::app_bootstrap,
+            commands::settings_update,
+            commands::profile_update,
+            commands::engine_start,
+            commands::engine_stop,
+            commands::engine_toggle_pause,
+            commands::engine_ack_error,
+            commands::engine_snapshot,
             commands::engine_capabilities,
             commands::engine_run_benchmark,
+            commands::window_set_content_height,
+            commands::window_open_variation,
             commands::debug_click_once
         ])
         .events(collect_events![
             events::EngineTick,
+            events::EngineStatus,
             events::EngineJitter,
             events::EngineDegraded,
+            events::SettingsChanged,
+            events::ProfilesChanged,
             capabilities::Capabilities
         ])
 }

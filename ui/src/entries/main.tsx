@@ -1,5 +1,5 @@
-import { MainPlaceholder } from "../features/shell/main-placeholder";
+import { MainWindow } from "../features/main/main-window";
 
 import { boot } from "./boot";
 
-boot(<MainPlaceholder />);
+boot(<MainWindow />);

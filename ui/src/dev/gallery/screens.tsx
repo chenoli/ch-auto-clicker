@@ -1,3 +1,4 @@
+import { MainIdleScreen, MainStatesScreen, VariationScreen } from "./main-window-screens";
 import { SCREEN_META } from "./manifest";
 import { TokensScreen } from "./tokens-screen";
 
@@ -9,6 +10,9 @@ export interface GalleryScreen extends ScreenMeta {
 }
 
 const RENDERERS: Record<string, () => ReactNode> = {
+  "main-idle": () => <MainIdleScreen />,
+  "main-states": () => <MainStatesScreen />,
+  variation: () => <VariationScreen />,
   tokens: () => <TokensScreen />,
 };
 

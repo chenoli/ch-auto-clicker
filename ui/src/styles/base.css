@@ -6,6 +6,7 @@
 @import "tailwindcss";
 /* Unlayered on purpose: unlayered declarations beat the variables @theme mirrors into the theme layer. */
 @import "./themes.css";
+@import "./components.css";
 
 /* Tailwind defaults are reset so only design-system colors and measures exist as utilities. */
 @theme inline {
@@ -77,12 +78,28 @@
   --tracking-badge: 0.1em;
   --tracking-display: -0.025em;
   --tracking-logo: -0.02em;
+  --tracking-tab: 0.12em;
+  --tracking-kbd: 0.02em;
+
+  --leading-*: initial;
+  --leading-none: 1;
+  --leading-label: 1.15;
+  --leading-body: 1.5;
 }
 
 @layer base {
+  /* Every window fills its native frame; the panel takes the free space (handoff: panel flex 1). */
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
   html,
   body {
     margin: 0;
+    /* The prototype relies on the browser's default line height, not Tailwind's 1.5. */
+    line-height: normal;
     background: var(--bg);
     color: var(--fg);
     font-family: var(--font-ui);

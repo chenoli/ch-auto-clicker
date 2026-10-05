@@ -1,0 +1,771 @@
+/*
+ * Design-system primitives (handoff README, "Componentes base"). Colors come from the theme tokens;
+ * the one-off mixes the README specifies ("accent 22% over bg-2", "fg 14%") are written inline with
+ * color-mix() here instead of becoming new token names. State lives in data attributes.
+ */
+
+@layer components {
+  /* Label of a settings row: 10px/700, .18em, uppercase, fg-3. */
+  .row-label {
+    font-size: var(--text-10);
+    font-weight: 700;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--fg-3);
+  }
+
+  /* Small label inside controls and the footer: 9px. */
+  .micro-label {
+    font-size: var(--text-9);
+    font-weight: 700;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--fg-3);
+  }
+
+  .settings-row {
+    display: grid;
+    grid-template-columns: 84px 1fr;
+    align-items: center;
+    border-top: 1px solid var(--divider);
+  }
+
+  /* A whole settings row that opens a sub-screen (VARIAÇÃO · summary · Editar ›). */
+  .variation-row {
+    display: grid;
+    grid-template-columns: 84px 1fr auto;
+    align-items: center;
+    width: 100%;
+    padding: 0;
+    text-align: left;
+    background: transparent;
+    border: 0;
+    border-top: 1px solid var(--divider);
+    cursor: pointer;
+  }
+
+  /* Popover menu (README "Popover/menu"). */
+  .popover {
+    margin-top: 4px;
+    padding: 5px;
+    border-radius: 10px;
+    background: var(--bg-3);
+    border: 1px solid color-mix(in oklch, var(--fg) 14%, transparent);
+    box-shadow: var(--shadow-popover);
+  }
+  .menu-item {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 32px;
+    padding: 0 10px;
+    border-radius: 6px;
+    border: 0;
+    background: transparent;
+    font-size: var(--text-13);
+    color: var(--fg);
+    text-align: left;
+    cursor: pointer;
+  }
+  .menu-item:hover {
+    background: color-mix(in oklch, var(--fg) 6%, transparent);
+  }
+  .menu-item[aria-checked="true"]::after {
+    content: "✓";
+    margin-left: auto;
+    color: var(--accent);
+  }
+
+  /* Segmented control: container + items. */
+  .segmented {
+    display: grid;
+    grid-auto-columns: 1fr;
+    grid-auto-flow: column;
+    gap: 2px;
+    padding: 2px;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-seg);
+  }
+  .segmented__item {
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    border-radius: var(--radius-seg-item);
+    font-size: var(--text-12);
+    font-weight: 600;
+    color: var(--fg-2);
+    border: 1px solid transparent;
+    background: transparent;
+    cursor: pointer;
+  }
+  .segmented__item[data-active="true"] {
+    background: var(--seg-active);
+    border-color: color-mix(in oklch, var(--fg) 14%, transparent);
+    color: var(--fg);
+  }
+  .segmented--compact .segmented__item {
+    height: 26px;
+  }
+
+  /* Mode tabs: a larger segmented control with index numbers. */
+  .mode-tabs {
+    gap: 3px;
+    padding: 3px;
+    border-radius: 9px;
+  }
+  .mode-tabs .segmented__item {
+    height: 32px;
+    border-radius: 6px;
+    font-size: var(--text-13);
+  }
+  .mode-tabs__index {
+    font-size: var(--text-9);
+    font-weight: 700;
+    letter-spacing: var(--tracking-tab);
+    color: var(--fg-3);
+  }
+
+  /* Toggle: 34×20 track, 14px knob. */
+  .toggle {
+    position: relative;
+    width: 34px;
+    height: 20px;
+    flex: none;
+    border-radius: 10px;
+    background: var(--bg-3);
+    border: 1px solid color-mix(in oklch, var(--fg) 12%, transparent);
+    cursor: pointer;
+    padding: 0;
+  }
+  .toggle__knob {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 7px;
+    background: var(--fg-3);
+    transition: left 0.15s var(--ease-out);
+  }
+  .toggle[aria-checked="true"] {
+    background: color-mix(in oklch, var(--accent) 22%, var(--bg-2));
+    border-color: color-mix(in oklch, var(--accent) 55%, transparent);
+  }
+  .toggle[aria-checked="true"] .toggle__knob {
+    left: 16px;
+    background: var(--accent);
+  }
+
+  /* Radio card. */
+  .radio-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 36px;
+    padding: 0 10px;
+    border-radius: var(--radius-control);
+    border: 1px solid var(--border);
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+  }
+  .radio-card__ring {
+    width: 14px;
+    height: 14px;
+    flex: none;
+    border-radius: 7px;
+    border: 1px solid var(--fg-3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .radio-card__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 3px;
+  }
+  .radio-card[aria-checked="true"] {
+    border-color: color-mix(in oklch, var(--accent) 45%, transparent);
+    background: color-mix(in oklch, var(--accent) 7%, var(--bg));
+  }
+  .radio-card[aria-checked="true"] .radio-card__ring {
+    border-color: var(--accent);
+  }
+  .radio-card[aria-checked="true"] .radio-card__dot {
+    background: var(--accent);
+  }
+
+  /* Stepper. */
+  .stepper {
+    display: flex;
+    align-items: center;
+    height: 32px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-seg);
+    background: var(--bg-2);
+  }
+  .stepper__button {
+    width: 28px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--fg-2);
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+  }
+  .stepper__button:disabled {
+    color: var(--fg-3);
+    cursor: default;
+  }
+  .stepper__value {
+    padding: 0 4px;
+    font-size: var(--text-14);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--fg);
+  }
+  .stepper[data-muted="true"] .stepper__value {
+    color: var(--fg-3);
+  }
+
+  /* Big numeric field (interval). */
+  .big-field {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 44px;
+    padding: 0 12px;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+  }
+  .big-field:focus-within {
+    border-color: color-mix(in oklch, var(--accent) 45%, transparent);
+  }
+  .big-field__input {
+    flex: 1;
+    width: 0;
+    min-width: 0;
+    background: transparent;
+    border: 0;
+    padding: 0;
+    outline: none;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: var(--text-24);
+    letter-spacing: var(--tracking-logo);
+    color: var(--fg);
+  }
+  .big-field__unit {
+    font-size: var(--text-12);
+    font-weight: 600;
+    color: var(--fg-3);
+  }
+
+  /* Keyboard key. */
+  .kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 6px;
+    border-radius: 5px;
+    font-size: var(--text-11);
+    font-weight: 700;
+    letter-spacing: var(--tracking-kbd);
+    --kbd-edge: color-mix(in oklch, var(--fg) 16%, transparent);
+    border: 1px solid var(--kbd-edge);
+    box-shadow: inset 0 -2px 0 var(--kbd-edge);
+  }
+  .kbd--large {
+    min-width: 38px;
+    height: 30px;
+    padding: 0 8px;
+    border-radius: var(--radius-seg);
+    font-size: var(--text-13);
+  }
+  .kbd[data-broken="true"] {
+    border-style: dashed;
+    text-decoration: line-through;
+  }
+
+  /* Badges. */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: var(--radius-pill);
+    font-size: var(--text-10);
+    font-weight: 700;
+    letter-spacing: var(--tracking-badge);
+    text-transform: uppercase;
+    color: var(--accent);
+    background: color-mix(in oklch, var(--accent) 14%, transparent);
+    border: 1px solid color-mix(in oklch, var(--accent) 40%, transparent);
+  }
+  .badge--neutral {
+    font-size: var(--text-9);
+    font-weight: 600;
+    letter-spacing: normal;
+    text-transform: none;
+    color: var(--fg-2);
+    background: var(--bg-2);
+    border-color: var(--border);
+  }
+
+  /* Buttons. */
+  .button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 36px;
+    padding: 0 14px;
+    border-radius: 9px;
+    font-size: var(--text-13);
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+  .button--primary {
+    background: var(--fg);
+    color: var(--bg);
+  }
+  .button--secondary {
+    background: transparent;
+    color: var(--fg);
+    border-color: color-mix(in oklch, var(--fg) 16%, transparent);
+  }
+  .button--danger {
+    background: var(--danger);
+    color: var(--bg);
+  }
+  .button--text {
+    height: auto;
+    padding: 0;
+    background: transparent;
+    color: var(--fg-2);
+  }
+  .button:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  /* Callout (warning / error). */
+  .callout {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 10px 12px;
+    border-radius: var(--radius-control);
+    font-size: var(--text-12);
+    line-height: 1.5;
+    color: var(--fg-2);
+    --callout: var(--warn);
+    border: 1px solid color-mix(in oklch, var(--callout) 32%, transparent);
+    background: color-mix(in oklch, var(--callout) 6%, transparent);
+  }
+  .callout[data-tone="danger"] {
+    --callout: var(--danger);
+  }
+  .callout__dot {
+    width: 6px;
+    height: 6px;
+    flex: none;
+    margin-top: 6px;
+    border-radius: 3px;
+    background: var(--callout);
+  }
+  .callout strong {
+    color: var(--fg);
+  }
+
+  /* Icon buttons in the header and the title bar. */
+  .icon-button {
+    width: 36px;
+    height: 36px;
+    flex: none;
+    border-radius: var(--radius-control);
+    border: 1px solid var(--border);
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .icon-button:hover,
+  .titlebar__button:hover {
+    background: color-mix(in oklch, var(--fg) 6%, transparent);
+  }
+  .icon-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .icon-bars span {
+    display: block;
+    width: 13px;
+    height: 1.5px;
+    background: var(--fg-2);
+  }
+  .icon-ring {
+    width: 13px;
+    height: 13px;
+    border-radius: 7px;
+    border: 1.5px solid var(--fg-2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .icon-ring span {
+    width: 3px;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--fg-2);
+  }
+
+  .titlebar__button {
+    width: 46px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--text-12);
+    color: var(--fg-2);
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+  }
+  .titlebar__button--close:hover {
+    /* Windows 11 close-button red, intentionally fixed across themes. */
+    background: #c42b1c;
+    color: #ffffff;
+  }
+  .titlebar__minimize {
+    width: 10px;
+    height: 1px;
+    background: var(--fg-2);
+  }
+
+  /* Main button (Tela 10 state map). */
+  .main-button {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    height: 76px;
+    border-radius: var(--radius-card);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px 0 20px;
+    cursor: pointer;
+    user-select: none;
+    text-align: left;
+    --mb-tone: var(--fg);
+    background: var(--fg);
+    border: 1px solid var(--fg);
+    color: var(--bg);
+  }
+  .main-button .kbd {
+    --kbd-edge: color-mix(in oklch, var(--bg) 22%, transparent);
+  }
+  .main-button[data-state="countdown"] {
+    --mb-tone: var(--warn);
+  }
+  .main-button[data-state="running"] {
+    --mb-tone: var(--accent);
+  }
+  .main-button[data-state="paused"] {
+    --mb-tone: var(--fg-2);
+  }
+  .main-button[data-state="error"] {
+    --mb-tone: var(--danger);
+  }
+  .main-button:not([data-state="idle"]) {
+    background: color-mix(in oklch, var(--mb-tone) 12%, var(--bg-2));
+    border-color: color-mix(in oklch, var(--mb-tone) 45%, transparent);
+    color: var(--mb-tone);
+  }
+  .main-button:not([data-state="idle"]) .kbd {
+    --kbd-edge: color-mix(in oklch, var(--mb-tone) 40%, transparent);
+  }
+  .main-button__kicker {
+    font-size: var(--text-10);
+    font-weight: 700;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+  .main-button__label {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: var(--text-28);
+    letter-spacing: var(--tracking-display);
+    line-height: 1;
+  }
+  .main-button__hint {
+    font-size: var(--text-11);
+    font-weight: 500;
+    opacity: 0.65;
+  }
+  .main-button__progress {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 2px;
+    background: var(--mb-tone);
+    transition: width 0.1s linear;
+  }
+
+  /* Footer status dot and text. */
+  .status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 4px;
+    background: var(--fg-3);
+  }
+  .status-text {
+    font-size: var(--text-10);
+    font-weight: 700;
+    letter-spacing: var(--tracking-status);
+    text-transform: uppercase;
+    color: var(--fg-2);
+  }
+  [data-tone="warn"] > .status-dot {
+    background: var(--warn);
+  }
+  [data-tone="warn"] > .status-text {
+    color: var(--warn);
+  }
+  [data-tone="accent"] > .status-dot {
+    background: var(--accent);
+  }
+  [data-tone="accent"] > .status-text {
+    color: var(--accent);
+  }
+  [data-tone="danger"] > .status-dot {
+    background: var(--danger);
+  }
+  [data-tone="danger"] > .status-text {
+    color: var(--danger);
+  }
+
+  .link {
+    font-size: var(--text-12);
+    font-weight: 600;
+    color: var(--accent);
+    background: transparent;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    font-variant-numeric: tabular-nums;
+  }
+  .link:hover {
+    color: var(--fg);
+  }
+
+  /* Variation editor (Tela 02.B). */
+  .var-block {
+    position: relative;
+    min-width: 72px;
+    border-radius: 9px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    text-align: left;
+    cursor: pointer;
+    background: var(--bg-2);
+    border: 1px solid color-mix(in oklch, var(--fg) 12%, transparent);
+  }
+  .var-block[data-low="true"] {
+    border-color: color-mix(in oklch, var(--warn) 50%, transparent);
+  }
+  .var-block[aria-pressed="true"] {
+    border-color: var(--accent);
+    background: color-mix(in oklch, var(--accent) 12%, var(--bg-2));
+  }
+  .var-block__id {
+    font-size: var(--text-9);
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    color: var(--fg-3);
+  }
+  .var-block__value {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: var(--text-24);
+    letter-spacing: var(--tracking-logo);
+    line-height: 1;
+    color: var(--fg);
+  }
+  .var-block[aria-pressed="true"] .var-block__value {
+    color: var(--accent);
+  }
+  .unit-suffix {
+    font-family: var(--font-ui);
+    font-size: var(--text-11);
+    font-weight: 600;
+    color: var(--fg-3);
+  }
+  .var-add {
+    flex: none;
+    width: 44px;
+    border-radius: 9px;
+    border: 1px dashed color-mix(in oklch, var(--fg) 18%, transparent);
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--text-18);
+    color: var(--fg-2);
+    cursor: pointer;
+  }
+  .var-add:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+  .cycle-line__edge {
+    width: 1px;
+    height: 10px;
+    background: color-mix(in oklch, var(--fg) 25%, transparent);
+  }
+  .cycle-line__rule {
+    flex: 1;
+    height: 1px;
+    background: color-mix(in oklch, var(--fg) 18%, transparent);
+  }
+  .small-field {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 120px;
+    height: 36px;
+    padding: 0 10px;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+  }
+  .small-field input {
+    flex: 1;
+    min-width: 0;
+    background: transparent;
+    border: 0;
+    padding: 0;
+    outline: none;
+    font-size: var(--text-15);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--fg);
+  }
+  .chip-button {
+    height: 32px;
+    padding: 0 10px;
+    border-radius: var(--radius-seg);
+    border: 1px solid color-mix(in oklch, var(--fg) 12%, transparent);
+    background: transparent;
+    display: flex;
+    align-items: center;
+    font-size: var(--text-12);
+    font-weight: 600;
+    color: var(--fg-2);
+    cursor: pointer;
+  }
+  .chip-button:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+  .chip-button--danger {
+    border-color: transparent;
+    color: var(--danger);
+  }
+  .chip-button--danger:hover {
+    background: color-mix(in oklch, var(--danger) 12%, transparent);
+  }
+  .rhythm {
+    position: relative;
+    height: 56px;
+    border-radius: var(--radius-control);
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .rhythm__grid {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+  }
+  .rhythm__grid > span:not(:last-child) {
+    border-right: 1px solid color-mix(in oklch, var(--fg) 5%, transparent);
+  }
+  .rhythm__ticks {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    top: 0;
+    bottom: 12px;
+  }
+  .rhythm__tick {
+    position: absolute;
+    bottom: 0;
+    width: 1.5px;
+    height: 18px;
+    background: var(--accent);
+  }
+  .rhythm__tick[data-start="true"] {
+    height: 30px;
+    background: var(--fg);
+  }
+  .rhythm__tick[data-low="true"] {
+    background: var(--warn);
+  }
+  .stat-value {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: var(--text-26);
+    letter-spacing: var(--tracking-logo);
+    line-height: 1;
+    color: var(--fg);
+  }
+  .stat-value .unit-suffix {
+    font-size: var(--text-12);
+    font-weight: 400;
+  }
+  .back-button {
+    width: 30px;
+    height: 30px;
+    flex: none;
+    border-radius: var(--radius-seg);
+    border: 1px solid var(--border);
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--fg-2);
+    font-size: var(--text-15);
+    cursor: pointer;
+  }
+
+  /* Gallery stand-in for the OS window frame. */
+  .window-frame {
+    border: 1px solid color-mix(in oklch, var(--fg) 12%, transparent);
+    transition: height 0.32s var(--ease-out);
+  }
+
+  /* Scrollable panel only scrolls once the window reached its maximum height. */
+  .panel-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+  }
+}

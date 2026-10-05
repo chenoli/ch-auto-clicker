@@ -7,22 +7,17 @@ use std::thread::JoinHandle;
 use std::time::Duration;
 
 use ch_core::engine::clock::{Clock, NANOS_PER_US};
+use ch_core::engine::state::EngineState;
 use ch_core::stats::{DegradedDetector, JitterStats};
 
-use crate::engine::Shared;
+use crate::engine::{Shared, Snapshot};
 
 pub const TICK_PERIOD: Duration = Duration::from_millis(100);
 const TICKS_PER_JITTER: u32 = 10;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct TickSnapshot {
-    pub fires: u64,
-    pub missed: u64,
-    pub elapsed_ns: u64,
-}
-
 pub trait TelemetrySink: Send {
-    fn tick(&mut self, snapshot: TickSnapshot);
+    /// 10 Hz during countdown, running and pause, plus one final tick when the run ends.
+    fn tick(&mut self, snapshot: Snapshot);
     fn jitter(&mut self, stats: JitterStats);
     fn degraded(&mut self, degraded: bool);
 }
@@ -46,21 +41,22 @@ impl Telemetry {
             .name("ch-telemetry".into())
             .spawn(move || {
                 let mut detector = DegradedDetector::default();
-                let mut was_running = false;
-                let mut ticks = 0u32;
+                let mut was_active = false;
+                let mut running_ticks = 0u32;
                 while !thread_stop.load(Ordering::Acquire) {
                     std::thread::sleep(period);
-                    let running = shared.is_running();
-                    if running && !was_running {
+                    let snapshot = shared.snapshot(clock.now());
+                    let active = snapshot.state.is_active();
+                    if active && !was_active {
                         detector = DegradedDetector::default();
-                        ticks = 0;
+                        running_ticks = 0;
                     }
-                    if running || was_running {
-                        sink.tick(snapshot(&shared, &clock));
+                    if active || was_active {
+                        sink.tick(snapshot);
                     }
-                    if running {
-                        ticks += 1;
-                        if ticks.is_multiple_of(TICKS_PER_JITTER) {
+                    if snapshot.state == EngineState::Running {
+                        running_ticks += 1;
+                        if running_ticks.is_multiple_of(TICKS_PER_JITTER) {
                             let stats = shared.histogram.drain().stats();
                             sink.jitter(stats);
                             let interval_us =
@@ -69,11 +65,12 @@ impl Telemetry {
                                 sink.degraded(change);
                             }
                         }
-                    } else if was_running && detector.is_degraded() {
+                    }
+                    if !active && was_active && detector.is_degraded() {
                         detector = DegradedDetector::default();
                         sink.degraded(false);
                     }
-                    was_running = running;
+                    was_active = active;
                 }
             })
             .expect("failed to spawn the telemetry thread");
@@ -81,14 +78,6 @@ impl Telemetry {
             stop,
             thread: Some(thread),
         }
-    }
-}
-
-fn snapshot<C: Clock>(shared: &Shared, clock: &C) -> TickSnapshot {
-    TickSnapshot {
-        fires: shared.fires(),
-        missed: shared.missed(),
-        elapsed_ns: clock.now().saturating_sub(shared.run_started_ns()),
     }
 }
 
@@ -117,7 +106,7 @@ mod tests {
 
     #[derive(Default)]
     struct Recorded {
-        ticks: Vec<TickSnapshot>,
+        ticks: Vec<Snapshot>,
         jitter: Vec<JitterStats>,
         degraded: Vec<bool>,
     }
@@ -125,7 +114,7 @@ mod tests {
     struct Sink(Arc<Mutex<Recorded>>);
 
     impl TelemetrySink for Sink {
-        fn tick(&mut self, s: TickSnapshot) {
+        fn tick(&mut self, s: Snapshot) {
             self.0.lock().expect("lock").ticks.push(s);
         }
         fn jitter(&mut self, s: JitterStats) {
@@ -144,6 +133,7 @@ mod tests {
             HighResWaiter::new().expect("waiter"),
             NoopBackend,
             RealtimeGuard::acquire,
+            Box::new(|_| {}),
         );
         let recorded = Arc::new(Mutex::new(Recorded::default()));
         let _telemetry = Telemetry::spawn(
@@ -153,15 +143,14 @@ mod tests {
             TICK_PERIOD,
         );
 
-        engine.start(RunPlan {
-            scheduler: Scheduler::new(vec![Box::new(IntervalTimeline::noop(
-                clock.now(),
-                NANOS_PER_MS,
-            ))]),
-            nominal_interval_ns: NANOS_PER_MS,
-        });
+        engine.start(RunPlan::new(
+            300 * NANOS_PER_MS,
+            NANOS_PER_MS,
+            None,
+            |start, _| Scheduler::new(vec![Box::new(IntervalTimeline::noop(start, NANOS_PER_MS))]),
+        ));
         let started = Instant::now();
-        std::thread::sleep(Duration::from_millis(2_050));
+        std::thread::sleep(Duration::from_millis(2_350));
         engine.stop();
         assert!(engine.wait_idle(Duration::from_secs(1)));
         std::thread::sleep(Duration::from_millis(250));
@@ -173,6 +162,17 @@ mod tests {
             (8.0..=11.5).contains(&per_second),
             "{} ticks in {seconds:.2}s",
             r.ticks.len()
+        );
+        assert!(
+            r.ticks
+                .iter()
+                .any(|t| t.state == EngineState::Countdown && t.countdown_remaining_ns.is_some()),
+            "countdown ticks carry the remaining time"
+        );
+        assert_eq!(
+            r.ticks.last().map(|t| t.state),
+            Some(EngineState::Idle),
+            "final tick after the stop"
         );
         assert!(
             (1..=3).contains(&r.jitter.len()),
@@ -190,8 +190,9 @@ mod tests {
             first.p99_us
         );
         assert!(
-            r.ticks.windows(2).all(|w| w[1].fires >= w[0].fires),
-            "fires only grow"
+            r.ticks
+                .windows(2)
+                .all(|w| w[1].fires >= w[0].fires || w[1].state == EngineState::Idle)
         );
         assert!(
             r.degraded.is_empty(),

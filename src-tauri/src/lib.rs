@@ -2,13 +2,16 @@
 
 mod capabilities;
 mod commands;
+mod error;
 mod events;
 mod ipc;
 mod logging;
 mod paths;
+mod persist;
 mod state;
 #[allow(dead_code)] // consumed by the tray icons in Phase 11
 mod tokens;
+mod windowing;
 
 use tauri::Manager;
 
@@ -42,6 +45,14 @@ pub fn run() {
             );
             Ok(())
         })
-        .run(tauri::generate_context!())
-        .expect("failed to start CH. Clicker");
+        .build(tauri::generate_context!())
+        .expect("failed to start CH. Clicker")
+        .run(|app, event| {
+            if let tauri::RunEvent::Exit = event
+                && let Some(state) = app.try_state::<state::AppState>()
+            {
+                state.engine.stop();
+                state.persister.flush();
+            }
+        });
 }
