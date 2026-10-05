@@ -12,6 +12,15 @@ for (const screen of SCREEN_META) {
   });
 }
 
+// T9.4: the main window in all six themes, reviewed by eye when a token changes.
+for (const theme of THEMES) {
+  test(`main-idle in ${theme.id}`, async ({ page }) => {
+    await page.goto(`/gallery.html#/main-idle?theme=${theme.id}`);
+    await page.evaluate(() => document.fonts.ready);
+    await expect(page.getByTestId("screen-main-idle")).toHaveScreenshot(`main-idle-${theme.id}.png`);
+  });
+}
+
 test("every theme can be applied", async ({ page }) => {
   for (const theme of THEMES) {
     await page.goto(`/gallery.html#/tokens?theme=${theme.id}`);

@@ -1,5 +1,6 @@
 import { DATA_PATH } from "../../features/profiles/profiles-route";
 import { ProfilesScreen } from "../../features/profiles/profiles-screen";
+import { ThemesScreen } from "../../features/themes/themes-screen";
 
 import { prototypeProfile } from "./fixtures";
 import { WindowFrame } from "./window-frame";
@@ -87,4 +88,23 @@ export function ProfilesScreenDemo(): ReactElement {
 /** Tela 05.B: the empty state with its drop area. */
 export function ProfilesEmptyDemo(): ReactElement {
   return <Screen profiles={[]} activeId={null} />;
+}
+
+/** Tela 07 with Grafite selected. */
+export function ThemesScreenDemo(): ReactElement {
+  return (
+    <WindowFrame width={420} height={640}>
+      {() => (
+        <ThemesScreen
+          shown="grafite"
+          followSystem={false}
+          onSelect={noop}
+          onToggleFollow={noop}
+          onBack={noop}
+          onMinimize={noop}
+          onClose={noop}
+        />
+      )}
+    </WindowFrame>
+  );
 }

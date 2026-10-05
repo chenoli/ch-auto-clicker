@@ -37,6 +37,7 @@ const mocks = vi.hoisted(() => ({
     profileImport: vi.fn(),
     profileImportText: vi.fn(),
     hotkeySet: vi.fn(),
+    settingsUpdate: vi.fn(),
   },
 }));
 
@@ -73,6 +74,8 @@ function bootstrap(profile: Profile = prototypeProfile()) {
     settings: {
       activeProfileId: profile.id,
       locale: "pt-BR",
+      theme: "grafite",
+      followSystemTheme: false,
       countdownSec: 3,
       hotkeys: {
         startStop: { mods: [], key: "F6" },
@@ -173,6 +176,39 @@ describe("MainWindow", () => {
     mocks.commands.appBootstrap.mockReturnValue(new Promise(() => {}));
     const { container } = render(<MainWindow />);
     expect(container).toBeEmptyDOMElement();
+  });
+});
+
+describe("ThemesRoute", () => {
+  it("opens from Configurações, picks a theme and toggles Seguir o Windows", async () => {
+    mocks.commands.settingsUpdate
+      .mockResolvedValueOnce({ status: "ok", data: null })
+      .mockResolvedValueOnce({ status: "error", error: { code: "SETTINGS_INVALID", message: "" } });
+    render(<MainWindow />);
+    fireEvent.click(await screen.findByRole("button", { name: "Configurações" }));
+    fireEvent.click(screen.getByRole("button", { name: /Grafite ›/ }));
+    expect(screen.getByRole("heading", { name: "Tema" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Fósforo · Terminal" }));
+    expect(mocks.commands.settingsUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ theme: "fosforo", followSystemTheme: false }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Seguir o Windows" }));
+    expect(mocks.commands.settingsUpdate).toHaveBeenLastCalledWith(
+      expect.objectContaining({ followSystemTheme: true }),
+    );
+    expect(await screen.findByRole("alert")).toHaveTextContent("SETTINGS_INVALID");
+    fireEvent.click(screen.getByRole("button", { name: "Voltar" }));
+    expect(screen.getByRole("heading", { name: "Configurações" })).toBeInTheDocument();
+  });
+
+  it("labels the Tema row when following Windows", async () => {
+    mocks.commands.appBootstrap.mockResolvedValue({
+      ...bootstrap(),
+      settings: { ...bootstrap().settings, followSystemTheme: true },
+    });
+    render(<MainWindow />);
+    fireEvent.click(await screen.findByRole("button", { name: "Configurações" }));
+    expect(screen.getByRole("button", { name: /Seguindo o Windows · (Grafite|Papel) ›/ })).toBeInTheDocument();
   });
 });
 

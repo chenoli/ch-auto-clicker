@@ -73,7 +73,15 @@ pub fn settings_update(
     });
     state.persister.save_settings(&saved);
     emit_settings(&app, &saved);
+    crate::theme::apply(&app, &saved);
     Ok(saved)
+}
+
+/// The current settings, for windows that only need the theme (variation, HUD, overlays).
+#[tauri::command]
+#[specta::specta]
+pub fn settings_get(state: State<'_, AppState>) -> Settings {
+    state.data().settings
 }
 
 /// Last version stamp handed out, in epoch ms; keeps stamps strictly increasing in this process.

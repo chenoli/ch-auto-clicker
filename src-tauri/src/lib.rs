@@ -12,8 +12,8 @@ mod paths;
 mod persist;
 mod profiles;
 mod state;
+mod theme;
 mod thumbs;
-#[allow(dead_code)] // consumed by the tray icons in Phase 11
 mod tokens;
 mod windowing;
 
@@ -46,6 +46,17 @@ pub fn run() {
             app.manage(state);
             let state = app.state::<state::AppState>();
             state.hotkeys().apply(app.handle(), &state.data());
+            theme::apply(app.handle(), &state.data().settings);
+            // "Seguir o Windows": repaint when the Windows app theme flips.
+            if let Some(main) = app.get_webview_window("main") {
+                let handle = app.handle().clone();
+                main.on_window_event(move |event| {
+                    if let tauri::WindowEvent::ThemeChanged(_) = event {
+                        let state = handle.state::<state::AppState>();
+                        theme::apply(&handle, &state.data().settings);
+                    }
+                });
+            }
             state::measure_if_needed(app.handle());
             log::info!(
                 "{} {} started (DPI: {})",

@@ -188,7 +188,9 @@
     "kicker": "Aplicativo",
     "title": "Configurações",
     "hotkeysLink": "Atalhos ›",
-    "comingSoon": "As demais configurações chegam na Fase 11."
+    "comingSoon": "As demais configurações chegam na Fase 11.",
+    "theme": "Tema",
+    "followingSystem": "Seguindo o Windows · {name}"
   },
   "common": {
     "back": "Voltar",
@@ -309,5 +311,9 @@
       "variation": "Variação {blocks} ms",
       "points": "{count, plural, one {# ponto} other {# pontos}}"
     }
+  },
+  "themes": {
+    "title": "Tema",
+    "followSystem": "Seguir o Windows"
   }
 }

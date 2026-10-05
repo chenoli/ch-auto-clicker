@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { useTranslation } from "react-i18next";
 
 import { commands, inTauri } from "../../ipc";
 
@@ -17,12 +18,13 @@ import { PointsRoute } from "../points/points-route";
 import { ProfilesRoute } from "../profiles/profiles-route";
 import { SettingsScreen } from "../settings/settings-screen";
 import { ConnectFailure } from "../shell/connect-failure";
+import { ThemesRoute, themeLabel } from "../themes/themes-route";
 import { MainWindowView } from "./main-window-view";
 
 import type { Profile } from "../../ipc";
 import type { ReactElement } from "react";
 
-type Screen = "main" | "settings" | "hotkeys" | "points" | "profiles";
+type Screen = "main" | "settings" | "hotkeys" | "points" | "profiles" | "themes";
 
 const MIN_HEIGHT = 640;
 
@@ -33,6 +35,7 @@ function thumbnailUrl(profile: Profile): string {
 
 /** The main window (Tela 01) and its sub-screens, connected to the Rust state. */
 export function MainWindow(): ReactElement | null {
+  const { t } = useTranslation();
   const ready = useAppStore((s) => s.ready);
   const profile = useAppStore(selectActiveProfile);
   const settings = useAppStore((s) => s.settings);
@@ -85,7 +88,19 @@ export function MainWindow(): ReactElement | null {
   };
 
   if (screen === "settings") {
-    return <SettingsScreen onOpenHotkeys={() => go("hotkeys")} onBack={() => go("main")} {...windowActions} />;
+    return (
+      <SettingsScreen
+        themeLabel={themeLabel(settings, t)}
+        onOpenThemes={() => go("themes")}
+        onOpenHotkeys={() => go("hotkeys")}
+        onBack={() => go("main")}
+        {...windowActions}
+      />
+    );
+  }
+
+  if (screen === "themes") {
+    return <ThemesRoute settings={settings} onBack={() => go("settings")} {...windowActions} />;
   }
 
   if (screen === "hotkeys") {

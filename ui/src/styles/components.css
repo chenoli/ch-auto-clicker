@@ -994,6 +994,137 @@
     border: 1px solid var(--border);
   }
 
+  /* Themes (Tela 07). The preview reads the tokens of its own nested data-theme. */
+  .follow-system {
+    height: 30px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 7px;
+    background: none;
+    font: inherit;
+    font-size: var(--text-12);
+    font-weight: 600;
+    color: var(--fg-2);
+    cursor: pointer;
+  }
+  .follow-system:hover {
+    background: color-mix(in oklch, var(--fg) 6%, transparent);
+  }
+  .follow-system[aria-pressed="true"] {
+    color: var(--accent);
+  }
+  .follow-system[aria-pressed="true"]::before {
+    content: "✓ ";
+  }
+  .theme-card {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    padding: 6px 6px 10px;
+    border-radius: 12px;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  .theme-card:hover {
+    border-color: color-mix(in oklch, var(--fg) 16%, transparent);
+  }
+  .theme-card[data-on="true"] {
+    border-color: color-mix(in oklch, var(--accent) 45%, transparent);
+  }
+  .theme-card__tag {
+    font-size: var(--text-9);
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--fg-3);
+  }
+  .theme-card__check {
+    width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent);
+    font-size: var(--text-10);
+    font-weight: 700;
+    color: var(--on-accent);
+  }
+  .theme-preview {
+    position: relative;
+    height: 92px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--bg);
+    border: 1px solid var(--border);
+  }
+  .theme-preview__tabs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    padding: 2px;
+    border-radius: 4px;
+    background: var(--bg-2);
+  }
+  .theme-preview__tab {
+    height: 8px;
+    border-radius: 2px;
+  }
+  .theme-preview__tab--on {
+    background: var(--bg-3);
+  }
+  .theme-preview__button {
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 6px;
+    border-radius: 5px;
+    background: var(--fg);
+  }
+  .theme-preview__label {
+    width: 26px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--bg);
+  }
+  .theme-preview__kbd {
+    width: 10px;
+    height: 7px;
+    border-radius: 2px;
+    border: 1px solid var(--bg);
+  }
+  .theme-preview__dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 3px;
+    background: var(--accent);
+  }
+  .theme-preview__line {
+    height: 3px;
+    border-radius: 2px;
+  }
+  .theme-preview__line--min {
+    width: 5px;
+    height: 1px;
+    background: var(--fg-2);
+  }
+  .theme-preview__line--text {
+    width: 40px;
+    background: var(--fg-3);
+  }
+  .theme-preview__line--b {
+    width: 14px;
+    background: var(--accent-b);
+  }
+
   /* Profiles (Telas 05.A / 05.B). */
   .menu-divider {
     height: 1px;
@@ -1485,7 +1616,8 @@
     border: 1px solid color-mix(in oklch, var(--bg) 20%, transparent);
   }
 
-  /* Point capture overlay (Tela 03.B). */
+  /* Point capture overlay (Tela 03.B). Dims, stripes and shadows are fixed on purpose: they sit
+     over a frozen capture of the desktop, which looks the same whatever the app theme. */
   .overlay-root {
     position: fixed;
     inset: 0;

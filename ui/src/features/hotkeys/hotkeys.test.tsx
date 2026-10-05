@@ -125,7 +125,19 @@ describe("SettingsScreen", () => {
   it("links to the shortcuts screen", () => {
     const onOpenHotkeys = vi.fn();
     const onBack = vi.fn();
-    render(<SettingsScreen onOpenHotkeys={onOpenHotkeys} onBack={onBack} onMinimize={vi.fn()} onClose={vi.fn()} />);
+    const onOpenThemes = vi.fn();
+    render(
+      <SettingsScreen
+        themeLabel="Grafite"
+        onOpenThemes={onOpenThemes}
+        onOpenHotkeys={onOpenHotkeys}
+        onBack={onBack}
+        onMinimize={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: /Grafite ›/ }));
+    expect(onOpenThemes).toHaveBeenCalledOnce();
     fireEvent.click(screen.getByRole("button", { name: /Atalhos ›/ }));
     fireEvent.click(screen.getByRole("button", { name: "Voltar" }));
     expect(onOpenHotkeys).toHaveBeenCalledOnce();

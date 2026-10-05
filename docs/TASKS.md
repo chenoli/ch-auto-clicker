@@ -160,12 +160,12 @@ Referências: `docs/ARCHITECTURE.md` (seções citadas como §N) e `refs/README.
 
 ## Fase 10 — Internacionalização
 
-| ID    | Tarefa                                                                                         | Depende | Critério de aceite                                                                        |
-| ----- | ---------------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------- |
-| T10.1 | Locale en-US completo + script de CI que compara as chaves entre os locales                    | T0.6    | O CI falha com chave faltando. Toda a UI aparece em inglês sem fallback visível.          |
-| T10.2 | Troca de idioma ao vivo (segmented na Tela 08) e locale inicial por `GetUserDefaultUILanguage` | T10.1   | Trocar o idioma atualiza todas as janelas. Primeira execução em Windows EN abre em en-US. |
-| T10.3 | Namespace `native` embutido no Rust (tray, notificações, diálogos) seguindo o locale           | T10.1   | O menu da bandeja muda de idioma junto com a UI.                                          |
-| T10.4 | Formatação de números/tempos por locale (CPS, `mm:ss.d`, px, "≈ 0,96 px")                      | T10.2   | Testes de formatação nos dois locales.                                                    |
+| ID    | Tarefa                                                                                                                                              | Depende | Critério de aceite                                                                                                                      |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| T10.1 | Locales en-US e es-419 (espanhol latino-americano, pedido do usuário em 2026-10-05) completos + script de CI que compara as chaves entre os locales | T0.6    | O CI falha com chave faltando. Toda a UI aparece em inglês e em espanhol sem fallback visível.                                          |
+| T10.2 | Troca de idioma ao vivo (segmented na Tela 08) e locale inicial por `GetUserDefaultUILanguage`                                                      | T10.1   | Trocar o idioma atualiza todas as janelas. Primeira execução em Windows EN abre em en-US; em Windows ES (qualquer variante), em es-419. |
+| T10.3 | Namespace `native` embutido no Rust (tray, notificações, diálogos) seguindo o locale                                                                | T10.1   | O menu da bandeja muda de idioma junto com a UI.                                                                                        |
+| T10.4 | Formatação de números/tempos por locale (CPS, `mm:ss.d`, px, "≈ 0,96 px")                                                                           | T10.2   | Testes de formatação nos três locales.                                                                                                  |
 
 ## Fase 11 — Configurações, tray e HUD
 
@@ -213,3 +213,9 @@ Referências: `docs/ARCHITECTURE.md` (seções citadas como §N) e `refs/README.
 5. **M5 — Distribuível** (fases 12–13): instalador assinado com auto-update.
 
 As fases 9 e 10 podem correr em paralelo com 5–8, porque a infra de tokens e de i18n existe desde a fase 0.
+
+## Pendências de verificação no app real
+
+- **Fase 8 (Perfis):** commitada só com testes automatizados; o teste ao vivo foi interrompido (havia um jogo na tela 1). Testar: dropdown do cabeçalho, criar, duplicar, renomear (F2), excluir com confirmação, definir/remover atalho do perfil e disparo dele, exportar/importar pelo diálogo nativo e soltar um `.chprofile` na tela.
+- **Fase 9 (Temas):** sem teste ao vivo pelo mesmo motivo. Testar: trocar o tema muda todas as janelas abertas sem piscar (inclusive o fundo nativo no Papel), "Seguir o Windows" acompanha a troca claro/escuro do Windows em menos de 1 s.
+- **Teclas físicas** (desde a Fase 4): F6, F7, parada de emergência, Ctrl Shift P e Esc/Enter nos overlays.

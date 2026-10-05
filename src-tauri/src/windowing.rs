@@ -124,7 +124,10 @@ pub fn open_variation<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
     .decorations(false)
     .shadow(true)
     .skip_taskbar(true)
-    .background_color(tauri::window::Color(0x14, 0x14, 0x12, 0xFF))
+    .background_color(crate::theme::background(
+        app,
+        &app.state::<crate::state::AppState>().data().settings,
+    ))
     .parent(&main)?
     .build()?;
     let _ = window.set_position(LogicalPosition::new(x, y));

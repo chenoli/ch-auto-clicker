@@ -9,6 +9,8 @@ export const commands = {
 	appBootstrap: () => __TAURI_INVOKE<Bootstrap>("app_bootstrap"),
 	/**  Replaces the settings (the UI always sends the full object) and notifies every window. */
 	settingsUpdate: (settings: Settings) => typedError<Settings, AppError>(__TAURI_INVOKE("settings_update", { settings })),
+	/**  The current settings, for windows that only need the theme (variation, HUD, overlays). */
+	settingsGet: () => __TAURI_INVOKE<Settings>("settings_get"),
 	/**
 	 *  Replaces a profile. `base_updated_at` is the version the caller edited; if another window saved
 	 *  in between, the update is refused with `STALE_PROFILE` instead of silently overwriting it.
