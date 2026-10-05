@@ -66,11 +66,12 @@ pub fn background<R: Runtime>(app: &AppHandle<R>, settings: &Settings) -> Color 
     color(palette(resolve(settings, system_theme(app))).bg)
 }
 
-/// Repaints the native background of every open window (overlays keep their own dark backdrop).
+/// Repaints the native background of every open window. Overlays keep their own dark backdrop
+/// and the HUD must stay transparent.
 pub fn apply<R: Runtime>(app: &AppHandle<R>, settings: &Settings) {
     let bg = background(app, settings);
     for (label, window) in app.webview_windows() {
-        if !label.starts_with("overlay-") {
+        if !label.starts_with("overlay-") && label != crate::hud::LABEL {
             let _ = window.set_background_color(Some(bg));
         }
     }

@@ -33,17 +33,19 @@ export function HudWindow(): ReactElement | null {
     };
   }, []);
 
-  // The window hugs the pill so its transparent area never covers anything.
+  // The window hugs the pill so its transparent area never covers anything. Re-run once the
+  // settings arrive: before that the component renders nothing and there is no element to watch.
+  const ready = settings !== null;
   useEffect(() => {
     const root = rootRef.current;
-    if (!root || !inTauri) return;
+    if (!ready || !root || !inTauri) return;
     const observer = new ResizeObserver(() => {
       const box = root.getBoundingClientRect();
       void commands.hudResize(Math.ceil(box.width) + PAD * 2, Math.ceil(box.height) + PAD * 2);
     });
     observer.observe(root);
     return () => observer.disconnect();
-  }, []);
+  }, [ready]);
 
   if (!settings) return null;
   const hints = settings.hudHintsShown ?? 0;

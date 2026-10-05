@@ -251,6 +251,7 @@ describe("HudWindow", () => {
     render(<HudWindow />);
     expect(await screen.findByRole("status")).toHaveTextContent("42");
     expect(screen.getByText("Segure Ctrl para mover")).toBeInTheDocument();
+    await waitFor(() => expect(mocks.commands.hudResize).toHaveBeenCalled());
   });
 
   it("renders nothing before the state arrives", () => {

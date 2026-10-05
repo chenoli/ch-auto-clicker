@@ -14,6 +14,8 @@ use tauri_specta::Event;
 use crate::state::AppState;
 
 pub const LABEL: &str = "hud";
+/// Distinct from the main window so tools (and screen readers) can tell them apart.
+const HUD_TITLE: &str = "CH. Clicker HUD";
 /// Room for the widest state (Rodando with counter, remaining time and chip) at any locale.
 const DEFAULT_SIZE: (f64, f64) = (460.0, 56.0);
 /// Gap to the work area's top-right corner.
@@ -46,7 +48,7 @@ fn window<R: Runtime>(app: &AppHandle<R>) -> Option<WebviewWindow<R>> {
 pub fn create<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
     let (w, h) = DEFAULT_SIZE;
     let hud = WebviewWindowBuilder::new(app, LABEL, WebviewUrl::App("hud.html".into()))
-        .title(ch_core::PRODUCT_NAME)
+        .title(HUD_TITLE)
         .inner_size(w, h)
         .decorations(false)
         .transparent(true)
@@ -126,16 +128,18 @@ pub fn sync<R: Runtime>(app: &AppHandle<R>) {
     let want = settings.show_hud && state.engine.shared().state().is_active();
     let visible = hud.is_visible().unwrap_or(false);
     if want && !visible {
+        // Shown first: the settings event below must not re-enter this branch.
+        let _ = hud.show();
         // D5: the "Segure Ctrl para mover" hint shows the first 3 times.
         if settings.hud_hints_shown < 3 {
             let saved = state.with_data(|d| {
-                d.settings.hud_hints_shown += 1;
+                d.settings.hud_hints_shown = d.settings.hud_hints_shown.saturating_add(1);
                 d.settings.clone()
             });
             state.persister.save_settings(&saved);
-            crate::state::emit_settings(app, &saved);
+            // The raw event, not `emit_settings`, which would call back into this function.
+            let _ = crate::events::SettingsChanged(saved).emit(app);
         }
-        let _ = hud.show();
     } else if !want && visible {
         let _ = hud.hide();
     }
