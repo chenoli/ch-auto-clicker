@@ -3,6 +3,7 @@ import {
   HotkeysStatesDemo,
   MainIdleScreen,
   MainStatesScreen,
+  MainWiggleScreen,
   VariationScreen,
 } from "./main-window-screens";
 import { SCREEN_META } from "./manifest";
@@ -18,6 +19,7 @@ export interface GalleryScreen extends ScreenMeta {
 
 const RENDERERS: Record<string, () => ReactNode> = {
   "main-idle": () => <MainIdleScreen />,
+  "main-wiggle": () => <MainWiggleScreen />,
   "main-states": () => <MainStatesScreen />,
   points: () => <PointsScreenDemo />,
   variation: () => <VariationScreen />,

@@ -4,10 +4,11 @@
 use ch_core::engine::clock::NANOS_PER_MS;
 use ch_core::engine::scheduler::Scheduler;
 use ch_core::engine::timeline::{IntervalTimeline, StopTimeline, Timeline};
-use ch_core::geometry::{Point, Rect};
+use ch_core::geometry::{DisplayLayout, Point, Rect};
 use ch_core::input::{InputBackend, TargetGuard};
 use ch_core::model::{Mode, Position, Profile};
 use ch_core::validate::{ValidationError, validate_profile};
+use ch_core::wiggle::{MOTION_INTERVAL_NS, WiggleTimeline};
 
 use crate::engine::RunPlan;
 
@@ -17,7 +18,7 @@ const NANOS_PER_SEC: u64 = 1_000_000_000;
 pub enum PlanError {
     #[error("profile is invalid: {0:?}")]
     Invalid(Vec<ValidationError>),
-    /// Modes that arrive in later phases (wiggle: 6, scan: 7).
+    /// Modes that arrive in later phases (scan: 7).
     #[error("{0} is not available yet")]
     NotAvailableYet(&'static str),
     #[error("the points list is empty")]
@@ -38,16 +39,42 @@ impl PlanError {
     }
 }
 
+/// The screens a run plays on: the virtual desktop (points must be inside it) and each monitor
+/// (the wiggle never leaves the one the cursor is on).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Screens {
+    pub desktop: Rect,
+    pub monitors: Vec<Rect>,
+}
+
+impl From<&DisplayLayout> for Screens {
+    fn from(layout: &DisplayLayout) -> Self {
+        Self {
+            desktop: layout.virtual_desktop,
+            monitors: layout.monitors.iter().map(|m| m.rect).collect(),
+        }
+    }
+}
+
+/// What the run does besides (or instead of) clicking.
+enum Motion {
+    None,
+    Wiggle { amplitude_pct: f64, speed_hz: u8 },
+}
+
 pub fn build_plan(
     profile: &Profile,
     countdown_sec: u8,
-    desktop: Rect,
+    screens: Screens,
     guard: Box<dyn TargetGuard>,
 ) -> Result<RunPlan, PlanError> {
     let errors = validate_profile(profile);
     if !errors.is_empty() {
         return Err(PlanError::Invalid(errors));
     }
+    let desktop = screens.desktop;
+    let mut motion = Motion::None;
+    let mut clicks = true;
     let points: Vec<(Point, u64)> = match (profile.mode, profile.modes.click.position) {
         (Mode::Click, Position::Cursor) => Vec::new(),
         (Mode::Click, Position::Points) => {
@@ -66,7 +93,15 @@ pub fn build_plan(
                 .map(|p| (Point::new(p.x, p.y), u64::from(p.delay_ms) * NANOS_PER_MS))
                 .collect()
         }
-        (Mode::Wiggle, _) => return Err(PlanError::NotAvailableYet("wiggle")),
+        (Mode::Wiggle, _) => {
+            let w = &profile.modes.wiggle;
+            motion = Motion::Wiggle {
+                amplitude_pct: w.amplitude_pct,
+                speed_hz: w.speed_hz,
+            };
+            clicks = w.click_while_wiggling;
+            Vec::new()
+        }
         (Mode::Scan, _) => return Err(PlanError::NotAvailableYet("scan")),
     };
 
@@ -76,7 +111,12 @@ pub fn build_plan(
         .into_iter()
         .map(|ms| u64::from(ms) * NANOS_PER_MS)
         .collect();
-    let nominal = u64::from(click.min_interval_ms()) * NANOS_PER_MS;
+    let nominal = if clicks {
+        u64::from(click.min_interval_ms()) * NANOS_PER_MS
+    } else {
+        MOTION_INTERVAL_NS
+    };
+    let monitors = screens.monitors;
     let stop_after_ns = profile
         .stop_after
         .enabled
@@ -89,6 +129,19 @@ pub fn build_plan(
         stop_after_ns,
         move |start, shared| {
             let clicks_per_tick = u64::from(click.kind.clicks());
+            let mut timelines: Vec<Box<dyn Timeline>> = Vec::new();
+            if let Motion::Wiggle {
+                amplitude_pct,
+                speed_hz,
+            } = motion
+            {
+                timelines.push(Box::new(WiggleTimeline::new(
+                    start,
+                    monitors,
+                    amplitude_pct,
+                    speed_hz,
+                )));
+            }
             let click_timeline: Box<dyn Timeline> = if points.is_empty() {
                 let action = Box::new(move |backend: &mut dyn InputBackend| {
                     if guard.blocks_click() {
@@ -127,7 +180,10 @@ pub fn build_plan(
                 });
                 Box::new(IntervalTimeline::new(start, gaps, action))
             };
-            let mut timelines = vec![click_timeline];
+            // The wiggle clicks wherever the motion has the cursor ("Clicar enquanto oscila").
+            if clicks {
+                timelines.push(click_timeline);
+            }
             if let Some(after) = stop_after_ns {
                 timelines.push(Box::new(StopTimeline::new(start + after)) as Box<dyn Timeline>);
             }
@@ -154,6 +210,13 @@ mod tests {
 
     const MS: u64 = NANOS_PER_MS;
     const DESK: Rect = Rect::new(-1680, 0, 3600, 1080);
+
+    fn desk() -> Screens {
+        Screens {
+            desktop: DESK,
+            monitors: vec![Rect::new(-1680, 0, 1680, 1050), Rect::new(0, 0, 1920, 1080)],
+        }
+    }
 
     struct Fires(Vec<u64>, FakeClock, usize);
 
@@ -197,7 +260,7 @@ mod tests {
         let mut p = profile();
         p.click.button = MouseButton::Right;
         p.click.kind = ClickKind::Double;
-        let plan = build_plan(&p, 3, DESK, Box::new(AllowAll)).expect("plan");
+        let plan = build_plan(&p, 3, desk(), Box::new(AllowAll)).expect("plan");
         assert_eq!(plan.countdown_ns, 3_000 * MS);
         assert_eq!(plan.nominal_interval_ns, 100 * MS);
         assert_eq!(plan.stop_after_ns, None);
@@ -219,7 +282,7 @@ mod tests {
     fn follows_the_variation_cycle() {
         let mut p = profile();
         p.click.variation.enabled = true;
-        let plan = build_plan(&p, 0, DESK, Box::new(AllowAll)).expect("plan");
+        let plan = build_plan(&p, 0, desk(), Box::new(AllowAll)).expect("plan");
         assert_eq!(plan.nominal_interval_ns, MS, "shortest block");
         let (_, times, _, _) = simulate(plan, 5);
         let gaps: Vec<_> = times
@@ -235,7 +298,7 @@ mod tests {
         p.stop_after.enabled = true;
         p.stop_after.seconds = 30;
         p.click.interval_ms = 10_000;
-        let plan = build_plan(&p, 0, DESK, Box::new(AllowAll)).expect("plan");
+        let plan = build_plan(&p, 0, desk(), Box::new(AllowAll)).expect("plan");
         assert_eq!(plan.stop_after_ns, Some(30_000 * MS));
         let (calls, _, _, end) = simulate(plan, usize::MAX);
         assert_eq!(end, RunEnd::TimerElapsed);
@@ -255,8 +318,13 @@ mod tests {
             }
         }
         let blocked = Arc::new(AtomicBool::new(true));
-        let plan =
-            build_plan(&profile(), 0, DESK, Box::new(Toggle(Arc::clone(&blocked)))).expect("plan");
+        let plan = build_plan(
+            &profile(),
+            0,
+            desk(),
+            Box::new(Toggle(Arc::clone(&blocked))),
+        )
+        .expect("plan");
         let (calls, _, shared, _) = simulate(plan, 3);
         assert!(calls.is_empty(), "nothing injected while over our window");
         assert_eq!(shared.clicks(), 0);
@@ -281,7 +349,7 @@ mod tests {
                 delay_ms: 120,
             },
         ];
-        let plan = build_plan(&p, 0, DESK, Box::new(AllowAll)).expect("plan");
+        let plan = build_plan(&p, 0, desk(), Box::new(AllowAll)).expect("plan");
         let (calls, times, shared, _) = simulate(plan, 4);
         let click = Call::Click(MouseButton::Left, ClickKind::Single);
         assert_eq!(
@@ -325,7 +393,7 @@ mod tests {
             y: 1,
             delay_ms: 0,
         }];
-        let plan = build_plan(&p, 0, DESK, Box::new(Always)).expect("plan");
+        let plan = build_plan(&p, 0, desk(), Box::new(Always)).expect("plan");
         let (calls, _, shared, _) = simulate(plan, 2);
         assert!(
             calls.iter().all(|c| matches!(c, Call::MoveTo(_))),
@@ -335,16 +403,80 @@ mod tests {
     }
 
     #[test]
+    fn wiggle_only_moves_and_returns_to_the_origin() {
+        let mut p = profile();
+        p.mode = Mode::Wiggle;
+        p.modes.wiggle.amplitude_pct = 1.0;
+        p.modes.wiggle.speed_hz = 8;
+        p.stop_after.enabled = false;
+        let plan = build_plan(&p, 0, desk(), Box::new(AllowAll)).expect("plan");
+        assert_eq!(plan.nominal_interval_ns, 4 * MS);
+        let (calls, times, shared, end) = simulate(plan, 63);
+        assert_eq!(end, RunEnd::Stopped);
+        assert_eq!(shared.clicks(), 0);
+        assert!(calls.iter().all(|c| matches!(c, Call::MoveTo(_))));
+        // 250 Hz updates on the first (left) monitor, whose centre is the origin without a cursor.
+        assert!(times.windows(2).all(|w| w[1] - w[0] < 4 * MS + 10_000));
+        let xs: Vec<i32> = calls
+            .iter()
+            .filter_map(|c| match c {
+                Call::MoveTo(pt) => Some(pt.x),
+                _ => None,
+            })
+            .collect();
+        let (lo, hi) = (xs.iter().min().copied(), xs.iter().max().copied());
+        assert_eq!((lo, hi), (Some(-840 - 8), Some(-840 - 8 + 17)));
+        assert_eq!(calls.last(), Some(&Call::MoveTo(Point::new(-840, 525))));
+    }
+
+    #[test]
+    fn wiggle_can_click_at_the_profile_rate() {
+        let mut p = profile();
+        p.mode = Mode::Wiggle;
+        p.modes.wiggle.click_while_wiggling = true;
+        p.click.interval_ms = 20;
+        p.click.variation.enabled = false;
+        p.stop_after.enabled = false;
+        let plan = build_plan(&p, 0, desk(), Box::new(AllowAll)).expect("plan");
+        assert_eq!(plan.nominal_interval_ns, 20 * MS);
+        let (calls, _, shared, _) = simulate(plan, 60);
+        let clicks = calls
+            .iter()
+            .filter(|c| matches!(c, Call::Click(..)))
+            .count();
+        assert!(clicks >= 8, "clicks {clicks}");
+        assert_eq!(shared.clicks(), clicks as u64);
+        assert!(calls.iter().any(|c| matches!(c, Call::MoveTo(_))));
+    }
+
+    #[test]
+    fn screens_come_from_the_display_layout() {
+        let layout = DisplayLayout {
+            virtual_desktop: DESK,
+            monitors: vec![ch_core::geometry::Monitor {
+                id: "a".into(),
+                rect: Rect::new(0, 0, 1920, 1080),
+                work_area: Rect::new(0, 0, 1920, 1040),
+                scale: 1.0,
+                primary: true,
+            }],
+        };
+        let screens = Screens::from(&layout);
+        assert_eq!(screens.desktop, DESK);
+        assert_eq!(screens.monitors, vec![Rect::new(0, 0, 1920, 1080)]);
+    }
+
+    #[test]
     fn rejects_invalid_profiles_and_later_modes() {
         let mut p = profile();
         p.click.interval_ms = 0;
-        let err = build_plan(&p, 3, DESK, Box::new(AllowAll)).expect_err("invalid");
+        let err = build_plan(&p, 3, desk(), Box::new(AllowAll)).expect_err("invalid");
         assert_eq!(err.code(), "PROFILE_INVALID");
 
         let mut p = profile();
         p.modes.click.position = Position::Points;
         assert_eq!(
-            build_plan(&p, 3, DESK, Box::new(AllowAll)).expect_err("no points"),
+            build_plan(&p, 3, desk(), Box::new(AllowAll)).expect_err("no points"),
             PlanError::NoPoints
         );
         p.modes.click.points = vec![ScreenPoint {
@@ -353,20 +485,13 @@ mod tests {
             y: 10,
             delay_ms: 0,
         }];
-        let err = build_plan(&p, 3, DESK, Box::new(AllowAll)).expect_err("offscreen");
+        let err = build_plan(&p, 3, desk(), Box::new(AllowAll)).expect_err("offscreen");
         assert_eq!(err, PlanError::PointsOffscreen { x: 5000, y: 10 });
         assert_eq!(err.code(), "POINTS_OFFSCREEN");
         assert_eq!(PlanError::NoPoints.code(), "NO_POINTS");
-        p.mode = Mode::Wiggle;
-        assert_eq!(
-            build_plan(&p, 3, DESK, Box::new(AllowAll))
-                .expect_err("wiggle")
-                .code(),
-            "MODE_NOT_AVAILABLE"
-        );
         p.mode = Mode::Scan;
         assert!(
-            build_plan(&p, 3, DESK, Box::new(AllowAll))
+            build_plan(&p, 3, desk(), Box::new(AllowAll))
                 .expect_err("scan")
                 .to_string()
                 .contains("scan")

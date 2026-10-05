@@ -13,7 +13,7 @@ import type { Profile } from "../../ipc";
 import type { MainWindowViewProps } from "./main-window-view";
 
 function setup(overrides: Partial<MainWindowViewProps> = {}) {
-  let profile = prototypeProfile();
+  let profile = overrides.profile ?? prototypeProfile();
   const onEdit = vi.fn((mutate: (p: Profile) => Profile) => {
     profile = mutate(profile);
   });
@@ -114,6 +114,27 @@ describe("MainWindowView", () => {
     setup({ profile });
     expect(screen.getByText("O modo Scan chega em uma próxima fase.")).toBeInTheDocument();
     expect(screen.getByText("—")).toBeInTheDocument();
+  });
+
+  it("shows the wiggle panel, whose Ajustar link goes back to the Click tab", () => {
+    const profile = { ...prototypeProfile(), mode: "wiggle" as const };
+    const { latest } = setup({ profile, monitorWidth: 1920 });
+    expect(screen.getByText(/≈ 0,96 px em 1920/)).toBeInTheDocument();
+    expect(screen.getByText("—")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("switch", { name: "Clicar enquanto oscila" }));
+    expect(latest().modes.wiggle.clickWhileWiggling).toBe(true);
+  });
+
+  it("switches to the Click tab from the inherited rate card", () => {
+    const base = prototypeProfile();
+    const profile = {
+      ...base,
+      mode: "wiggle" as const,
+      modes: { ...base.modes, wiggle: { ...base.modes.wiggle, clickWhileWiggling: true } },
+    };
+    const { latest } = setup({ profile });
+    fireEvent.click(screen.getByRole("button", { name: "Ajustar ›" }));
+    expect(latest().mode).toBe("click");
   });
 
   it("shows the shortcut-conflict state while idle and offers both ways out", () => {

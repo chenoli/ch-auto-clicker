@@ -102,6 +102,10 @@ impl<S: InputSink> SendInputBackend<S> {
 }
 
 impl<S: InputSink> InputBackend for SendInputBackend<S> {
+    fn cursor_pos(&mut self) -> Option<Point> {
+        self.sink.cursor_pos()
+    }
+
     fn move_to(&mut self, target: Point) -> Result<(), InputError> {
         let desktop = self.sink.virtual_desktop();
         let n = geometry::normalize(target, desktop).map_err(|_| InputError::OutsideDesktop {

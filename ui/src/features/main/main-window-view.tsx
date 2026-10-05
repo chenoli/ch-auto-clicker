@@ -4,6 +4,8 @@ import { useTranslation } from "react-i18next";
 
 import { Callout } from "../../components/callout";
 
+import { useMonitorWidth } from "../wiggle/use-monitor-width";
+import { WigglePanel } from "../wiggle/wiggle-panel";
 import { ClickPanel } from "./click-panel";
 import { Footer } from "./footer";
 import { Header } from "./header";
@@ -31,6 +33,8 @@ export interface MainWindowViewProps {
   onPrimary: () => void;
   onOpenVariation: () => void;
   onOpenPoints?: () => void;
+  /** Fixed monitor width (gallery); the window measures its own monitor otherwise. */
+  monitorWidth?: number;
   onMinimize: () => void;
   onClose: () => void;
   /** Height the window needs to show the whole panel without scrolling. */
@@ -63,6 +67,7 @@ export function MainWindowView({
   onPrimary,
   onOpenVariation,
   onOpenPoints,
+  monitorWidth: fixedMonitorWidth,
   onMinimize,
   onClose,
   onDesiredHeight,
@@ -77,6 +82,8 @@ export function MainWindowView({
   const innerRef = useRef<HTMLDivElement>(null);
   const lastHeight = useRef(0);
 
+  const measuredMonitorWidth = useMonitorWidth();
+  const monitorWidth = fixedMonitorWidth ?? measuredMonitorWidth;
   const errorText = errorCode ? t(`errors.${errorCode}`, { defaultValue: errorCode }) : "";
   const noClicks =
     (profile.mode === "wiggle" && !profile.modes.wiggle.clickWhileWiggling) ||
@@ -151,6 +158,14 @@ export function MainWindowView({
               onChange={onEdit}
               onOpenVariation={onOpenVariation}
               onOpenPoints={onOpenPoints}
+            />
+          ) : profile.mode === "wiggle" ? (
+            <WigglePanel
+              profile={profile}
+              locale={locale}
+              monitorWidth={monitorWidth}
+              onChange={onEdit}
+              onAdjustClick={() => onEdit((p) => ({ ...p, mode: "click" }))}
             />
           ) : (
             <ComingSoon mode={profile.mode} />

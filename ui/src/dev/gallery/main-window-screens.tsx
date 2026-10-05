@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import { HotkeysScreen } from "../../features/hotkeys/hotkeys-screen";
 import { MainWindowView } from "../../features/main/main-window-view";
 import { VariationEditorView } from "../../features/variation/variation-editor-view";
@@ -5,7 +7,7 @@ import { VariationEditorView } from "../../features/variation/variation-editor-v
 import { prototypeProfile, tick } from "./fixtures";
 import { WindowFrame } from "./window-frame";
 
-import type { EngineTick } from "../../ipc";
+import type { EngineTick, Profile } from "../../ipc";
 import type { ReactElement } from "react";
 
 const noop = () => {};
@@ -14,28 +16,33 @@ function Window({
   engine,
   errorCode = null,
   countdownTotalMs = 3000,
+  initialProfile = prototypeProfile(),
 }: {
   engine: EngineTick;
   errorCode?: string | null;
   countdownTotalMs?: number;
+  initialProfile?: Profile;
 }) {
+  // Editable in place, so toggles and tabs can be tried in the gallery.
+  const [profile, setProfile] = useState(initialProfile);
   return (
     <WindowFrame width={420}>
       {(onDesiredHeight) => (
         <MainWindowView
-          profile={prototypeProfile()}
+          profile={profile}
           locale="pt-BR"
           engine={engine}
           countdownTotalMs={countdownTotalMs}
           shortcut="F6"
           errorCode={errorCode}
           commandError={null}
-          onEdit={noop}
+          onEdit={(mutate) => setProfile(mutate)}
           onPrimary={noop}
           onOpenVariation={noop}
           onMinimize={noop}
           onClose={noop}
           onDesiredHeight={onDesiredHeight}
+          monitorWidth={1920}
         />
       )}
     </WindowFrame>
@@ -45,6 +52,21 @@ function Window({
 /** Tela 01.A in the idle state, with the prototype's profile. */
 export function MainIdleScreen(): ReactElement {
   return <Window engine={tick()} />;
+}
+
+function wiggleProfile(clickWhileWiggling: boolean): Profile {
+  const p = prototypeProfile();
+  return { ...p, mode: "wiggle", modes: { ...p.modes, wiggle: { ...p.modes.wiggle, clickWhileWiggling } } };
+}
+
+/** Tela 01.B: the wiggle panel, without and with clicks. */
+export function MainWiggleScreen(): ReactElement {
+  return (
+    <div className="flex gap-10">
+      <Window engine={tick()} initialProfile={wiggleProfile(false)} />
+      <Window engine={tick()} initialProfile={wiggleProfile(true)} />
+    </div>
+  );
 }
 
 /** Tela 10: every state of the main button and footer. */

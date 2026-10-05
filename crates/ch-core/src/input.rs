@@ -56,6 +56,11 @@ pub trait InputBackend {
     fn button_down(&mut self, button: MouseButton) -> Result<(), InputError>;
 
     fn button_up(&mut self, button: MouseButton) -> Result<(), InputError>;
+
+    /// Real cursor position, when the backend can read it (wiggle re-anchoring, decision D16).
+    fn cursor_pos(&mut self) -> Option<Point> {
+        None
+    }
 }
 
 /// Decides whether a click right now must be skipped because it would land on one of the app's
@@ -114,6 +119,8 @@ pub mod fake {
         pub calls: Vec<Call>,
         /// When set, every call fails with this error (and is still recorded).
         pub fail_with: Option<InputError>,
+        /// Simulated cursor: `None` means the backend cannot read it. `move_to` updates it.
+        pub cursor: Option<Point>,
     }
 
     impl RecordingBackend {
@@ -125,6 +132,9 @@ pub mod fake {
 
     impl InputBackend for RecordingBackend {
         fn move_to(&mut self, target: Point) -> Result<(), InputError> {
+            if self.cursor.is_some() {
+                self.cursor = Some(target);
+            }
             self.record(Call::MoveTo(target))
         }
 
@@ -138,6 +148,10 @@ pub mod fake {
 
         fn button_up(&mut self, button: MouseButton) -> Result<(), InputError> {
             self.record(Call::Up(button))
+        }
+
+        fn cursor_pos(&mut self) -> Option<Point> {
+            self.cursor
         }
     }
 }

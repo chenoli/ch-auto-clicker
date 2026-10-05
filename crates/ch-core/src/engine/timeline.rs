@@ -24,6 +24,9 @@ pub trait Timeline: Send {
     fn ends_run(&self) -> bool {
         false
     }
+
+    /// The run pauses or ends: undo anything visible (the wiggle returns the cursor to its origin).
+    fn halt(&mut self, _backend: &mut dyn InputBackend) {}
 }
 
 /// Fires once at `deadline` and ends the run ("Parar após").

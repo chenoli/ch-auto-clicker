@@ -34,8 +34,21 @@ pub trait RunControl {
     fn on_fire(&mut self, report: &FireReport);
 }
 
-/// The scheduler loop: wait precisely for the next deadline, fire, repeat.
+/// The scheduler loop: wait precisely for the next deadline, fire, repeat. Timelines are halted
+/// when the run pauses and when it ends, however it ends.
 pub fn run<C: Clock + ?Sized, W: CoarseWaiter + ?Sized>(
+    scheduler: &mut Scheduler,
+    clock: &C,
+    waiter: &mut W,
+    backend: &mut dyn InputBackend,
+    control: &mut dyn RunControl,
+) -> RunEnd {
+    let end = run_until_end(scheduler, clock, waiter, backend, control);
+    scheduler.halt_all(backend);
+    end
+}
+
+fn run_until_end<C: Clock + ?Sized, W: CoarseWaiter + ?Sized>(
     scheduler: &mut Scheduler,
     clock: &C,
     waiter: &mut W,
@@ -47,6 +60,7 @@ pub fn run<C: Clock + ?Sized, W: CoarseWaiter + ?Sized>(
             Poll::Continue => {}
             Poll::Stop => return RunEnd::Stopped,
             Poll::Pause => {
+                scheduler.halt_all(backend);
                 let paused_at = clock.now();
                 if !control.wait_while_paused() {
                     return RunEnd::Stopped;
@@ -84,7 +98,7 @@ pub fn run<C: Clock + ?Sized, W: CoarseWaiter + ?Sized>(
 mod tests {
     use super::*;
     use crate::engine::clock::{FakeClock, NANOS_PER_MS};
-    use crate::engine::timeline::IntervalTimeline;
+    use crate::engine::timeline::{IntervalTimeline, Timeline};
     use crate::engine::wait::fake::FakeWaiter;
     use crate::input::fake::RecordingBackend;
     use crate::input::{ClickKind, MouseButton};
@@ -135,6 +149,64 @@ mod tests {
             )
             .with_limit(limit),
         )
+    }
+
+    /// Counts halts and records the order of events.
+    struct Halting {
+        inner: IntervalTimeline,
+        log: std::sync::Arc<std::sync::Mutex<Vec<&'static str>>>,
+    }
+
+    impl Timeline for Halting {
+        fn deadline(&self) -> Option<u64> {
+            self.inner.deadline()
+        }
+        fn interval(&self) -> u64 {
+            self.inner.interval()
+        }
+        fn fire(&mut self, backend: &mut dyn InputBackend) -> Result<(), InputError> {
+            self.log.lock().expect("log").push("fire");
+            self.inner.fire(backend)
+        }
+        fn rebase(&mut self, now: u64) {
+            self.inner.rebase(now);
+        }
+        fn shift(&mut self, delta: u64) {
+            self.inner.shift(delta);
+        }
+        fn halt(&mut self, _backend: &mut dyn InputBackend) {
+            self.log.lock().expect("log").push("halt");
+        }
+    }
+
+    #[test]
+    fn timelines_are_halted_on_pause_and_at_the_end() {
+        let clock = FakeClock::with_auto_step(1_000);
+        let mut waiter = FakeWaiter::new(clock.clone());
+        let log = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
+        let mut scheduler = Scheduler::new(vec![Box::new(Halting {
+            inner: IntervalTimeline::noop(0, MS).with_limit(3),
+            log: std::sync::Arc::clone(&log),
+        })]);
+        let mut control = Control {
+            pause_at: Some(1),
+            pause_for: 5 * MS,
+            resume: true,
+            clock: Some(clock.clone()),
+            ..Control::default()
+        };
+        let end = run(
+            &mut scheduler,
+            &clock,
+            &mut waiter,
+            &mut crate::input::NoopBackend,
+            &mut control,
+        );
+        assert_eq!(end, RunEnd::Completed);
+        assert_eq!(
+            *log.lock().expect("log"),
+            vec!["fire", "halt", "fire", "fire", "halt"]
+        );
     }
 
     #[test]

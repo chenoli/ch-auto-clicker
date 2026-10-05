@@ -102,6 +102,13 @@ impl Scheduler {
             t.shift(delta);
         }
     }
+
+    /// Pause or end of the run (see [`Timeline::halt`]).
+    pub fn halt_all(&mut self, backend: &mut dyn InputBackend) {
+        for t in &mut self.timelines {
+            t.halt(backend);
+        }
+    }
 }
 
 #[cfg(test)]

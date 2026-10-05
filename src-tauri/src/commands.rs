@@ -154,10 +154,13 @@ pub fn start_profile(state: &AppState, profile_id: Option<String>) -> AppResult<
     #[cfg(not(windows))]
     let guard: Box<dyn ch_core::input::TargetGuard> = Box::new(ch_core::input::AllowAll);
     #[cfg(windows)]
-    let desktop = ch_win::display::virtual_desktop();
+    let screens = ch_engine::plan::Screens::from(&ch_win::display::display_layout());
     #[cfg(not(windows))]
-    let desktop = ch_core::geometry::Rect::new(0, 0, 1920, 1080);
-    let plan = ch_engine::plan::build_plan(profile, data.settings.countdown_sec, desktop, guard)?;
+    let screens = ch_engine::plan::Screens {
+        desktop: ch_core::geometry::Rect::new(0, 0, 1920, 1080),
+        monitors: vec![ch_core::geometry::Rect::new(0, 0, 1920, 1080)],
+    };
+    let plan = ch_engine::plan::build_plan(profile, data.settings.countdown_sec, screens, guard)?;
     state.engine.start(plan);
     Ok(())
 }

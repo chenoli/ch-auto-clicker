@@ -9,6 +9,7 @@ export interface ScreenMeta {
 
 export const SCREEN_META: ScreenMeta[] = [
   { id: "main-idle", title: "01.A — Janela principal · Click", width: 420, height: 900, reference: "janela" },
+  { id: "main-wiggle", title: "01.B — Janela principal · Wiggle", width: 880, height: 900 },
   { id: "main-states", title: "10 — Estados do botão principal", width: 1808, height: 900, reference: "estados" },
   { id: "points", title: "02.A — Editor de pontos", width: 420, height: 640, reference: "pontos" },
   { id: "variation", title: "02.B — Variação de intervalo", width: 560, height: 640, reference: "variacao" },

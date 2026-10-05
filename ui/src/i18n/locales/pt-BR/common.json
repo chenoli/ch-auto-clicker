@@ -204,5 +204,29 @@
     "space": "Espaço adiciona",
     "undo": "Ctrl Z desfaz",
     "finish": "para concluir"
+  },
+  "wiggle": {
+    "amplitude": "Amplitude · % da largura",
+    "amplitudeValue": "Amplitude em %",
+    "equivalent": "≈ {px} px em {width}",
+    "effective": "→ {px} px efetivo",
+    "preview": "Prévia · largura da tela",
+    "previewScale": "Escala ×40 · tempo ×¼",
+    "speed": "Velocidade",
+    "slow": "Lenta",
+    "medium": "Média",
+    "fast": "Rápida",
+    "clicks": "Cliques",
+    "clickWhile": "Clicar enquanto oscila",
+    "rateFromClick": "Taxa e botão definidos na aba Click",
+    "adjust": "Ajustar ›",
+    "double": "duplo",
+    "button": {
+      "left": "esquerdo",
+      "middle": "meio",
+      "right": "direito",
+      "x1": "X1",
+      "x2": "X2"
+    }
   }
 }

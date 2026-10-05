@@ -114,6 +114,42 @@ function ButtonRow({ profile, onChange }: Pick<ClickPanelProps, "profile" | "onC
   );
 }
 
+/** "Parada · Parar após": shared by every mode, since the timer applies to any run. */
+export function StopRow({ profile, onChange }: Pick<ClickPanelProps, "profile" | "onChange">): ReactElement {
+  const { t } = useTranslation();
+  const { stopAfter } = profile;
+  const setStop = (seconds: number) =>
+    onChange((p) => ({
+      ...p,
+      stopAfter: { ...p.stopAfter, seconds: Math.min(STOP_MAX_S, Math.max(STOP_MIN_S, seconds)) },
+    }));
+  return (
+    <div className="settings-row min-h-11.5">
+      <span className="row-label">{t("click.stop")}</span>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <Toggle
+            label={t("click.stopAfter")}
+            checked={stopAfter.enabled}
+            onChange={(enabled) => onChange((p) => ({ ...p, stopAfter: { ...p.stopAfter, enabled } }))}
+          />
+          <span className="text-13 text-fg-2">{t("click.stopAfter")}</span>
+        </div>
+        <Stepper
+          value={formatDuration(stopAfter.seconds)}
+          muted={!stopAfter.enabled}
+          decrementLabel={t("click.decrease")}
+          incrementLabel={t("click.increase")}
+          canDecrement={stopAfter.seconds > STOP_MIN_S}
+          canIncrement={stopAfter.seconds < STOP_MAX_S}
+          onDecrement={() => setStop(stopAfter.seconds - STOP_STEP_S)}
+          onIncrement={() => setStop(stopAfter.seconds + STOP_STEP_S)}
+        />
+      </div>
+    </div>
+  );
+}
+
 export function ClickPanel({
   profile,
   locale,
@@ -122,17 +158,11 @@ export function ClickPanel({
   onOpenPoints,
 }: ClickPanelProps): ReactElement {
   const { t } = useTranslation();
-  const { click, stopAfter } = profile;
+  const { click } = profile;
   const position = profile.modes.click.position;
   const variationText = click.variation.enabled
     ? t("click.variationSummary", { blocks: click.variation.blocksMs.join(" · ") })
     : t("click.variationOff", { interval: click.intervalMs });
-  const setStop = (seconds: number) =>
-    onChange((p) => ({
-      ...p,
-      stopAfter: { ...p.stopAfter, seconds: Math.min(STOP_MAX_S, Math.max(STOP_MIN_S, seconds)) },
-    }));
-
   return (
     <div className="flex flex-col">
       <ButtonRow profile={profile} onChange={onChange} />
@@ -185,29 +215,7 @@ export function ClickPanel({
           />
         </div>
       </div>
-      <div className="settings-row min-h-11.5">
-        <span className="row-label">{t("click.stop")}</span>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <Toggle
-              label={t("click.stopAfter")}
-              checked={stopAfter.enabled}
-              onChange={(enabled) => onChange((p) => ({ ...p, stopAfter: { ...p.stopAfter, enabled } }))}
-            />
-            <span className="text-13 text-fg-2">{t("click.stopAfter")}</span>
-          </div>
-          <Stepper
-            value={formatDuration(stopAfter.seconds)}
-            muted={!stopAfter.enabled}
-            decrementLabel={t("click.decrease")}
-            incrementLabel={t("click.increase")}
-            canDecrement={stopAfter.seconds > STOP_MIN_S}
-            canIncrement={stopAfter.seconds < STOP_MAX_S}
-            onDecrement={() => setStop(stopAfter.seconds - STOP_STEP_S)}
-            onIncrement={() => setStop(stopAfter.seconds + STOP_STEP_S)}
-          />
-        </div>
-      </div>
+      <StopRow profile={profile} onChange={onChange} />
     </div>
   );
 }
