@@ -2,9 +2,9 @@
 //! a stable code the UI translates.
 
 use crate::model::{
-    COUNTDOWN_MAX_SECONDS, DELAY_MS_MAX, INTERVAL_MS_MAX, INTERVAL_MS_MIN, LINE_SPACING_MAX,
-    LINE_SPACING_MIN, NAME_MAX_CHARS, POINTS_MAX, Profile, SCAN_AREA_MIN, STOP_AFTER_MIN_SECONDS,
-    Settings, VARIATION_BLOCKS_MAX,
+    COORD_MAX, COUNTDOWN_MAX_SECONDS, DELAY_MS_MAX, INTERVAL_MS_MAX, INTERVAL_MS_MIN,
+    LINE_SPACING_MAX, LINE_SPACING_MIN, NAME_MAX_CHARS, POINTS_MAX, Profile, SCAN_AREA_MAX,
+    SCAN_AREA_MIN, STOP_AFTER_MIN_SECONDS, Settings, VARIATION_BLOCKS_MAX,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
@@ -29,6 +29,10 @@ pub enum ValidationError {
     ScanSpeed,
     #[error("scan area must be at least {SCAN_AREA_MIN} px on each side")]
     ScanAreaTooSmall,
+    #[error("scan area must be at most {SCAN_AREA_MAX} px on each side, inside ±{COORD_MAX}")]
+    ScanAreaTooLarge,
+    #[error("point {index} is outside ±{COORD_MAX} px")]
+    PointCoordinateRange { index: usize },
     #[error("at most {POINTS_MAX} points")]
     TooManyPoints,
     #[error("point {index} delay exceeds {DELAY_MS_MAX} ms")]
@@ -53,6 +57,8 @@ impl ValidationError {
             Self::LineSpacingRange => "LINE_SPACING_RANGE",
             Self::ScanSpeed => "SCAN_SPEED",
             Self::ScanAreaTooSmall => "SCAN_AREA_TOO_SMALL",
+            Self::ScanAreaTooLarge => "SCAN_AREA_TOO_LARGE",
+            Self::PointCoordinateRange { .. } => "POINT_COORDINATE_RANGE",
             Self::TooManyPoints => "TOO_MANY_POINTS",
             Self::PointDelayRange { .. } => "POINT_DELAY_RANGE",
             Self::CountdownRange => "COUNTDOWN_RANGE",
@@ -106,6 +112,11 @@ pub fn validate_profile(p: &Profile) -> Vec<ValidationError> {
     {
         errors.push(ValidationError::ScanAreaTooSmall);
     }
+    if s.area.is_some_and(|a| {
+        a.w > SCAN_AREA_MAX || a.h > SCAN_AREA_MAX || a.x.abs() > COORD_MAX || a.y.abs() > COORD_MAX
+    }) {
+        errors.push(ValidationError::ScanAreaTooLarge);
+    }
     let points = &p.modes.click.points;
     if points.len() > POINTS_MAX {
         errors.push(ValidationError::TooManyPoints);
@@ -113,6 +124,9 @@ pub fn validate_profile(p: &Profile) -> Vec<ValidationError> {
     for (index, pt) in points.iter().enumerate() {
         if pt.delay_ms > DELAY_MS_MAX {
             errors.push(ValidationError::PointDelayRange { index });
+        }
+        if pt.x.abs() > COORD_MAX || pt.y.abs() > COORD_MAX {
+            errors.push(ValidationError::PointCoordinateRange { index });
         }
     }
     errors
@@ -233,6 +247,8 @@ mod tests {
             ValidationError::LineSpacingRange,
             ValidationError::ScanSpeed,
             ValidationError::ScanAreaTooSmall,
+            ValidationError::ScanAreaTooLarge,
+            ValidationError::PointCoordinateRange { index: 0 },
             ValidationError::TooManyPoints,
             ValidationError::PointDelayRange { index: 2 },
             ValidationError::CountdownRange,

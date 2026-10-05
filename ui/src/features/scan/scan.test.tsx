@@ -28,6 +28,12 @@ describe("scan math", () => {
     expect(pts).toEqual(["4,4", "384,4", "384,65", "4,65", "4,126", "384,126"]);
   });
 
+  it("caps the thumbnail path for very tall areas", () => {
+    const pts = thumbPolyline({ x: 0, y: 0, w: 100, h: 32_768 }, 8).split(" ");
+    expect(pts).toHaveLength(260);
+    expect(pts.at(-1)).toMatch(/,12[56](\.\d)?$/);
+  });
+
   it("clamps the spacing to 8–130", () => {
     expect(clampSpacing(4)).toBe(8);
     expect(clampSpacing(134)).toBe(130);

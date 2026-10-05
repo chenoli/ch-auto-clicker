@@ -64,11 +64,7 @@ pub fn settings_update(
     }
     let previous = state.data().settings;
     let saved = state.with_data(|data| {
-        // Profile bookkeeping is owned by the profile commands, never by a settings edit.
-        let mut next = settings;
-        next.profile_order.clone_from(&data.settings.profile_order);
-        next.active_profile_id
-            .clone_from(&data.settings.active_profile_id);
+        let next = data.settings.merge_user_edit(settings);
         data.settings = next.clone();
         next
     });

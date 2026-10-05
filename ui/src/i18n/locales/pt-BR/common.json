@@ -139,7 +139,9 @@
     "OPEN_FAILED": "Não foi possível abrir o navegador.",
     "BENCHMARK_FAILED": "Não foi possível medir o agendador.",
     "UPDATE_FAILED": "Não foi possível atualizar o aplicativo.",
-    "UPDATE_NONE": "Não há atualização disponível."
+    "UPDATE_NONE": "Não há atualização disponível.",
+    "SCAN_AREA_TOO_LARGE": "A área do scan é grande demais.",
+    "POINT_COORDINATE_RANGE": "Há pontos com coordenadas fora do alcance."
   },
   "gallery": {
     "title": "Galeria de telas",

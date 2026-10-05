@@ -79,7 +79,7 @@ fn icon_size<R: Runtime>(app: &AppHandle<R>) -> u32 {
 }
 
 fn icon<R: Runtime>(app: &AppHandle<R>, state: EngineState, pulse_on: bool) -> Image<'static> {
-    let settings = app.state::<AppState>().data().settings;
+    let settings = app.state::<AppState>().settings();
     let palette = theme::palette(theme::resolve(&settings, theme::system_theme(app)));
     let color = match state {
         EngineState::Idle | EngineState::Stopping => palette.fg_3,
@@ -355,7 +355,7 @@ fn spawn_pulse<R: Runtime>(app: AppHandle<R>) {
 /// informs; the main window shows the fix (decision D17).
 pub fn notify_hotkey_taken<R: Runtime>(app: &AppHandle<R>, combo: &Hotkey) {
     use tauri_plugin_notification::NotificationExt;
-    let locale = app.state::<AppState>().data().settings.locale;
+    let locale = app.state::<AppState>().settings().locale;
     let _ = app
         .notification()
         .builder()

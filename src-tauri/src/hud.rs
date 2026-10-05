@@ -21,6 +21,8 @@ const DEFAULT_SIZE: (f64, f64) = (460.0, 56.0);
 /// Gap to the work area's top-right corner.
 const MARGIN: i32 = 16;
 const POLL: Duration = Duration::from_millis(100);
+/// While the HUD is hidden there is nothing to track; wake up rarely.
+const POLL_HIDDEN: Duration = Duration::from_millis(500);
 
 /// Cursor over the HUD (it fades) and whether Ctrl currently makes it draggable.
 #[derive(
@@ -94,13 +96,24 @@ pub fn place<R: Runtime>(app: &AppHandle<R>, settings: &Settings) {
     let Some(hud) = window(app) else {
         return;
     };
-    let pos = match (settings.hud.x, settings.hud.y) {
-        (Some(x), Some(y)) => Some(PhysicalPosition::new(x, y)),
-        _ => default_position(app, &hud),
+    // A saved spot on a monitor that is no longer connected falls back to the default corner.
+    let saved = match (settings.hud.x, settings.hud.y) {
+        (Some(x), Some(y)) if on_a_monitor(app, x, y) => Some(PhysicalPosition::new(x, y)),
+        _ => None,
     };
+    let pos = saved.or_else(|| default_position(app, &hud));
     if let Some(pos) = pos {
         let _ = hud.set_position(pos);
     }
+}
+
+fn on_a_monitor<R: Runtime>(app: &AppHandle<R>, x: i32, y: i32) -> bool {
+    app.available_monitors().is_ok_and(|monitors| {
+        monitors.iter().any(|m| {
+            let (p, s) = (m.position(), m.size());
+            x >= p.x && y >= p.y && x < p.x + s.width as i32 && y < p.y + s.height as i32
+        })
+    })
 }
 
 fn save_position<R: Runtime>(app: &AppHandle<R>, pos: PhysicalPosition<i32>) {
@@ -124,7 +137,7 @@ pub fn sync<R: Runtime>(app: &AppHandle<R>) {
     let (Some(hud), Some(state)) = (window(app), app.try_state::<AppState>()) else {
         return;
     };
-    let settings = state.data().settings;
+    let settings = state.settings();
     let want = settings.show_hud && state.engine.shared().state().is_active();
     let visible = hud.is_visible().unwrap_or(false);
     if want && !visible {
@@ -173,13 +186,15 @@ fn spawn_poll<R: Runtime>(app: AppHandle<R>) {
                 draggable: false,
             };
             loop {
-                std::thread::sleep(POLL);
                 let Some(hud) = window(&app) else {
+                    std::thread::sleep(POLL_HIDDEN);
                     continue;
                 };
                 if !hud.is_visible().unwrap_or(false) {
+                    std::thread::sleep(POLL_HIDDEN);
                     continue;
                 }
+                std::thread::sleep(POLL);
                 let now = hover_state(&hud);
                 if now != last {
                     let _ = hud.set_ignore_cursor_events(!now.draggable);

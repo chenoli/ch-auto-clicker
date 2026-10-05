@@ -67,6 +67,16 @@ impl AppState {
                 },
             )
             .map_err(|e| e.to_string())?;
+        let mut loaded = loaded;
+        // The language picked in the installer wins once, on the first start after installing.
+        if let Some(locale) = ch_win::system::take_installer_locale()
+            && loaded.settings.locale != locale
+        {
+            loaded.settings.locale = locale;
+            if let Err(e) = store.save_settings(&loaded.settings) {
+                log::warn!("could not save the installer language: {e}");
+            }
+        }
         for issue in &loaded.issues {
             log::warn!(
                 "could not load {}: {} (moved to {:?})",
@@ -128,6 +138,11 @@ impl AppState {
 
     pub fn data(&self) -> AppData {
         lock(&self.data).clone()
+    }
+
+    /// Only the settings, for frequent readers (tray pulse, HUD) that do not need the profiles.
+    pub fn settings(&self) -> Settings {
+        lock(&self.data).settings.clone()
     }
 
     /// Applies `f` to the data under the lock; `f` decides what changed.

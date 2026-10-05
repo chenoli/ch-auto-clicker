@@ -2,7 +2,8 @@
 
 use windows::Win32::System::Power::{GetSystemPowerStatus, SYSTEM_POWER_STATUS};
 use windows::Win32::System::Registry::{
-    HKEY_LOCAL_MACHINE, RRF_RT_REG_DWORD, RRF_RT_REG_SZ, RegGetValueW,
+    HKEY, HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, RRF_RT_REG_DWORD, RRF_RT_REG_SZ,
+    RegDeleteKeyValueW, RegGetValueW,
 };
 use windows::core::{HSTRING, PCWSTR};
 
@@ -10,13 +11,17 @@ const CURRENT_VERSION: &str = r"SOFTWARE\Microsoft\Windows NT\CurrentVersion";
 const CPU_KEY: &str = r"HARDWARE\DESCRIPTION\System\CentralProcessor\0";
 
 fn read_string(key: &str, value: &str) -> Option<String> {
+    read_string_in(HKEY_LOCAL_MACHINE, key, value)
+}
+
+fn read_string_in(hive: HKEY, key: &str, value: &str) -> Option<String> {
     let (key, value) = (HSTRING::from(key), HSTRING::from(value));
     let mut buffer = [0u16; 256];
     let mut size = (buffer.len() * 2) as u32;
     // SAFETY: buffer and size describe the same writable allocation; strings are null-terminated.
     unsafe {
         RegGetValueW(
-            HKEY_LOCAL_MACHINE,
+            hive,
             PCWSTR(key.as_ptr()),
             PCWSTR(value.as_ptr()),
             RRF_RT_REG_SZ,
@@ -71,6 +76,26 @@ pub fn on_battery() -> Option<bool> {
         1 => Some(false),
         _ => None,
     }
+}
+
+/// Where the installer leaves the language chosen in its language selector.
+const INSTALLER_KEY: &str = r"Software\Chenoli\CH Clicker";
+const PENDING_LOCALE: &str = "PendingLocale";
+
+/// The language picked in the installer, read once: the value is deleted so later updates (which
+/// run the installer without the selector) never override the user's own choice.
+pub fn take_installer_locale() -> Option<ch_core::model::Locale> {
+    let raw = read_string_in(HKEY_CURRENT_USER, INSTALLER_KEY, PENDING_LOCALE)?;
+    let (key, value) = (HSTRING::from(INSTALLER_KEY), HSTRING::from(PENDING_LOCALE));
+    // SAFETY: both strings are null-terminated HSTRINGs alive for the call.
+    let _ = unsafe {
+        RegDeleteKeyValueW(
+            HKEY_CURRENT_USER,
+            PCWSTR(key.as_ptr()),
+            PCWSTR(value.as_ptr()),
+        )
+    };
+    ch_core::model::Locale::from_tag(&raw)
 }
 
 /// Windows UI language as a CH. Clicker locale (first run only; the user can change it later).

@@ -139,7 +139,9 @@
     "OPEN_FAILED": "No se pudo abrir el navegador.",
     "BENCHMARK_FAILED": "No se pudo medir el programador.",
     "UPDATE_FAILED": "No se pudo actualizar la aplicación.",
-    "UPDATE_NONE": "No hay ninguna actualización disponible."
+    "UPDATE_NONE": "No hay ninguna actualización disponible.",
+    "SCAN_AREA_TOO_LARGE": "El área del scan es demasiado grande.",
+    "POINT_COORDINATE_RANGE": "Hay puntos con coordenadas fuera de rango."
   },
   "gallery": {
     "title": "Galería de pantallas",

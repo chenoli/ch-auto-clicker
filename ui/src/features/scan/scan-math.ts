@@ -29,9 +29,15 @@ export function scanCycleSecs(area: Area, spacing: number, speed: number, loop: 
   return scanLength(area, spacing, loop) / Math.max(1, speed);
 }
 
+/** More rows than this cannot be told apart in a 130 px box; caps the work for odd areas. */
+const THUMB_ROWS_MAX = 130;
+
 /** The zigzag's vertices mapped into the thumbnail box (SVG `points`). */
 export function thumbPolyline(area: Area, spacing: number): string {
-  const rows = scanRows(area, spacing);
+  const total = scanRows(area, spacing);
+  const rows = Math.min(total, THUMB_ROWS_MAX);
+  // Past the cap, rows are sampled evenly so the drawing still spans the whole area.
+  const rowAt = (i: number) => (rows === total ? i : Math.round((i * (total - 1)) / (rows - 1)));
   const innerW = THUMB.width - 2 * THUMB.inset;
   const innerH = THUMB.height - 2 * THUMB.inset;
   const sx = (x: number) => THUMB.inset + (x / Math.max(1, area.w - 1)) * innerW;
@@ -39,7 +45,7 @@ export function thumbPolyline(area: Area, spacing: number): string {
   const right = area.w - 1;
   const points: string[] = [];
   for (let row = 0; row < rows; row++) {
-    const y = sy(row * spacing);
+    const y = sy(rowAt(row) * spacing);
     const [a, b] = row % 2 === 0 ? [0, right] : [right, 0];
     points.push(`${round(sx(a))},${round(y)}`, `${round(sx(b))},${round(y)}`);
   }

@@ -18,6 +18,10 @@ pub const DELAY_MS_MAX: u32 = 60_000;
 pub const LINE_SPACING_MIN: u32 = 8;
 pub const LINE_SPACING_MAX: u32 = 130;
 pub const SCAN_AREA_MIN: u32 = 16;
+/// Larger than any virtual desktop Windows supports; bounds imported or hand-edited areas.
+pub const SCAN_AREA_MAX: u32 = 32_768;
+/// Bound for point and area coordinates (virtual desktop pixels).
+pub const COORD_MAX: i32 = 100_000;
 pub const NAME_MAX_CHARS: usize = 48;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -255,6 +259,16 @@ pub enum Locale {
 }
 
 impl Locale {
+    /// `pt-BR`, `en-US` or `es-419` (as stored in settings and written by the installer).
+    pub fn from_tag(tag: &str) -> Option<Self> {
+        match tag.trim() {
+            "pt-BR" => Some(Self::PtBr),
+            "en-US" => Some(Self::EnUs),
+            "es-419" => Some(Self::Es419),
+            _ => None,
+        }
+    }
+
     /// The UI language for a Windows primary language id (`PRIMARYLANGID` of the UI language):
     /// Portuguese → pt-BR, Spanish → es-419, anything else → en-US.
     pub fn from_primary_language(primary: u16) -> Self {
@@ -354,6 +368,24 @@ pub struct Settings {
 }
 
 impl Settings {
+    /// Applies a settings edit from the UI. The UI always sends the whole object, possibly built
+    /// from a stale copy, so fields owned by Rust keep their current values: profile bookkeeping,
+    /// shortcuts (changed only through the hotkey commands), window and HUD positions, the
+    /// anti-cheat acknowledgement (never revoked) and the HUD hint counter (never decreases).
+    pub fn merge_user_edit(&self, incoming: Self) -> Self {
+        Self {
+            active_profile_id: self.active_profile_id.clone(),
+            profile_order: self.profile_order.clone(),
+            hotkeys: self.hotkeys.clone(),
+            hud: self.hud,
+            window: self.window,
+            anti_cheat_acknowledged: self.anti_cheat_acknowledged
+                || incoming.anti_cheat_acknowledged,
+            hud_hints_shown: self.hud_hints_shown.max(incoming.hud_hints_shown),
+            ..incoming
+        }
+    }
+
     pub fn new_default(locale: Locale) -> Self {
         Self {
             schema_version: SETTINGS_SCHEMA_VERSION,
@@ -414,6 +446,42 @@ mod tests {
         );
         assert_eq!(serde_json::to_value(Locale::PtBr).expect("json"), "pt-BR");
         assert_eq!(serde_json::to_value(Locale::Es419).expect("json"), "es-419");
+    }
+
+    #[test]
+    fn user_edits_never_overwrite_fields_owned_by_rust() {
+        let mut current = Settings::new_default(Locale::PtBr);
+        current.active_profile_id = Some("a".into());
+        current.profile_order = vec!["a".into(), "b".into()];
+        current.hud = WindowPosition {
+            x: Some(10),
+            y: Some(20),
+        };
+        current.anti_cheat_acknowledged = true;
+        current.hud_hints_shown = 2;
+        current.hotkeys.start_stop = Some(Hotkey::new(&[], "F9"));
+        let mut stale = Settings::new_default(Locale::PtBr);
+        stale.countdown_sec = 7;
+        stale.locale = Locale::EnUs;
+        let merged = current.merge_user_edit(stale);
+        assert_eq!(
+            (merged.countdown_sec, merged.locale),
+            (7, Locale::EnUs),
+            "the edit applies"
+        );
+        assert_eq!(merged.active_profile_id.as_deref(), Some("a"));
+        assert_eq!(merged.profile_order, ["a", "b"]);
+        assert_eq!(merged.hud, current.hud);
+        assert!(merged.anti_cheat_acknowledged);
+        assert_eq!(merged.hud_hints_shown, 2);
+        assert_eq!(merged.hotkeys, current.hotkeys);
+        let mut later = merged.clone();
+        later.hud_hints_shown = 3;
+        assert_eq!(merged.merge_user_edit(later).hud_hints_shown, 3);
+        assert_eq!(Locale::from_tag(" es-419 "), Some(Locale::Es419));
+        assert_eq!(Locale::from_tag("pt-BR"), Some(Locale::PtBr));
+        assert_eq!(Locale::from_tag("en-US"), Some(Locale::EnUs));
+        assert_eq!(Locale::from_tag("fr-FR"), None);
         assert_eq!(Locale::from_primary_language(0x16), Locale::PtBr);
         assert_eq!(Locale::from_primary_language(0x0A), Locale::Es419);
         assert_eq!(Locale::from_primary_language(0x09), Locale::EnUs);

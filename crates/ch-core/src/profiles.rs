@@ -33,9 +33,13 @@ impl ProfileError {
     }
 }
 
-/// Trimmed name with inner whitespace collapsed, 1–48 characters.
+/// Trimmed name with inner whitespace collapsed and control characters dropped, 1–48 characters.
 pub fn normalize_name(raw: &str) -> Result<String, ProfileError> {
-    let name = raw.split_whitespace().collect::<Vec<_>>().join(" ");
+    let printable: String = raw
+        .chars()
+        .map(|c| if c.is_control() { ' ' } else { c })
+        .collect();
+    let name = printable.split_whitespace().collect::<Vec<_>>().join(" ");
     if name.is_empty() {
         return Err(ProfileError::NameEmpty);
     }
@@ -260,6 +264,7 @@ mod tests {
             Ok("Coleta rápida".into())
         );
         assert_eq!(normalize_name("   "), Err(ProfileError::NameEmpty));
+        assert_eq!(normalize_name("A\tB\u{7}C\n"), Ok("A B C".into()));
         assert_eq!(
             normalize_name(&"á".repeat(48)).map(|n| n.chars().count()),
             Ok(48)

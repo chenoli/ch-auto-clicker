@@ -10,7 +10,7 @@ use serde_json::{Value, json};
 
 use crate::hotkeys::{HotkeyTarget, find_conflict};
 use crate::model::{Hotkey, HotkeyBindings, Profile};
-use crate::profiles::unique_name;
+use crate::profiles::{normalize_name, unique_name};
 use crate::schema::{SchemaError, load_profile};
 
 pub const FORMAT: &str = "chprofile";
@@ -139,6 +139,10 @@ pub fn import(
     profile.created_at = now.to_owned();
     profile.updated_at = now.to_owned();
 
+    // Files come from anywhere: tabs and control characters would break menus and lists.
+    if let Ok(clean) = normalize_name(&profile.name) {
+        profile.name = clean;
+    }
     let name = unique_name(&profile.name, existing, None);
     if name != profile.name {
         notes.push(ImportNote::Renamed {
@@ -220,6 +224,31 @@ mod tests {
         )
         .expect("import");
         assert_eq!(kept.profile.hotkey, free.hotkey);
+    }
+
+    #[test]
+    fn imported_names_lose_control_characters_and_huge_areas_are_refused() {
+        let mut p = sample();
+        p.name = "Farm\tnight\u{1b}".into();
+        let imported =
+            import(&export(&p, "x"), "n", NOW, &HotkeyBindings::default(), &[]).expect("import");
+        assert_eq!(imported.profile.name, "Farm night");
+        let mut huge = sample();
+        huge.modes.scan.area = Some(crate::model::Area {
+            x: 0,
+            y: 0,
+            w: u32::MAX,
+            h: u32::MAX,
+        });
+        let err = import(
+            &export(&huge, "x"),
+            "n",
+            NOW,
+            &HotkeyBindings::default(),
+            &[],
+        )
+        .expect_err("huge");
+        assert_eq!(err.code(), "IMPORT_INVALID");
     }
 
     #[test]

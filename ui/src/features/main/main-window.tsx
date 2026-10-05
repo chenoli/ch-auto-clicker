@@ -5,7 +5,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { commands, events, inTauri } from "../../ipc";
 
 import { selectActiveProfile, setCommandError, useAppStore } from "../../store/app-store";
-import { connectStore } from "../../store/connect";
+import { connectStoreEffect } from "../../store/connect";
 import { primaryAction } from "../../store/engine-actions";
 import { editProfile } from "../../store/profile-sync";
 
@@ -62,13 +62,7 @@ export function MainWindow(): ReactElement | null {
     return () => void unlisten.then((f) => f());
   }, []);
 
-  useEffect(() => {
-    let dispose: (() => void) | undefined;
-    connectStore()
-      .then((d) => (dispose = d))
-      .catch((e: unknown) => setConnectError(String(e)));
-    return () => dispose?.();
-  }, []);
+  useEffect(() => connectStoreEffect((e) => setConnectError(String(e))), []);
 
   const onEdit = useCallback(
     (mutate: (p: Profile) => Profile) => {

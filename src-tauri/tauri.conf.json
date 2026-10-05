@@ -48,7 +48,8 @@
       "nsis": {
         "installMode": "currentUser",
         "installerHooks": "./windows/hooks.nsh",
-        "languages": ["PortugueseBR", "English", "Spanish"]
+        "languages": ["PortugueseBR", "English", "Spanish"],
+        "displayLanguageSelector": true
       },
       "wix": {
         "language": ["pt-BR", "en-US"]

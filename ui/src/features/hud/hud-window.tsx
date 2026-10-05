@@ -5,7 +5,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { commands, events, inTauri } from "../../ipc";
 
 import { selectActiveProfile, useAppStore } from "../../store/app-store";
-import { connectStore } from "../../store/connect";
+import { connectStoreEffect } from "../../store/connect";
 
 import { hotkeyLabel } from "../hotkeys/format-hotkey";
 import { HudView } from "./hud-view";
@@ -24,11 +24,10 @@ export function HudWindow(): ReactElement | null {
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    let dispose: (() => void) | undefined;
-    void connectStore().then((d) => (dispose = d));
+    const disconnect = connectStoreEffect();
     const unlisten = inTauri ? events.hudHover.listen((e) => setHover(e.payload)) : null;
     return () => {
-      dispose?.();
+      disconnect();
       void unlisten?.then((f) => f());
     };
   }, []);

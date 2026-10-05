@@ -139,7 +139,9 @@
     "OPEN_FAILED": "Could not open the browser.",
     "BENCHMARK_FAILED": "Could not measure the scheduler.",
     "UPDATE_FAILED": "Could not update the app.",
-    "UPDATE_NONE": "No update is available."
+    "UPDATE_NONE": "No update is available.",
+    "SCAN_AREA_TOO_LARGE": "The scan area is too large.",
+    "POINT_COORDINATE_RANGE": "Some points have out-of-range coordinates."
   },
   "gallery": {
     "title": "Screen gallery",

@@ -27,9 +27,36 @@ export async function connectStore(): Promise<() => void> {
     events.hotkeyStatusChanged.listen((e) => applyHotkeys(e.payload)),
     events.hotkeyActionFailed.listen((e) => setCommandError(e.payload.code)),
   ]);
-  const bootstrap = await commands.appBootstrap();
-  rememberServerVersions(bootstrap.profiles);
-  applyProfilesChanged({ profiles: bootstrap.profiles, activeProfileId: bootstrap.settings.activeProfileId });
-  hydrate(bootstrap);
-  return () => unlisten.forEach((fn) => fn());
+  const dispose = () => unlisten.forEach((fn) => fn());
+  try {
+    const bootstrap = await commands.appBootstrap();
+    rememberServerVersions(bootstrap.profiles);
+    applyProfilesChanged({ profiles: bootstrap.profiles, activeProfileId: bootstrap.settings.activeProfileId });
+    hydrate(bootstrap);
+  } catch (e) {
+    dispose();
+    throw e;
+  }
+  return dispose;
+}
+
+/**
+ * `connectStore` for a component effect: the returned cleanup also works when the component
+ * unmounts before the connection finishes (React StrictMode does exactly that in development).
+ */
+export function connectStoreEffect(onError?: (error: unknown) => void): () => void {
+  let disposed = false;
+  let dispose: (() => void) | undefined;
+  connectStore()
+    .then((d) => {
+      if (disposed) d();
+      else dispose = d;
+    })
+    .catch((e: unknown) => {
+      if (!disposed) onError?.(e);
+    });
+  return () => {
+    disposed = true;
+    dispose?.();
+  };
 }

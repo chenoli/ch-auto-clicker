@@ -43,7 +43,7 @@ vi.mock("../ipc", () => {
 
 const { IDLE_TICK, applyStatus, selectActiveProfile, useAppStore } = await import("./app-store");
 const { applyProfilesChanged, editProfile, hasPendingEdits, resetProfileSync } = await import("./profile-sync");
-const { connectStore } = await import("./connect");
+const { connectStore, connectStoreEffect } = await import("./connect");
 const { primaryAction } = await import("./engine-actions");
 
 function profile(id: string, updatedAt = "v1"): Profile {
@@ -142,6 +142,38 @@ describe("profile sync", () => {
 });
 
 describe("connectStore", () => {
+  it("removes its listeners when the bootstrap fails", async () => {
+    ipc.commands.appBootstrap.mockRejectedValueOnce(new Error("down"));
+    await expect(connectStore()).rejects.toThrow("down");
+    expect(Object.keys(ipc.listeners)).toHaveLength(0);
+  });
+
+  it("cleans up even when the component unmounts before connecting", async () => {
+    let resolve: (b: Bootstrap) => void = () => {};
+    ipc.commands.appBootstrap.mockReturnValueOnce(new Promise<Bootstrap>((r) => (resolve = r)));
+    const onError = vi.fn();
+    const cleanup = connectStoreEffect(onError);
+    cleanup();
+    resolve({
+      version: "0.1.0",
+      dpiAwareness: "PerMonitorV2",
+      settings: settings("b"),
+      profiles: [profile("b")],
+      engine: IDLE_TICK,
+      capabilities: { minReliableIntervalMs: 1 },
+      hotkeys: [],
+    } as unknown as Bootstrap);
+    await vi.waitFor(() => expect(Object.keys(ipc.listeners)).toHaveLength(0));
+    ipc.commands.appBootstrap.mockRejectedValueOnce(new Error("late"));
+    const cleanupFailed = connectStoreEffect(onError);
+    cleanupFailed();
+    await new Promise((r) => setTimeout(r, 0));
+    expect(onError).not.toHaveBeenCalled();
+    ipc.commands.appBootstrap.mockRejectedValueOnce(new Error("now"));
+    connectStoreEffect(onError);
+    await vi.waitFor(() => expect(onError).toHaveBeenCalledOnce());
+  });
+
   it("hydrates from the bootstrap and follows events", async () => {
     const boot = {
       version: "0.1.0",
