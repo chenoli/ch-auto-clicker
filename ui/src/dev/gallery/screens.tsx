@@ -1,4 +1,10 @@
-import { MainIdleScreen, MainStatesScreen, VariationScreen } from "./main-window-screens";
+import {
+  HotkeysScreenDemo,
+  HotkeysStatesDemo,
+  MainIdleScreen,
+  MainStatesScreen,
+  VariationScreen,
+} from "./main-window-screens";
 import { SCREEN_META } from "./manifest";
 import { TokensScreen } from "./tokens-screen";
 
@@ -13,6 +19,8 @@ const RENDERERS: Record<string, () => ReactNode> = {
   "main-idle": () => <MainIdleScreen />,
   "main-states": () => <MainStatesScreen />,
   variation: () => <VariationScreen />,
+  hotkeys: () => <HotkeysScreenDemo />,
+  "hotkeys-states": () => <HotkeysStatesDemo />,
   tokens: () => <TokensScreen />,
 };
 

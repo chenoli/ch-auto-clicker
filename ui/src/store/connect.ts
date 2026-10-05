@@ -1,6 +1,14 @@
 import { commands, events, inTauri } from "../ipc";
 
-import { applyCapabilities, applySettings, applyStatus, applyTick, hydrate } from "./app-store";
+import {
+  applyCapabilities,
+  applyHotkeys,
+  applySettings,
+  applyStatus,
+  applyTick,
+  hydrate,
+  setCommandError,
+} from "./app-store";
 import { applyProfilesChanged, rememberServerVersions } from "./profile-sync";
 
 /** Loads the initial state and keeps the store in sync with Rust. Returns a disposer. */
@@ -12,6 +20,8 @@ export async function connectStore(): Promise<() => void> {
     events.settingsChanged.listen((e) => applySettings(e.payload)),
     events.profilesChanged.listen((e) => applyProfilesChanged(e.payload)),
     events.capabilities.listen((e) => applyCapabilities(e.payload)),
+    events.hotkeyStatusChanged.listen((e) => applyHotkeys(e.payload)),
+    events.hotkeyActionFailed.listen((e) => setCommandError(e.payload.code)),
   ]);
   const bootstrap = await commands.appBootstrap();
   rememberServerVersions(bootstrap.profiles);

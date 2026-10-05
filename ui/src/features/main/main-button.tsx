@@ -31,6 +31,10 @@ interface MainButtonProps {
   countdownTotalMs?: number;
   /** Kicker for the error state, e.g. "Entrada bloqueada". */
   errorKicker?: string;
+  /** Label for the error state; defaults to "Iniciar" ("Revisar" for shortcut conflicts). */
+  errorLabel?: string | undefined;
+  /** Struck-through dashed key: the start shortcut could not be registered. */
+  brokenShortcut?: boolean;
   onPress: () => void;
 }
 
@@ -40,6 +44,8 @@ export function MainButton({
   countdownRemainingMs,
   countdownTotalMs = 0,
   errorKicker = "",
+  errorLabel,
+  brokenShortcut = false,
   onPress,
 }: MainButtonProps): ReactElement {
   const { t } = useTranslation();
@@ -53,7 +59,7 @@ export function MainButton({
     },
     running: { kicker: t("button.running.kicker"), label: t("button.running.label"), hint: t("button.stops") },
     paused: { kicker: t("button.paused.kicker"), label: t("button.paused.label"), hint: t("button.resumes") },
-    error: { kicker: errorKicker, label: t("button.error.label"), hint: t("button.shortcut") },
+    error: { kicker: errorKicker, label: errorLabel ?? t("button.error.label"), hint: t("button.shortcut") },
   };
   const { kicker, label, hint } = copy[state];
   const progress =
@@ -68,7 +74,9 @@ export function MainButton({
         </span>
         <span className="flex items-center gap-2.5">
           <span className="main-button__hint">{hint}</span>
-          <Kbd size="large">{shortcut}</Kbd>
+          <Kbd size="large" broken={brokenShortcut}>
+            {shortcut}
+          </Kbd>
         </span>
         <span className="main-button__progress" style={{ width: `${progress}%` }} />
       </button>

@@ -116,6 +116,28 @@ describe("MainWindowView", () => {
     expect(screen.getByText("—")).toBeInTheDocument();
   });
 
+  it("shows the shortcut-conflict state while idle and offers both ways out", () => {
+    const onReviewHotkeys = vi.fn();
+    const onStartAnyway = vi.fn();
+    const onOpenSettings = vi.fn();
+    setup({ hotkeyError: "F6", onReviewHotkeys, onStartAnyway, onOpenSettings });
+    const button = screen.getByRole("button", { name: /Atalho em conflito.*Revisar/ });
+    expect(button).toHaveAttribute("data-state", "error");
+    expect(screen.getByText("F6", { selector: "kbd" })).toHaveAttribute("data-broken", "true");
+    expect(screen.getByText("F6 indisponível")).toBeInTheDocument();
+    fireEvent.click(button);
+    fireEvent.click(screen.getByRole("button", { name: "Iniciar sem atalho" }));
+    fireEvent.click(screen.getByRole("button", { name: "Configurações" }));
+    expect(onReviewHotkeys).toHaveBeenCalledOnce();
+    expect(onStartAnyway).toHaveBeenCalledOnce();
+    expect(onOpenSettings).toHaveBeenCalledOnce();
+  });
+
+  it("ignores a broken shortcut while running", () => {
+    setup({ hotkeyError: "F6", engine: tick({ state: "running" }) });
+    expect(screen.getByRole("button", { name: /Em execução/ })).toHaveAttribute("data-state", "running");
+  });
+
   it("reports the height it needs", () => {
     const onDesiredHeight = vi.fn();
     setup({ onDesiredHeight });

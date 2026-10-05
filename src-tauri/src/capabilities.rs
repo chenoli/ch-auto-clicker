@@ -105,10 +105,11 @@ pub fn save_cache(path: &Path, capabilities: &Capabilities) -> std::io::Result<(
     std::fs::rename(tmp, path)
 }
 
+/// Whole milliseconds: integers survive the JSON round trip exactly, fractions may not.
 pub fn now_ms() -> f64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
-        .map_or(0.0, |d| d.as_secs_f64() * 1000.0)
+        .map_or(0.0, |d| d.as_millis() as f64)
 }
 
 pub fn fingerprint() -> String {

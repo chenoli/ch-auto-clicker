@@ -15,6 +15,10 @@ const mocks = vi.hoisted(() => ({
     engineStart: vi.fn(),
     windowOpenVariation: vi.fn(),
     windowSetContentHeight: vi.fn(),
+    hotkeyResetDefaults: vi.fn(),
+    hotkeyRetry: vi.fn(),
+    hotkeyBeginRecord: vi.fn(),
+    hotkeyCancelRecord: vi.fn(),
   },
 }));
 
@@ -31,6 +35,9 @@ vi.mock("../ipc", () => {
       settingsChanged: event,
       profilesChanged: event,
       capabilities: event,
+      hotkeyStatusChanged: event,
+      hotkeyActionFailed: event,
+      hotkeyRecording: event,
     },
   };
 });
@@ -47,11 +54,18 @@ function bootstrap(profile: Profile = prototypeProfile()) {
       activeProfileId: profile.id,
       locale: "pt-BR",
       countdownSec: 3,
-      hotkeys: { startStop: { mods: [], key: "F6" } },
+      hotkeys: {
+        startStop: { mods: [], key: "F6" },
+        pauseResume: { mods: [], key: "F7" },
+        capturePoint: null,
+        nextProfile: null,
+        emergencyStop: { mods: ["ctrl", "alt"], key: "Escape" },
+      },
     },
     profiles: [profile],
     engine: tick(),
     capabilities: { minReliableIntervalMs: 2 },
+    hotkeys: [],
   };
 }
 
@@ -79,6 +93,43 @@ describe("MainWindow", () => {
     fireEvent.click(screen.getByRole("button", { name: "Fechar" }));
     expect(mocks.window.minimize).toHaveBeenCalledOnce();
     expect(mocks.window.close).toHaveBeenCalledOnce();
+  });
+
+  it("navigates to settings and shortcuts and back", async () => {
+    render(<MainWindow />);
+    fireEvent.click(await screen.findByRole("button", { name: "Configurações" }));
+    expect(mocks.commands.windowSetContentHeight).toHaveBeenLastCalledWith(640);
+    fireEvent.click(screen.getByRole("button", { name: /Atalhos ›/ }));
+    expect(screen.getByRole("heading", { name: "Atalhos" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Pausar \/ Retomar/ }));
+    expect(mocks.commands.hotkeyBeginRecord).toHaveBeenCalledOnce();
+    fireEvent.click(screen.getByRole("button", { name: "Restaurar padrão" }));
+    expect(mocks.commands.hotkeyResetDefaults).toHaveBeenCalledOnce();
+    fireEvent.click(screen.getByRole("button", { name: "Voltar" }));
+    expect(mocks.commands.hotkeyCancelRecord).toHaveBeenCalledOnce();
+    fireEvent.click(screen.getByRole("button", { name: "Voltar" }));
+    fireEvent.click(screen.getByRole("button", { name: "Minimizar" }));
+    fireEvent.click(screen.getByRole("button", { name: "Fechar" }));
+    expect(await screen.findByText("Coleta rápida")).toBeInTheDocument();
+  });
+
+  it("shows the conflict state when F6 could not be registered", async () => {
+    mocks.commands.appBootstrap.mockResolvedValue({
+      ...bootstrap(),
+      hotkeys: [
+        {
+          target: { kind: "action", id: "startStop" },
+          combo: { mods: [], key: "F6" },
+          ok: false,
+          errorCode: "HOTKEY_TAKEN",
+        },
+      ],
+    });
+    render(<MainWindow />);
+    fireEvent.click(await screen.findByRole("button", { name: /Revisar/ }));
+    expect(screen.getByRole("heading", { name: "Atalhos" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Tentar de novo" }));
+    expect(mocks.commands.hotkeyRetry).toHaveBeenCalledOnce();
   });
 
   it("saves edits through the profile sync", async () => {

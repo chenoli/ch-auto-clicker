@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-import type { Bootstrap, Capabilities, EngineStatus, EngineTick, Profile, Settings } from "../ipc";
+import type { Bootstrap, Capabilities, EngineStatus, EngineTick, HotkeyStatus, Profile, Settings } from "../ipc";
 
 export const IDLE_TICK: EngineTick = {
   state: "idle",
@@ -24,6 +24,8 @@ export interface AppState {
   /** Length of the current countdown, for the progress bar on the main button. */
   countdownTotalMs: number;
   capabilities: Capabilities | null;
+  /** Registration result of every global shortcut. */
+  hotkeys: HotkeyStatus[];
   /** Error code from the last failed command, shown until the next action. */
   commandError: string | null;
 }
@@ -37,6 +39,7 @@ export const useAppStore = create<AppState>(() => ({
   lastStatus: null,
   countdownTotalMs: 0,
   capabilities: null,
+  hotkeys: [],
   commandError: null,
 }));
 
@@ -48,7 +51,12 @@ export function hydrate(b: Bootstrap): void {
     profiles: b.profiles,
     engine: b.engine,
     capabilities: b.capabilities,
+    hotkeys: b.hotkeys,
   });
+}
+
+export function applyHotkeys(hotkeys: HotkeyStatus[]): void {
+  useAppStore.setState({ hotkeys });
 }
 
 export function applyTick(tick: EngineTick): void {

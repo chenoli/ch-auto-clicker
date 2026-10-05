@@ -25,6 +25,24 @@ export const commands = {
 	engineCapabilities: () => __TAURI_INVOKE<Capabilities>("engine_capabilities"),
 	/**  Re-runs the timing benchmark (~3 s) and returns the new capabilities. */
 	engineRunBenchmark: () => typedError<Capabilities, string>(__TAURI_INVOKE("engine_run_benchmark")),
+	hotkeyStatus: () => __TAURI_INVOKE<HotkeyStatus[]>("hotkey_status"),
+	/**  Suspends every shortcut and starts capturing keys for the capture field. */
+	hotkeyBeginRecord: () => __TAURI_INVOKE<void>("hotkey_begin_record"),
+	/**  Leaves recording without changes and restores every shortcut. */
+	hotkeyCancelRecord: () => __TAURI_INVOKE<HotkeyStatus[]>("hotkey_cancel_record"),
+	/**
+	 *  Assigns `combo` (or clears it with `None`) to `target`. With `replace`, the binding that held
+	 *  the combo loses it and shows a dash, as in the "Substituir" action of Tela 06.
+	 */
+	hotkeySet: (target: HotkeyTarget, combo: {
+	mods: Modifier[],
+	/**  Canonical virtual-key name (`F6`, `Escape`, `Right`, `P`) or `MouseMiddle`/`MouseX1`/`MouseX2`. */
+	key: string,
+} | null, replace: boolean) => typedError<HotkeySetResult, AppError>(__TAURI_INVOKE("hotkey_set", { target, combo, replace })),
+	/**  Restores the handoff's default shortcuts (F6, F7, Ctrl Shift P, Ctrl Alt Right, Ctrl Alt Esc). */
+	hotkeyResetDefaults: () => __TAURI_INVOKE<HotkeyStatus[]>("hotkey_reset_defaults"),
+	/**  Tries every registration again (after the user freed a combo in another app). */
+	hotkeyRetry: () => __TAURI_INVOKE<HotkeyStatus[]>("hotkey_retry"),
 	/**  The main window asks for the height its content needs; Rust animates to it (640–900 px). */
 	windowSetContentHeight: (height: number | null) => typedError<number | null, AppError>(__TAURI_INVOKE("window_set_content_height", { height })),
 	/**
@@ -43,6 +61,9 @@ export const events = {
 	engineJitter: makeEvent<EngineJitter>("engine-jitter"),
 	engineStatus: makeEvent<EngineStatus>("engine-status"),
 	engineTick: makeEvent<EngineTick>("engine-tick"),
+	hotkeyActionFailed: makeEvent<HotkeyActionFailed>("hotkey-action-failed"),
+	hotkeyRecording: makeEvent<HotkeyRecording>("hotkey-recording"),
+	hotkeyStatusChanged: makeEvent<HotkeyStatusChanged>("hotkey-status-changed"),
 	profilesChanged: makeEvent<ProfilesChanged>("profiles-changed"),
 	settingsChanged: makeEvent<SettingsChanged>("settings-changed"),
 };
@@ -75,6 +96,7 @@ export type Bootstrap = {
 	profiles: Profile[],
 	engine: EngineTick,
 	capabilities: Capabilities,
+	hotkeys: HotkeyStatus[],
 };
 
 export type Capabilities = {
@@ -153,6 +175,13 @@ export type Hotkey = {
 	key: string,
 };
 
+export type HotkeyAction = "startStop" | "pauseResume" | "capturePoint" | "nextProfile" | "emergencyStop";
+
+/**  A shortcut-triggered action failed (e.g. starting a mode not available yet). */
+export type HotkeyActionFailed = {
+	code: string,
+};
+
 export type HotkeyBindings = {
 	startStop: Hotkey | null,
 	pauseResume: Hotkey | null,
@@ -161,6 +190,31 @@ export type HotkeyBindings = {
 	/**  Never optional: the emergency stop cannot be disabled (ARCHITECTURE §10.1). */
 	emergencyStop: Hotkey,
 };
+
+/**  Live feedback while the capture field records a combo. */
+export type HotkeyRecording = {
+	mods: Modifier[],
+	combo: Hotkey | null,
+	cancelled: boolean,
+};
+
+export type HotkeySetResult = { result: "saved"; statuses: HotkeyStatus[] } | 
+/**  Another binding already uses the combo; nothing changed (call again with `replace`). */
+{ result: "conflict"; with: HotkeyTarget };
+
+export type HotkeyStatus = {
+	target: HotkeyTarget,
+	combo: Hotkey,
+	ok: boolean,
+	/**  `HOTKEY_TAKEN` when another app holds the combo. */
+	errorCode: string | null,
+};
+
+/**  Registration result of every binding. */
+export type HotkeyStatusChanged = HotkeyStatus[];
+
+/**  What a shortcut triggers: an app action or a profile's own shortcut (decision D4). */
+export type HotkeyTarget = { kind: "action"; id: HotkeyAction } | { kind: "profile"; id: string };
 
 export type InputBackendKind = "sendinput" | "interception";
 

@@ -1,3 +1,4 @@
+import { HotkeysScreen } from "../../features/hotkeys/hotkeys-screen";
 import { MainWindowView } from "../../features/main/main-window-view";
 import { VariationEditorView } from "../../features/variation/variation-editor-view";
 
@@ -75,5 +76,53 @@ export function VariationScreen(): ReactElement {
         />
       )}
     </WindowFrame>
+  );
+}
+
+const DEFAULT_BINDINGS = {
+  startStop: { mods: [], key: "F6" },
+  pauseResume: { mods: [], key: "F7" },
+  capturePoint: { mods: ["ctrl", "shift"], key: "P" },
+  nextProfile: { mods: ["ctrl", "alt"], key: "Right" },
+  emergencyStop: { mods: ["ctrl", "alt"], key: "Escape" },
+} as const;
+
+function Hotkeys(props: Partial<Parameters<typeof HotkeysScreen>[0]>) {
+  return (
+    <WindowFrame width={420} height={640}>
+      {() => (
+        <HotkeysScreen
+          bindings={structuredClone(DEFAULT_BINDINGS) as never}
+          statuses={[]}
+          recording={null}
+          heldMods={[]}
+          conflict={null}
+          onRecord={noop}
+          onReplace={noop}
+          onKeep={noop}
+          onReset={noop}
+          onRetry={noop}
+          onBack={noop}
+          onMinimize={noop}
+          onClose={noop}
+          {...props}
+        />
+      )}
+    </WindowFrame>
+  );
+}
+
+/** Tela 06 with the default shortcuts. */
+export function HotkeysScreenDemo(): ReactElement {
+  return <Hotkeys />;
+}
+
+/** Tela 06 recording one field and showing a conflict on another. */
+export function HotkeysStatesDemo(): ReactElement {
+  return (
+    <Hotkeys
+      recording="startStop"
+      conflict={{ action: "pauseResume", combo: { mods: [], key: "F6" }, withName: "Iniciar / Parar" }}
+    />
   );
 }

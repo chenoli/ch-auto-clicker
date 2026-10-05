@@ -11,6 +11,8 @@ export const SCREEN_META: ScreenMeta[] = [
   { id: "main-idle", title: "01.A — Janela principal · Click", width: 420, height: 900, reference: "janela" },
   { id: "main-states", title: "10 — Estados do botão principal", width: 1808, height: 900, reference: "estados" },
   { id: "variation", title: "02.B — Variação de intervalo", width: 560, height: 640, reference: "variacao" },
+  { id: "hotkeys", title: "06 — Atalhos", width: 420, height: 640, reference: "atalhos" },
+  { id: "hotkeys-states", title: "06 — Atalhos · gravando e conflito", width: 420, height: 640 },
   { id: "tokens", title: "11 — Tokens", width: 880, height: 620 },
 ];
 

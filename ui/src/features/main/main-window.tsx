@@ -10,13 +10,20 @@ import { primaryAction } from "../../store/engine-actions";
 import { editProfile } from "../../store/profile-sync";
 
 import { hotkeyLabel } from "../hotkeys/format-hotkey";
+import { HotkeysScreen } from "../hotkeys/hotkeys-screen";
+import { useHotkeyRecording } from "../hotkeys/use-hotkey-recording";
+import { SettingsScreen } from "../settings/settings-screen";
 import { ConnectFailure } from "../shell/connect-failure";
 import { MainWindowView } from "./main-window-view";
 
 import type { Profile } from "../../ipc";
 import type { ReactElement } from "react";
 
-/** The main window (Tela 01), connected to the Rust state. */
+type Screen = "main" | "settings" | "hotkeys";
+
+const MIN_HEIGHT = 640;
+
+/** The main window (Tela 01) and its sub-screens, connected to the Rust state. */
 export function MainWindow(): ReactElement | null {
   const ready = useAppStore((s) => s.ready);
   const profile = useAppStore(selectActiveProfile);
@@ -25,7 +32,10 @@ export function MainWindow(): ReactElement | null {
   const countdownTotalMs = useAppStore((s) => s.countdownTotalMs);
   const lastStatus = useAppStore((s) => s.lastStatus);
   const commandError = useAppStore((s) => s.commandError);
-
+  const hotkeys = useAppStore((s) => s.hotkeys);
+  const [screen, setScreen] = useState<Screen>("main");
+  const recordingApi = useHotkeyRecording();
+  const { cancel: cancelRecording } = recordingApi;
   const [connectError, setConnectError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -47,9 +57,48 @@ export function MainWindow(): ReactElement | null {
     if (inTauri) void commands.windowSetContentHeight(px);
   }, []);
 
+  const go = useCallback(
+    (next: Screen) => {
+      cancelRecording();
+      setScreen(next);
+      // Sub-screens scroll inside the minimum height; the main screen re-measures on its own.
+      if (next !== "main") onDesiredHeight(MIN_HEIGHT);
+    },
+    [cancelRecording, onDesiredHeight],
+  );
+
   if (connectError) return <ConnectFailure detail={connectError} />;
   if (!ready || !profile || !settings) return null;
 
+  const windowActions = {
+    onMinimize: () => void getCurrentWindow().minimize(),
+    onClose: () => void getCurrentWindow().close(),
+  };
+
+  if (screen === "settings") {
+    return <SettingsScreen onOpenHotkeys={() => go("hotkeys")} onBack={() => go("main")} {...windowActions} />;
+  }
+
+  if (screen === "hotkeys") {
+    return (
+      <HotkeysScreen
+        bindings={settings.hotkeys}
+        statuses={hotkeys}
+        recording={recordingApi.recording}
+        heldMods={recordingApi.heldMods}
+        conflict={recordingApi.conflict}
+        onRecord={recordingApi.record}
+        onReplace={recordingApi.replace}
+        onKeep={recordingApi.keep}
+        onReset={() => void commands.hotkeyResetDefaults()}
+        onRetry={() => void commands.hotkeyRetry()}
+        onBack={() => go("settings")}
+        {...windowActions}
+      />
+    );
+  }
+
+  const startStatus = hotkeys.find((h) => h.target.kind === "action" && h.target.id === "startStop");
   return (
     <MainWindowView
       profile={profile}
@@ -59,15 +108,18 @@ export function MainWindow(): ReactElement | null {
       shortcut={hotkeyLabel(settings.hotkeys.startStop)}
       errorCode={engine.state === "error" ? (lastStatus?.errorCode ?? null) : null}
       commandError={commandError}
+      hotkeyError={startStatus && !startStatus.ok ? hotkeyLabel(startStatus.combo) : null}
       onEdit={onEdit}
       onPrimary={() => void primaryAction(engine.state)}
+      onReviewHotkeys={() => go("hotkeys")}
+      onStartAnyway={() => void primaryAction("idle")}
+      onOpenSettings={() => go("settings")}
       onOpenVariation={() => {
         setCommandError(null);
         void commands.windowOpenVariation();
       }}
-      onMinimize={() => void getCurrentWindow().minimize()}
-      onClose={() => void getCurrentWindow().close()}
       onDesiredHeight={onDesiredHeight}
+      {...windowActions}
     />
   );
 }

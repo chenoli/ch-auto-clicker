@@ -5,6 +5,7 @@
 pub mod easing;
 pub mod engine;
 pub mod geometry;
+pub mod hotkeys;
 pub mod input;
 pub mod model;
 pub mod schema;

@@ -38,7 +38,12 @@
     },
     "error": {
       "label": "Iniciar"
-    }
+    },
+    "hotkeyError": {
+      "kicker": "Atalho em conflito",
+      "label": "Revisar"
+    },
+    "startAnyway": "Iniciar sem atalho"
   },
   "status": {
     "idle": "Parado",
@@ -47,7 +52,8 @@
     "paused": "Pausado",
     "stopping": "Parando",
     "clicks": "Cliques",
-    "time": "Tempo"
+    "time": "Tempo",
+    "hotkeyUnavailable": "{combo} indisponível"
   },
   "click": {
     "button": "Botão",
@@ -107,7 +113,10 @@
     "PROFILE_NOT_FOUND": "Perfil não encontrado.",
     "STALE_PROFILE": "O perfil foi alterado em outra janela. Recarregamos a versão mais recente.",
     "generic": "Algo deu errado: {code}",
-    "connect": "Não foi possível carregar o estado do aplicativo."
+    "connect": "Não foi possível carregar o estado do aplicativo.",
+    "HOTKEY_UNKNOWN_KEY": "Esta tecla não pode ser usada como atalho.",
+    "HOTKEY_PRIMARY_MOUSE": "Os botões esquerdo e direito do mouse não podem ser atalhos.",
+    "HOTKEY_EMERGENCY_REQUIRED": "A parada de emergência precisa de um atalho."
   },
   "gallery": {
     "title": "Galeria de telas",
@@ -121,5 +130,49 @@
   "debug": {
     "clickOnce": "Clique de teste em 2 s",
     "clickScheduled": "Clique agendado. Posicione o cursor."
+  },
+  "hotkeys": {
+    "kicker": "Configurações",
+    "title": "Atalhos",
+    "reset": "Restaurar padrão",
+    "recording": "Pressione as teclas…",
+    "footer": "Atalhos são globais e registrados no Windows. Parada de emergência não pode ser desativada.",
+    "conflict": "{combo} já está em uso por “{name}”.",
+    "replace": "Substituir",
+    "keep": "Manter o anterior",
+    "taken": "Outro aplicativo já usa este atalho. Feche-o ou escolha outra combinação.",
+    "retry": "Tentar de novo",
+    "profileShortcut": "Atalho do perfil {name}",
+    "actions": {
+      "startStop": {
+        "name": "Iniciar / Parar",
+        "desc": "Global · funciona com a janela minimizada"
+      },
+      "pauseResume": {
+        "name": "Pausar / Retomar",
+        "desc": "Mantém contador e temporizador"
+      },
+      "capturePoint": {
+        "name": "Capturar ponto",
+        "desc": "Adiciona a posição atual à lista"
+      },
+      "nextProfile": {
+        "name": "Próximo perfil",
+        "desc": "Cicla entre perfis com atalho"
+      },
+      "emergencyStop": {
+        "name": "Parada de emergência",
+        "desc": "Interrompe tudo, sempre ativo"
+      }
+    }
+  },
+  "settings": {
+    "kicker": "Aplicativo",
+    "title": "Configurações",
+    "hotkeysLink": "Atalhos ›",
+    "comingSoon": "As demais configurações chegam na Fase 11."
+  },
+  "common": {
+    "back": "Voltar"
   }
 }

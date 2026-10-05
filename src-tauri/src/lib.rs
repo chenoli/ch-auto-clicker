@@ -4,6 +4,7 @@ mod capabilities;
 mod commands;
 mod error;
 mod events;
+mod hotkeys;
 mod ipc;
 mod logging;
 mod paths;
@@ -36,6 +37,8 @@ pub fn run() {
             specta.mount_events(app);
             let state = state::AppState::new(app.handle())?;
             app.manage(state);
+            let state = app.state::<state::AppState>();
+            state.hotkeys().apply(app.handle(), &state.data());
             state::measure_if_needed(app.handle());
             log::info!(
                 "{} {} started (DPI: {})",

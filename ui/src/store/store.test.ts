@@ -33,6 +33,8 @@ vi.mock("../ipc", () => {
       settingsChanged: event("settingsChanged"),
       profilesChanged: event("profilesChanged"),
       capabilities: event("capabilities"),
+      hotkeyStatusChanged: event("hotkeyStatusChanged"),
+      hotkeyActionFailed: event("hotkeyActionFailed"),
     },
   };
 });
@@ -146,6 +148,7 @@ describe("connectStore", () => {
       profiles: [profile("b")],
       engine: IDLE_TICK,
       capabilities: { minReliableIntervalMs: 1 },
+      hotkeys: [],
     } as unknown as Bootstrap;
     ipc.commands.appBootstrap.mockResolvedValue(boot);
     const dispose = await connectStore();
@@ -162,6 +165,10 @@ describe("connectStore", () => {
     ipc.listeners.settingsChanged?.({ payload: { ...settings("b"), countdownSec: 5 } });
     expect(useAppStore.getState().settings?.countdownSec).toBe(5);
     ipc.listeners.capabilities?.({ payload: { minReliableIntervalMs: 2 } });
+    ipc.listeners.hotkeyStatusChanged?.({ payload: [{ ok: false }] });
+    expect(useAppStore.getState().hotkeys).toEqual([{ ok: false }]);
+    ipc.listeners.hotkeyActionFailed?.({ payload: { code: "MODE_NOT_AVAILABLE" } });
+    expect(useAppStore.getState().commandError).toBe("MODE_NOT_AVAILABLE");
     expect(useAppStore.getState().capabilities?.minReliableIntervalMs).toBe(2);
     ipc.listeners.profilesChanged?.({ payload: { profiles: [profile("b", "v5")], activeProfileId: "b" } });
     expect(useAppStore.getState().profiles[0]?.updatedAt).toBe("v5");

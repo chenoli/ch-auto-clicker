@@ -2,7 +2,7 @@
 
 use tauri_specta::{Builder, collect_commands, collect_events};
 
-use crate::{capabilities, commands, events};
+use crate::{capabilities, commands, events, hotkeys};
 
 const BINDINGS_PATH: &str = "../ui/src/ipc/bindings.ts";
 const BINDINGS_HEADER: &str = "// Regenerate with `cargo test -p ch-clicker export_bindings`.";
@@ -20,6 +20,12 @@ pub fn builder() -> Builder<tauri::Wry> {
             commands::engine_snapshot,
             commands::engine_capabilities,
             commands::engine_run_benchmark,
+            commands::hotkey_status,
+            commands::hotkey_begin_record,
+            commands::hotkey_cancel_record,
+            commands::hotkey_set,
+            commands::hotkey_reset_defaults,
+            commands::hotkey_retry,
             commands::window_set_content_height,
             commands::window_open_variation,
             commands::debug_click_once
@@ -31,6 +37,9 @@ pub fn builder() -> Builder<tauri::Wry> {
             events::EngineDegraded,
             events::SettingsChanged,
             events::ProfilesChanged,
+            hotkeys::HotkeyStatusChanged,
+            hotkeys::HotkeyRecording,
+            hotkeys::HotkeyActionFailed,
             capabilities::Capabilities
         ])
 }

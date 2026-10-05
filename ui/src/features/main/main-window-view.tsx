@@ -34,6 +34,11 @@ export interface MainWindowViewProps {
   onClose: () => void;
   /** Height the window needs to show the whole panel without scrolling. */
   onDesiredHeight?: (px: number) => void;
+  /** Label of the start shortcut when Windows refused to register it (Tela 10, "Erro"). */
+  hotkeyError?: string | null;
+  onReviewHotkeys?: () => void;
+  onStartAnyway?: () => void;
+  onOpenSettings?: () => void;
 }
 
 function ComingSoon({ mode }: { mode: Mode }) {
@@ -59,12 +64,25 @@ export function MainWindowView({
   onMinimize,
   onClose,
   onDesiredHeight,
+  hotkeyError = null,
+  onReviewHotkeys,
+  onStartAnyway,
+  onOpenSettings,
 }: MainWindowViewProps): ReactElement {
   const { t } = useTranslation();
   const rootRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
   const lastHeight = useRef(0);
+
+  const errorText = errorCode ? t(`errors.${errorCode}`, { defaultValue: errorCode }) : "";
+  const noClicks =
+    (profile.mode === "wiggle" && !profile.modes.wiggle.clickWhileWiggling) ||
+    (profile.mode === "scan" && profile.modes.scan.action === "move");
+  const active = engine.state === "countdown" || engine.state === "running" || engine.state === "paused";
+  // A refused start shortcut shows the error state while idle; the engine itself is fine.
+  const shortcutBroken = Boolean(hotkeyError) && engine.state === "idle";
+  const extraRows = `${String(active)}|${commandError ?? ""}|${String(shortcutBroken)}`;
 
   useLayoutEffect(() => {
     const root = rootRef.current;
@@ -79,31 +97,38 @@ export function MainWindowView({
       }
     };
     measure();
+    // Web fonts change line heights once they load.
+    void document.fonts?.ready.then(measure);
     if (typeof ResizeObserver === "undefined") return;
+    // Every block counts: rows above the panel (notes, callouts) change the height it needs too.
     const observer = new ResizeObserver(measure);
+    for (const child of Array.from(root.children)) observer.observe(child);
     observer.observe(inner);
     return () => observer.disconnect();
-  }, [onDesiredHeight]);
-
-  const errorText = errorCode ? t(`errors.${errorCode}`, { defaultValue: errorCode }) : "";
-  const noClicks =
-    (profile.mode === "wiggle" && !profile.modes.wiggle.clickWhileWiggling) ||
-    (profile.mode === "scan" && profile.modes.scan.action === "move");
-  const active = engine.state === "countdown" || engine.state === "running" || engine.state === "paused";
+  }, [onDesiredHeight, extraRows]);
 
   return (
     <div ref={rootRef} className="flex h-full flex-col bg-bg">
       <TitleBar onMinimize={onMinimize} onClose={onClose} />
-      <Header profileName={profile.name} />
+      <Header profileName={profile.name} onOpenSettings={onOpenSettings} />
       <ModeTabs mode={profile.mode} onChange={(mode) => onEdit((p) => ({ ...p, mode }))} />
       <MainButton
-        state={buttonStateFor(engine.state)}
+        state={shortcutBroken ? "error" : buttonStateFor(engine.state)}
         shortcut={shortcut}
         countdownRemainingMs={engine.countdownRemainingMs}
         countdownTotalMs={countdownTotalMs}
-        errorKicker={errorText}
-        onPress={onPrimary}
+        errorKicker={shortcutBroken ? t("button.hotkeyError.kicker") : errorText}
+        errorLabel={shortcutBroken ? t("button.hotkeyError.label") : undefined}
+        brokenShortcut={shortcutBroken}
+        onPress={shortcutBroken ? (onReviewHotkeys ?? onPrimary) : onPrimary}
       />
+      {shortcutBroken && onStartAnyway && (
+        <div className="flex-none px-4 pb-3">
+          <button type="button" className="link" onClick={onStartAnyway}>
+            {t("button.startAnyway")}
+          </button>
+        </div>
+      )}
       {(commandError || active) && (
         <div className="flex-none px-4 pb-3">
           {commandError ? (
@@ -125,13 +150,13 @@ export function MainWindowView({
         </div>
       </div>
       <Footer
-        state={engine.state}
+        state={shortcutBroken ? "error" : engine.state}
         locale={locale}
         clicks={engine.clicks}
         elapsedMs={engine.elapsedMs ?? 0}
         countdownRemainingMs={engine.countdownRemainingMs}
         noClicks={noClicks}
-        errorText={errorText}
+        errorText={shortcutBroken ? t("status.hotkeyUnavailable", { combo: hotkeyError }) : errorText}
       />
     </div>
   );

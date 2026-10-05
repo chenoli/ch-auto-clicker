@@ -35,6 +35,7 @@ impl AppData {
 
 pub struct AppState {
     pub engine: Engine,
+    hotkeys: crate::hotkeys::HotkeyManager,
     _telemetry: Telemetry,
     data: Mutex<AppData>,
     pub persister: Persister,
@@ -83,11 +84,13 @@ impl AppState {
             Box::new(crate::events::EventSink(app.clone())),
             ch_engine::telemetry::TICK_PERIOD,
         );
+        let hotkeys = crate::hotkeys::HotkeyManager::spawn(app)?;
         let fingerprint = capabilities::fingerprint();
         let capabilities = capabilities::load_cached(&capabilities::cache_path(), &fingerprint)
             .unwrap_or_else(|| Capabilities::provisional(fingerprint));
         Ok(Self {
             engine,
+            hotkeys,
             _telemetry: telemetry,
             data: Mutex::new(AppData {
                 settings: loaded.settings,
@@ -98,6 +101,10 @@ impl AppState {
             benchmarking: AtomicBool::new(false),
             animator: OnceLock::new(),
         })
+    }
+
+    pub fn hotkeys(&self) -> &crate::hotkeys::HotkeyManager {
+        &self.hotkeys
     }
 
     pub fn data(&self) -> AppData {

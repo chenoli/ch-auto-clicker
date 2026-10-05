@@ -2,7 +2,8 @@
 
 use std::time::Duration;
 
-use ch_core::model::{Profile, Settings};
+use ch_core::hotkeys::{HotkeyTarget, find_conflict, normalize, set_binding};
+use ch_core::model::{Hotkey, HotkeyBindings, Profile, Settings};
 use ch_core::validate::{validate_profile, validate_settings};
 use serde::Serialize;
 use tauri::{AppHandle, Manager, State};
@@ -10,6 +11,7 @@ use tauri::{AppHandle, Manager, State};
 use crate::capabilities::Capabilities;
 use crate::error::{AppError, AppResult};
 use crate::events::EngineTick;
+use crate::hotkeys::HotkeyStatus;
 use crate::state::{AppState, emit_profiles, emit_settings, refresh_capabilities};
 use crate::windowing;
 
@@ -23,6 +25,7 @@ pub struct Bootstrap {
     pub profiles: Vec<Profile>,
     pub engine: EngineTick,
     pub capabilities: Capabilities,
+    pub hotkeys: Vec<HotkeyStatus>,
 }
 
 fn engine_tick(state: &AppState) -> EngineTick {
@@ -44,6 +47,7 @@ pub fn app_bootstrap(app: AppHandle, state: State<'_, AppState>) -> Bootstrap {
         profiles: data.profiles,
         engine: engine_tick(&state),
         capabilities: state.capabilities(),
+        hotkeys: state.hotkeys().statuses(),
     }
 }
 
@@ -107,7 +111,7 @@ pub fn profile_update(
     if let Some(e) = validate_profile(&profile).into_iter().next() {
         return Err(e.into());
     }
-    let (saved, data) = state.with_data(|data| {
+    let (saved, data, hotkey_changed) = state.with_data(|data| {
         let Some(slot) = data.profiles.iter_mut().find(|p| p.id == profile.id) else {
             return Err(AppError::new(
                 "PROFILE_NOT_FOUND",
@@ -120,21 +124,24 @@ pub fn profile_update(
                 "the profile changed in another window",
             ));
         }
+        let hotkey_changed = slot.hotkey != profile.hotkey;
         let mut next = profile;
         next.created_at.clone_from(&slot.created_at);
         next.updated_at = next_version();
         *slot = next.clone();
-        Ok((next, data.clone()))
+        Ok((next, data.clone(), hotkey_changed))
     })?;
     state.persister.save_profile(&saved);
     emit_profiles(&app, &data);
+    if hotkey_changed {
+        state.hotkeys().apply(&app, &data);
+    }
     Ok(saved)
 }
 
-/// Starts the given (or active) profile after the configured countdown.
-#[tauri::command]
-#[specta::specta]
-pub fn engine_start(state: State<'_, AppState>, profile_id: Option<String>) -> AppResult<()> {
+/// Builds and starts the plan for `profile_id` (or the active profile). Shared by the main button,
+/// the F6 shortcut and profile shortcuts.
+pub fn start_profile(state: &AppState, profile_id: Option<String>) -> AppResult<()> {
     let data = state.data();
     let profile = match profile_id.as_deref() {
         Some(id) => data.profile(id),
@@ -149,6 +156,13 @@ pub fn engine_start(state: State<'_, AppState>, profile_id: Option<String>) -> A
     let plan = ch_engine::plan::build_plan(profile, data.settings.countdown_sec, guard)?;
     state.engine.start(plan);
     Ok(())
+}
+
+/// Starts the given (or active) profile after the configured countdown.
+#[tauri::command]
+#[specta::specta]
+pub fn engine_start(state: State<'_, AppState>, profile_id: Option<String>) -> AppResult<()> {
+    start_profile(&state, profile_id)
 }
 
 /// Stops the run or cancels the countdown.
@@ -190,6 +204,133 @@ pub async fn engine_run_benchmark(app: AppHandle) -> Result<Capabilities, String
     tauri::async_runtime::spawn_blocking(move || refresh_capabilities(&app))
         .await
         .map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn hotkey_status(state: State<'_, AppState>) -> Vec<HotkeyStatus> {
+    state.hotkeys().statuses()
+}
+
+/// Suspends every shortcut and starts capturing keys for the capture field.
+#[tauri::command]
+#[specta::specta]
+pub fn hotkey_begin_record(state: State<'_, AppState>) {
+    state.hotkeys().begin_recording();
+}
+
+/// Leaves recording without changes and restores every shortcut.
+#[tauri::command]
+#[specta::specta]
+pub fn hotkey_cancel_record(app: AppHandle, state: State<'_, AppState>) -> Vec<HotkeyStatus> {
+    state.hotkeys().end_recording();
+    state.hotkeys().apply(&app, &state.data())
+}
+
+#[derive(Debug, Serialize, specta::Type)]
+#[serde(rename_all = "camelCase", tag = "result")]
+pub enum HotkeySetResult {
+    Saved {
+        statuses: Vec<HotkeyStatus>,
+    },
+    /// Another binding already uses the combo; nothing changed (call again with `replace`).
+    Conflict {
+        with: HotkeyTarget,
+    },
+}
+
+/// Assigns `combo` (or clears it with `None`) to `target`. With `replace`, the binding that held
+/// the combo loses it and shows a dash, as in the "Substituir" action of Tela 06.
+#[tauri::command]
+#[specta::specta]
+pub fn hotkey_set(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    target: HotkeyTarget,
+    combo: Option<Hotkey>,
+    replace: bool,
+) -> AppResult<HotkeySetResult> {
+    let combo = combo
+        .map(|c| normalize(&c))
+        .transpose()
+        .map_err(|e| AppError::new(e.code(), e.to_string()))?;
+    state.hotkeys().end_recording();
+    let outcome = state.with_data(|data| -> AppResult<Option<HotkeyTarget>> {
+        if let Some(c) = &combo
+            && let Some(other) = find_conflict(&data.settings.hotkeys, &data.profiles, &target, c)
+        {
+            if !replace {
+                return Ok(Some(other));
+            }
+            assign(data, &other, None)?;
+        }
+        assign(data, &target, combo.clone())?;
+        Ok(None)
+    });
+    let data = state.data();
+    match outcome {
+        Ok(Some(with)) => {
+            state.hotkeys().apply(&app, &data);
+            Ok(HotkeySetResult::Conflict { with })
+        }
+        Ok(None) => {
+            state.persister.save_settings(&data.settings);
+            for p in &data.profiles {
+                state.persister.save_profile(p);
+            }
+            emit_settings(&app, &data.settings);
+            emit_profiles(&app, &data);
+            Ok(HotkeySetResult::Saved {
+                statuses: state.hotkeys().apply(&app, &data),
+            })
+        }
+        Err(e) => {
+            state.hotkeys().apply(&app, &data);
+            Err(e)
+        }
+    }
+}
+
+/// Writes one binding into the app data.
+fn assign(
+    data: &mut crate::state::AppData,
+    target: &HotkeyTarget,
+    combo: Option<Hotkey>,
+) -> AppResult<()> {
+    match target {
+        HotkeyTarget::Action(action) => set_binding(&mut data.settings.hotkeys, *action, combo)
+            .map_err(|e| AppError::new(e.code(), e.to_string())),
+        HotkeyTarget::Profile(id) => {
+            let profile = data
+                .profiles
+                .iter_mut()
+                .find(|p| p.id == *id)
+                .ok_or_else(|| AppError::new("PROFILE_NOT_FOUND", format!("no profile {id}")))?;
+            profile.hotkey = combo;
+            profile.updated_at = next_version();
+            Ok(())
+        }
+    }
+}
+
+/// Restores the handoff's default shortcuts (F6, F7, Ctrl Shift P, Ctrl Alt Right, Ctrl Alt Esc).
+#[tauri::command]
+#[specta::specta]
+pub fn hotkey_reset_defaults(app: AppHandle, state: State<'_, AppState>) -> Vec<HotkeyStatus> {
+    let data = state.with_data(|data| {
+        data.settings.hotkeys = HotkeyBindings::default();
+        data.clone()
+    });
+    state.persister.save_settings(&data.settings);
+    emit_settings(&app, &data.settings);
+    state.hotkeys().apply(&app, &data)
+}
+
+/// Tries every registration again (after the user freed a combo in another app).
+#[tauri::command]
+#[specta::specta]
+pub fn hotkey_retry(app: AppHandle, state: State<'_, AppState>) -> Vec<HotkeyStatus> {
+    state.hotkeys().apply(&app, &state.data())
 }
 
 /// The main window asks for the height its content needs; Rust animates to it (640–900 px).

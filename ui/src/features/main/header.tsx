@@ -4,8 +4,8 @@ import type { ReactElement } from "react";
 
 interface HeaderProps {
   profileName: string;
-  onOpenProfiles?: () => void;
-  onOpenSettings?: () => void;
+  onOpenProfiles?: (() => void) | undefined;
+  onOpenSettings?: (() => void) | undefined;
 }
 
 export function Header({ profileName, onOpenProfiles, onOpenSettings }: HeaderProps): ReactElement {
