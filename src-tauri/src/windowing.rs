@@ -1,10 +1,11 @@
-use std::sync::mpsc;
+use std::sync::{Mutex, mpsc};
 use std::time::{Duration, Instant};
 
 use ch_core::easing::EASE_OUT;
+use ch_core::geometry::Rect;
 use tauri::{
-    AppHandle, LogicalPosition, LogicalSize, Manager, Runtime, WebviewUrl, WebviewWindow,
-    WebviewWindowBuilder,
+    AppHandle, LogicalPosition, LogicalSize, Manager, PhysicalPosition, PhysicalSize, Runtime,
+    WebviewUrl, WebviewWindow, WebviewWindowBuilder,
 };
 
 pub const MAIN_WIDTH: f64 = 420.0;
@@ -14,6 +15,8 @@ const DURATION: Duration = Duration::from_millis(320);
 const FRAME: Duration = Duration::from_millis(16);
 const VARIATION_LABEL: &str = "variation";
 const VARIATION_SIZE: (f64, f64) = (560.0, 640.0);
+const REACHABLE_WIDTH: i32 = 96;
+const REACHABLE_HEIGHT: i32 = 24;
 
 pub fn clamp_height(requested: f64, space_below_top: Option<f64>) -> f64 {
     let ceiling = space_below_top.map_or(MAX_HEIGHT, |s| s.min(MAX_HEIGHT));
@@ -31,6 +34,7 @@ pub fn height_at(from: f64, to: f64, elapsed: Duration) -> f64 {
 #[derive(Debug)]
 pub struct HeightAnimator {
     tx: mpsc::Sender<f64>,
+    last: Mutex<Option<f64>>,
 }
 
 impl HeightAnimator {
@@ -70,11 +74,128 @@ impl HeightAnimator {
                 }
             })
             .expect("failed to spawn the window animator");
-        Self { tx }
+        Self {
+            tx,
+            last: Mutex::new(None),
+        }
     }
 
     pub fn animate_to(&self, height: f64) {
+        if let Ok(mut last) = self.last.lock() {
+            *last = Some(height);
+        }
         let _ = self.tx.send(height);
+    }
+
+    pub fn last_target(&self) -> Option<f64> {
+        self.last.lock().ok().and_then(|last| *last)
+    }
+}
+
+fn overlap(a: &Rect, b: &Rect) -> (i32, i32) {
+    let width = a.right().min(b.right()) - a.left.max(b.left);
+    let height = a.bottom().min(b.bottom()) - a.top.max(b.top);
+    (width.max(0), height.max(0))
+}
+
+pub fn rescue_rect(
+    window: Rect,
+    collapsed_below: (i32, i32),
+    desired: (i32, i32),
+    work_areas: &[Rect],
+    home: Rect,
+) -> Option<Rect> {
+    let collapsed = window.width < collapsed_below.0 || window.height < collapsed_below.1;
+    let top_band = Rect::new(
+        window.left,
+        window.top,
+        window.width,
+        REACHABLE_HEIGHT.min(window.height),
+    );
+    let reachable = work_areas.iter().any(|work| {
+        let (w, h) = overlap(&top_band, work);
+        w >= REACHABLE_WIDTH.min(window.width) && h >= top_band.height
+    });
+    if !collapsed && reachable {
+        return None;
+    }
+    let (width, height) = (desired.0.min(home.width), desired.1.min(home.height));
+    Some(Rect::new(
+        home.left + (home.width - width) / 2,
+        home.top + (home.height - height) / 2,
+        width,
+        height,
+    ))
+}
+
+fn work_rect(monitor: &tauri::Monitor) -> Rect {
+    let area = monitor.work_area();
+    Rect::new(
+        area.position.x,
+        area.position.y,
+        area.size.width as i32,
+        area.size.height as i32,
+    )
+}
+
+pub fn ensure_on_screen<R: Runtime>(window: &WebviewWindow<R>, height: f64) {
+    let (Ok(pos), Ok(size), Ok(monitors)) = (
+        window.outer_position(),
+        window.inner_size(),
+        window.available_monitors(),
+    ) else {
+        return;
+    };
+    let Some(home) = window
+        .primary_monitor()
+        .ok()
+        .flatten()
+        .or_else(|| monitors.first().cloned())
+    else {
+        return;
+    };
+    let scale = home.scale_factor();
+    let physical = |v: f64| (v * scale).round() as i32;
+    let current = Rect::new(pos.x, pos.y, size.width as i32, size.height as i32);
+    let works: Vec<Rect> = monitors.iter().map(work_rect).collect();
+    let Some(target) = rescue_rect(
+        current,
+        (physical(MAIN_WIDTH / 2.0), physical(MIN_HEIGHT / 2.0)),
+        (physical(MAIN_WIDTH), physical(height)),
+        &works,
+        work_rect(&home),
+    ) else {
+        return;
+    };
+    log::warn!("main window unreachable at {current:?}, moved to {target:?}");
+    let _ = window.set_size(PhysicalSize::new(target.width as u32, target.height as u32));
+    let _ = window.set_position(PhysicalPosition::new(target.left, target.top));
+}
+
+fn main_height<R: Runtime>(app: &AppHandle<R>) -> f64 {
+    app.try_state::<crate::state::AppState>()
+        .and_then(|state| state.animator.get().and_then(HeightAnimator::last_target))
+        .unwrap_or(MIN_HEIGHT)
+}
+
+pub fn show_main<R: Runtime>(app: &AppHandle<R>) {
+    if let Some(main) = app.get_webview_window("main") {
+        let _ = main.unminimize();
+        ensure_on_screen(&main, main_height(app));
+        let _ = main.show();
+        let _ = main.set_focus();
+    }
+}
+
+pub fn rehome<R: Runtime>(app: &AppHandle<R>) {
+    if let Some(main) = app.get_webview_window("main")
+        && main.is_visible().unwrap_or(false)
+        && !main.is_minimized().unwrap_or(false)
+    {
+        ensure_on_screen(&main, main_height(app));
+    }
+    if let Some(state) = app.try_state::<crate::state::AppState>() {
+        crate::hud::place(app, &state.settings());
     }
 }
 
@@ -153,6 +274,83 @@ mod tests {
             600.0,
             "never taller than the space available"
         );
+    }
+
+    const PRIMARY: Rect = Rect::new(0, 0, 1920, 1040);
+    const SECOND: Rect = Rect::new(1920, 0, 1920, 1040);
+
+    fn rescue(window: Rect, works: &[Rect]) -> Option<Rect> {
+        rescue_rect(window, (210, 320), (420, 760), works, works[0])
+    }
+
+    #[test]
+    fn leaves_reachable_windows_alone() {
+        assert_eq!(
+            rescue(Rect::new(700, 200, 420, 760), &[PRIMARY, SECOND]),
+            None
+        );
+        assert_eq!(
+            rescue(Rect::new(1700, 10, 420, 760), &[PRIMARY, SECOND]),
+            None,
+            "straddling two screens"
+        );
+        assert_eq!(
+            rescue(Rect::new(-300, 100, 420, 760), &[PRIMARY]),
+            None,
+            "partly off the left edge but still grabbable"
+        );
+    }
+
+    #[test]
+    fn restores_the_minimized_placeholder_to_the_center_of_home() {
+        assert_eq!(
+            rescue(Rect::new(-32000, -32000, 160, 28), &[PRIMARY]),
+            Some(Rect::new(750, 140, 420, 760))
+        );
+    }
+
+    #[test]
+    fn brings_back_windows_left_on_a_disconnected_screen() {
+        assert_eq!(
+            rescue(Rect::new(2500, 100, 436, 649), &[PRIMARY]),
+            Some(Rect::new(750, 140, 420, 760)),
+            "back to the size the app asked for"
+        );
+        assert!(
+            rescue(Rect::new(500, -30, 420, 760), &[PRIMARY]).is_some(),
+            "title strip above the screen"
+        );
+        assert!(
+            rescue(Rect::new(1850, 100, 420, 760), &[PRIMARY]).is_some(),
+            "only a sliver visible"
+        );
+    }
+
+    #[test]
+    fn never_grows_past_the_home_work_area() {
+        let short = Rect::new(0, 0, 1366, 600);
+        assert_eq!(
+            rescue_rect(
+                Rect::new(-32000, -32000, 160, 28),
+                (210, 320),
+                (420, 760),
+                &[short],
+                short
+            ),
+            Some(Rect::new(473, 0, 420, 600))
+        );
+    }
+
+    #[test]
+    fn remembers_the_last_requested_height() {
+        let (tx, _rx) = mpsc::channel();
+        let animator = HeightAnimator {
+            tx,
+            last: Mutex::new(None),
+        };
+        assert_eq!(animator.last_target(), None);
+        animator.animate_to(720.0);
+        assert_eq!(animator.last_target(), Some(720.0));
     }
 
     #[test]

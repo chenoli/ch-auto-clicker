@@ -40,17 +40,23 @@ pub fn spawn<R: Runtime>(app: AppHandle<R>) {
         .name("ch-display-watch".into())
         .spawn(move || {
             let mut baseline: Option<String> = None;
+            let mut layout = fingerprint();
             loop {
                 std::thread::sleep(POLL);
                 let Some(state) = app.try_state::<AppState>() else {
                     continue;
                 };
+                let now = fingerprint();
+                if now != layout {
+                    log::info!("display layout changed: {layout} → {now}");
+                    layout = now.clone();
+                    crate::windowing::rehome(&app);
+                }
                 let engine = state.engine.shared().state();
                 if !engine.is_active() {
                     baseline = None;
                     continue;
                 }
-                let now = fingerprint();
                 let start = baseline.get_or_insert_with(|| now.clone());
                 let changed = *start != now;
                 match reaction(engine, changed) {

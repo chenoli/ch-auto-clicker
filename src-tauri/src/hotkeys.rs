@@ -268,12 +268,8 @@ fn on_triggered<R: Runtime>(app: &AppHandle<R>, id: u32) {
         }
     };
     if let Err(e) = result {
-        if e.code == crate::commands::ANTI_CHEAT_ACK
-            && let Some(main) = app.get_webview_window("main")
-        {
-            let _ = main.unminimize();
-            let _ = main.show();
-            let _ = main.set_focus();
+        if e.code == crate::commands::ANTI_CHEAT_ACK {
+            crate::windowing::show_main(app);
         }
         let _ = HotkeyActionFailed { code: e.code }.emit(app);
     }

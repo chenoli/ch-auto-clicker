@@ -202,11 +202,7 @@ fn build_menu<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
 }
 
 pub fn show_main<R: Runtime>(app: &AppHandle<R>) {
-    if let Some(main) = app.get_webview_window("main") {
-        let _ = main.unminimize();
-        let _ = main.show();
-        let _ = main.set_focus();
-    }
+    crate::windowing::show_main(app);
 }
 
 pub fn stop_engine<R: Runtime>(app: &AppHandle<R>) {
