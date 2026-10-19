@@ -17,9 +17,9 @@
   },
   "button": {
     "shortcut": "shortcut",
-    "cancels": "cancels",
-    "stops": "stops",
-    "resumes": "resumes",
+    "cancels": "cancel",
+    "stops": "stop",
+    "resumes": "resume",
     "review": "review",
     "idle": {
       "kicker": "Ready",

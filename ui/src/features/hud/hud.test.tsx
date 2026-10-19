@@ -32,7 +32,7 @@ describe("HudView", () => {
     expect(pill).toHaveTextContent("Iniciando");
     expect(pill).toHaveTextContent("3");
     expect(pill).toHaveTextContent("Coleta rápida");
-    expect(pill).toHaveTextContent("F6cancela");
+    expect(pill).toHaveTextContent("F6cancelar");
   });
 
   it("shows clicks and the remaining time while running (04.B)", () => {
@@ -40,14 +40,14 @@ describe("HudView", () => {
     const pill = screen.getByRole("status");
     expect(pill).toHaveTextContent("1.284");
     expect(pill).toHaveTextContent("Resta04:32");
-    expect(pill).toHaveTextContent("F6para");
+    expect(pill).toHaveTextContent("F6parar");
   });
 
   it("offers F7 to resume when paused (04.C) and hides the remaining time without a timer", () => {
     setup({ state: "paused", remainingMs: null });
     const pill = screen.getByRole("status");
     expect(pill).toHaveTextContent("Pausado");
-    expect(pill).toHaveTextContent("F7retoma");
+    expect(pill).toHaveTextContent("F7retomar");
     expect(pill).not.toHaveTextContent("Resta");
   });
 

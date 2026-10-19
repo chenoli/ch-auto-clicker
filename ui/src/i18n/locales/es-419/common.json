@@ -17,9 +17,9 @@
   },
   "button": {
     "shortcut": "atajo",
-    "cancels": "cancela",
-    "stops": "detiene",
-    "resumes": "reanuda",
+    "cancels": "cancelar",
+    "stops": "detener",
+    "resumes": "reanudar",
     "review": "revisar",
     "idle": {
       "kicker": "Listo",

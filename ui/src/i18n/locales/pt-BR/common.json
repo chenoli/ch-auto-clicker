@@ -17,9 +17,9 @@
   },
   "button": {
     "shortcut": "atalho",
-    "cancels": "cancela",
-    "stops": "para",
-    "resumes": "retoma",
+    "cancels": "cancelar",
+    "stops": "parar",
+    "resumes": "retomar",
     "review": "revisar",
     "idle": {
       "kicker": "Pronto",
