@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>CH Clicker soak target</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #141412;
+        color: #e8e6df;
+        font:
+          14px system-ui,
+          sans-serif;
+        user-select: none;
+      }
+      #pad {
+        position: fixed;
+        inset: 0;
+        background-image:
+          linear-gradient(#ffffff10 1px, transparent 1px), linear-gradient(90deg, #ffffff10 1px, transparent 1px);
+        background-size: 40px 40px;
+      }
+      #panel {
+        position: fixed;
+        top: 16px;
+        left: 16px;
+        padding: 12px 16px;
+        background: #1f1f1c;
+        border: 1px solid #3a3a35;
+        border-radius: 8px;
+        pointer-events: none;
+      }
+      #total {
+        font-size: 40px;
+        font-variant-numeric: tabular-nums;
+      }
+      dl {
+        display: grid;
+        grid-template-columns: auto auto;
+        gap: 2px 16px;
+        margin: 8px 0 0;
+        font-variant-numeric: tabular-nums;
+      }
+      dd {
+        margin: 0;
+        text-align: right;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="pad"></div>
+    <div id="panel">
+      <div id="total">0</div>
+      <dl>
+        <dt>left</dt>
+        <dd id="b0">0</dd>
+        <dt>middle</dt>
+        <dd id="b1">0</dd>
+        <dt>right</dt>
+        <dd id="b2">0</dd>
+        <dt>x1</dt>
+        <dd id="b3">0</dd>
+        <dt>x2</dt>
+        <dd id="b4">0</dd>
+        <dt>double</dt>
+        <dd id="dbl">0</dd>
+        <dt>since</dt>
+        <dd id="since">-</dd>
+      </dl>
+    </div>
+    <script>
+      const counts = [0, 0, 0, 0, 0];
+      let total = 0;
+      let doubles = 0;
+      const since = new Date();
+      document.getElementById("since").textContent = since.toLocaleTimeString();
+      const pad = document.getElementById("pad");
+      pad.addEventListener("mousedown", (event) => {
+        event.preventDefault();
+        if (event.button >= 0 && event.button < counts.length) {
+          counts[event.button] += 1;
+          total += 1;
+          document.getElementById(`b${event.button}`).textContent = counts[event.button];
+          document.getElementById("total").textContent = total;
+        }
+      });
+      pad.addEventListener("dblclick", () => {
+        doubles += 1;
+        document.getElementById("dbl").textContent = doubles;
+      });
+      pad.addEventListener("contextmenu", (event) => event.preventDefault());
+      pad.addEventListener("auxclick", (event) => event.preventDefault());
+    </script>
+  </body>
+</html>
