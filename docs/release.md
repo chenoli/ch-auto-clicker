@@ -4,12 +4,13 @@ How to publish a CH. Clicker version. Everything here is free.
 
 ## 1. Repository secrets (once)
 
-Under **Settings → Secrets and variables → Actions** of `chenoli/chenoli-auto-clicker`:
+Create `TAURI_SIGNING_PRIVATE_KEY` under **Settings → Secrets and variables → Actions** of `chenoli/chenoli-auto-clicker`, with the contents of `%USERPROFILE%\.tauri\ch-clicker-updater.key` (the updater private key, generated on 2026-10-05, no password). From Git Bash:
 
-| Secret                               | Value                                                                                                                          |
-| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
-| `TAURI_SIGNING_PRIVATE_KEY`          | The contents of `%USERPROFILE%\.tauri\ch-clicker-updater.key` (the updater private key, generated on 2026-10-05, no password). |
-| `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | Empty (the key has no password).                                                                                               |
+```sh
+gh secret set TAURI_SIGNING_PRIVATE_KEY -R chenoli/chenoli-auto-clicker < "$USERPROFILE/.tauri/ch-clicker-updater.key"
+```
+
+Do not create `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`: GitHub rejects empty secrets, and a missing secret reaches the workflow as an empty string, which is what a key without a password needs.
 
 The matching public key is already in `src-tauri/tauri.conf.json` (`plugins.updater.pubkey`). **Keep a copy of the private key off this computer**: without it, existing installs stop receiving updates and users would have to reinstall by hand.
 
