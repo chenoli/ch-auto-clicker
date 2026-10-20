@@ -1,9 +1,13 @@
 param(
     [Parameter(Mandatory = $true, Position = 0)]
-    [ValidateSet("shot", "move", "click", "key", "type", "windows", "focus", "cursor")]
+    [ValidateSet("shot", "move", "click", "drag", "key", "type", "windows", "focus", "cursor")]
     [string]$Command,
     [int]$X,
     [int]$Y,
+    [int]$ToX,
+    [int]$ToY,
+    [string]$Hold,
+    [int]$Steps = 20,
     [ValidateSet("left", "right", "middle", "x1", "x2")][string]$Button = "left",
     [switch]$Double,
     [string]$Keys,
@@ -112,6 +116,26 @@ switch ($Command) {
             $events += New-Mouse $flags[1] $flags[2]
         }
         Send-Inputs $events
+    }
+    "drag" {
+        $held = @()
+        if ($Hold) { $held = @($Hold -split '\+' | ForEach-Object { Get-Vk $_.Trim() }) }
+        $flags = @{ left = @(0x2, 0x4); right = @(0x8, 0x10); middle = @(0x20, 0x40) }[$Button]
+        if (-not $flags) { throw "drag supports left, right and middle" }
+        if ($held.Count) { Send-Inputs @($held | ForEach-Object { New-Key $_ $false }) }
+        try {
+            [void][Soak.Input]::SetCursorPos($X, $Y)
+            Start-Sleep -Milliseconds 80
+            Send-Inputs @(New-Mouse $flags[0])
+            for ($i = 1; $i -le $Steps; $i++) {
+                [void][Soak.Input]::SetCursorPos([int]($X + ($ToX - $X) * $i / $Steps), [int]($Y + ($ToY - $Y) * $i / $Steps))
+                Start-Sleep -Milliseconds 15
+            }
+            Start-Sleep -Milliseconds 80
+            Send-Inputs @(New-Mouse $flags[1])
+        } finally {
+            if ($held.Count) { Send-Inputs @($held | ForEach-Object { New-Key $_ $true }) }
+        }
     }
     "key" {
         $parts = $Keys -split '\+' | ForEach-Object { Get-Vk $_.Trim() }
