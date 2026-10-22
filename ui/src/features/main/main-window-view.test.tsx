@@ -35,6 +35,15 @@ function setup(overrides: Partial<MainWindowViewProps> = {}) {
 }
 
 describe("MainWindowView", () => {
+  it("shows a gear with eight teeth on the settings button", () => {
+    const onOpenSettings = vi.fn();
+    setup({ onOpenSettings });
+    const button = screen.getByRole("button", { name: "Configurações" });
+    expect(button.querySelectorAll("svg.icon-gear line")).toHaveLength(8);
+    fireEvent.click(button);
+    expect(onOpenSettings).toHaveBeenCalledTimes(1);
+  });
+
   it("renders the idle window like Tela 01.A", () => {
     setup();
     expect(screen.getByText("Coleta rápida")).toBeInTheDocument();

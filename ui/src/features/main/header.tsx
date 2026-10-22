@@ -4,6 +4,12 @@ import { useTranslation } from "react-i18next";
 
 import type { ReactElement } from "react";
 
+const GEAR_TEETH = [0, 45, 90, 135, 180, 225, 270, 315].map((deg) => {
+  const rad = (deg * Math.PI) / 180;
+  const at = (r: number) => ({ x: 8 + r * Math.cos(rad), y: 8 + r * Math.sin(rad) });
+  return { deg, from: at(4.4), to: at(6.6) };
+});
+
 interface HeaderProps {
   profileName: string;
   profiles?: readonly { id: string; name: string }[];
@@ -101,9 +107,13 @@ export function Header({
           </span>
         </button>
         <button type="button" className="icon-button" aria-label={t("header.settings")} onClick={onOpenSettings}>
-          <span className="icon-ring">
-            <span />
-          </span>
+          <svg className="icon-gear" viewBox="0 0 16 16" aria-hidden="true">
+            <circle cx="8" cy="8" r="3.9" />
+            <circle cx="8" cy="8" r="1.4" />
+            {GEAR_TEETH.map(({ deg, from, to }) => (
+              <line key={deg} x1={from.x} y1={from.y} x2={to.x} y2={to.y} />
+            ))}
+          </svg>
         </button>
       </div>
     </div>
