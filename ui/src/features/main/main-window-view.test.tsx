@@ -107,6 +107,11 @@ describe("MainWindowView", () => {
     expect(screen.getByText("Alterações valem ao reiniciar.")).toBeInTheDocument();
   });
 
+  it("warns while an administrator window blocks the clicks", () => {
+    setup({ engine: tick({ state: "running", blockedByAdmin: true }) });
+    expect(screen.getByText("Bloqueado: janela admin").parentElement).toHaveAttribute("data-tone", "warn");
+  });
+
   it("warns when the rate is not met or the screens changed", () => {
     setup({ degraded: "timing" });
     expect(screen.getByRole("note")).toHaveTextContent("ritmo pedido");

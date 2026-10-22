@@ -87,7 +87,7 @@ impl AppState {
         let telemetry = Telemetry::spawn(
             engine.shared(),
             ch_win::timing::QpcClock::new(),
-            Box::new(crate::events::EventSink(app.clone())),
+            Box::new(crate::events::EventSink::new(app.clone())),
             ch_engine::telemetry::TICK_PERIOD,
         );
         let hotkeys = crate::hotkeys::HotkeyManager::spawn(app)?;

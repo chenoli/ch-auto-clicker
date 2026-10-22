@@ -38,8 +38,6 @@ pub enum InputError {
     Blocked { sent: u32, expected: u32 },
     #[error("target ({x}, {y}) is outside the virtual desktop")]
     OutsideDesktop { x: i32, y: i32 },
-    #[error("the window under the cursor runs with higher privileges")]
-    TargetElevated,
 }
 
 pub trait InputBackend {

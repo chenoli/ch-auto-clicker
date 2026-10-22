@@ -1303,6 +1303,9 @@
     font-size: var(--text-10);
     color: var(--fg-2);
   }
+  .hud-hint[data-tone="warn"] {
+    color: var(--warn);
+  }
   @media (prefers-reduced-motion: reduce) {
     .hud-pill__dot {
       animation: none;

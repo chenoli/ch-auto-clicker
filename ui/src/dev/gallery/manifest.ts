@@ -20,7 +20,7 @@ export const SCREEN_META: ScreenMeta[] = [
   { id: "hotkeys", title: "06 — Atalhos", width: 420, height: 640, reference: "atalhos" },
   { id: "hotkeys-states", title: "06 — Atalhos · gravando e conflito", width: 420, height: 640 },
   { id: "settings", title: "08 — Configurações", width: 420, height: 640, reference: "config" },
-  { id: "hud", title: "04 — Mini HUD", width: 1120, height: 230, reference: "hud" },
+  { id: "hud", title: "04 — Mini HUD", width: 1120, height: 350, reference: "hud" },
   { id: "themes", title: "07 — Tema", width: 420, height: 640, reference: "temas" },
   { id: "tray-menu", title: "09.A — Menu da bandeja", width: 760, height: 480 },
   { id: "tokens", title: "11 — Tokens", width: 880, height: 620 },

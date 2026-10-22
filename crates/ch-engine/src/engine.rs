@@ -82,6 +82,7 @@ pub struct Shared {
     fires: AtomicU64,
     clicks: AtomicU64,
     skipped_self: AtomicU64,
+    blocked_by_admin: AtomicBool,
     missed: AtomicU64,
     run_started_ns: AtomicU64,
     paused_at_ns: AtomicU64,
@@ -100,6 +101,7 @@ pub struct Snapshot {
     pub fires: u64,
     pub clicks: u64,
     pub skipped_self: u64,
+    pub blocked_by_admin: bool,
     pub missed: u64,
     pub elapsed_ns: u64,
     pub countdown_remaining_ns: Option<u64>,
@@ -129,6 +131,10 @@ impl Shared {
 
     pub fn add_skipped_self(&self) {
         self.skipped_self.fetch_add(1, Ordering::Relaxed);
+    }
+
+    pub fn set_blocked_by_admin(&self, blocked: bool) {
+        self.blocked_by_admin.store(blocked, Ordering::Relaxed);
     }
 
     pub fn missed(&self) -> u64 {
@@ -173,6 +179,7 @@ impl Shared {
             fires: self.fires(),
             clicks: self.clicks(),
             skipped_self: self.skipped_self.load(Ordering::Relaxed),
+            blocked_by_admin: self.blocked_by_admin.load(Ordering::Relaxed),
             missed: self.missed(),
             elapsed_ns,
             countdown_remaining_ns: (state == EngineState::Countdown).then(|| {
@@ -197,6 +204,7 @@ impl Shared {
         ] {
             counter.store(0, Ordering::Relaxed);
         }
+        self.blocked_by_admin.store(false, Ordering::Relaxed);
         let _ = self.histogram.drain();
         self.nominal_interval_ns
             .store(plan.nominal_interval_ns, Ordering::Relaxed);

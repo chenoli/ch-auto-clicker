@@ -12,6 +12,7 @@ interface FooterProps {
   elapsedMs: number;
   countdownRemainingMs: number | null;
   noClicks?: boolean;
+  blockedByAdmin?: boolean;
   errorText?: string;
 }
 
@@ -31,18 +32,21 @@ export function Footer({
   elapsedMs,
   countdownRemainingMs,
   noClicks = false,
+  blockedByAdmin = false,
   errorText = "",
 }: FooterProps): ReactElement {
   const { t } = useTranslation();
-  const status =
-    state === "countdown"
+  const blocked = state === "running" && blockedByAdmin;
+  const status = blocked
+    ? t("status.adminBlocked")
+    : state === "countdown"
       ? t("status.countdown", { seconds: formatOneDecimal((countdownRemainingMs ?? 0) / 1000, locale) })
       : state === "error"
         ? errorText
         : t(`status.${state}`);
   return (
     <div className="flex h-10 flex-none items-center gap-4 border-t border-divider px-4 text-11">
-      <div className="flex flex-1 items-center gap-2" data-tone={TONES[state]}>
+      <div className="flex flex-1 items-center gap-2" data-tone={blocked ? "warn" : TONES[state]}>
         <span className="status-dot" />
         <span className="status-text">{status}</span>
       </div>

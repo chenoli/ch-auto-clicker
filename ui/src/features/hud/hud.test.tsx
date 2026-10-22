@@ -63,6 +63,14 @@ describe("HudView", () => {
     expect(props.onDragStart).toHaveBeenCalledOnce();
   });
 
+  it("swaps the hint for a warning while an administrator window blocks the clicks", () => {
+    const { props, view } = setup({ blockedByAdmin: true });
+    expect(screen.getByRole("alert")).toHaveTextContent("Janela de admin sob o cursor");
+    expect(screen.queryByText("Segure Ctrl para mover")).not.toBeInTheDocument();
+    view.rerender(<HudView {...props} state="paused" />);
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
   it("renders nothing while idle", () => {
     const { view } = setup({ state: "idle" });
     expect(view.container).toBeEmptyDOMElement();

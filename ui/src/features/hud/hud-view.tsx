@@ -12,6 +12,7 @@ export interface HudViewProps {
   clicks: number;
   countdownRemainingMs: number | null;
   remainingMs: number | null;
+  blockedByAdmin?: boolean;
   startStop: string;
   pauseResume: string;
   hover?: boolean;
@@ -81,7 +82,13 @@ export function HudView(props: HudViewProps): ReactElement | null {
           {chip.verb}
         </span>
       </div>
-      <span className="hud-hint">{t("hud.hint")}</span>
+      {state === "running" && props.blockedByAdmin ? (
+        <span className="hud-hint" data-tone="warn" role="alert">
+          {t("hud.adminBlocked")}
+        </span>
+      ) : (
+        <span className="hud-hint">{t("hud.hint")}</span>
+      )}
     </div>
   );
 }

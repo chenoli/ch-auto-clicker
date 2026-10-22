@@ -231,6 +231,17 @@ pub fn notify_hotkey_taken<R: Runtime>(app: &AppHandle<R>, combo: &Hotkey) {
         .show();
 }
 
+pub fn notify_admin_target<R: Runtime>(app: &AppHandle<R>) {
+    use tauri_plugin_notification::NotificationExt;
+    let locale = app.state::<AppState>().settings().locale;
+    let _ = app
+        .notification()
+        .builder()
+        .title(text(locale, Text::AdminTargetTitle))
+        .body(text(locale, Text::AdminTargetBody))
+        .show();
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

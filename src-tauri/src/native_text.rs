@@ -7,6 +7,8 @@ pub enum Text {
     ProfileFileType,
     HotkeyTakenBody,
     DefaultProfileName,
+    AdminTargetTitle,
+    AdminTargetBody,
 }
 
 pub const fn text(locale: Locale, key: Text) -> &'static str {
@@ -34,6 +36,18 @@ pub const fn text(locale: Locale, key: Text) -> &'static str {
         (PtBr, DefaultProfileName) => "Meu perfil",
         (EnUs, DefaultProfileName) => "My profile",
         (Es419, DefaultProfileName) => "Mi perfil",
+        (PtBr, AdminTargetTitle) => "Cliques bloqueados por um app de administrador",
+        (EnUs, AdminTargetTitle) => "Clicks blocked by an administrator app",
+        (Es419, AdminTargetTitle) => "Clics bloqueados por una app de administrador",
+        (PtBr, AdminTargetBody) => {
+            "O Windows não deixa clicar numa janela aberta como administrador. O clicker continua rodando e volta a clicar quando o cursor sair dela. Para clicar nela, abra o CH Auto Clicker como administrador."
+        }
+        (EnUs, AdminTargetBody) => {
+            "Windows does not allow clicks on a window running as administrator. The clicker keeps running and clicks again once the cursor leaves it. To click it, run CH Auto Clicker as administrator."
+        }
+        (Es419, AdminTargetBody) => {
+            "Windows no permite hacer clic en una ventana abierta como administrador. El clicker sigue en marcha y vuelve a hacer clic cuando el cursor salga de ella. Para hacer clic en ella, abre CH Auto Clicker como administrador."
+        }
     }
 }
 
@@ -63,12 +77,14 @@ pub fn hotkey_taken_title(locale: Locale, combo: &str) -> String {
 mod tests {
     use super::*;
 
-    const ALL: [Text; 5] = [
+    const ALL: [Text; 7] = [
         Text::CaptureTitle,
         Text::VariationTitle,
         Text::ProfileFileType,
         Text::HotkeyTakenBody,
         Text::DefaultProfileName,
+        Text::AdminTargetTitle,
+        Text::AdminTargetBody,
     ];
 
     #[test]

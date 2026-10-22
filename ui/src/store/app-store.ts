@@ -17,6 +17,7 @@ export const IDLE_TICK: EngineTick = {
   fires: 0,
   clicks: 0,
   skippedSelf: 0,
+  blockedByAdmin: false,
   missed: 0,
   elapsedMs: 0,
   countdownRemainingMs: null,

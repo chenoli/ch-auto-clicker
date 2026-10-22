@@ -207,6 +207,7 @@ export function MainWindowView({
         elapsedMs={engine.elapsedMs ?? 0}
         countdownRemainingMs={engine.countdownRemainingMs}
         noClicks={noClicks}
+        blockedByAdmin={engine.blockedByAdmin}
         errorText={shortcutBroken ? t("status.hotkeyUnavailable", { combo: hotkeyError }) : errorText}
       />
     </div>

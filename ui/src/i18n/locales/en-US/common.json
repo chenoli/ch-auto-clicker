@@ -46,6 +46,7 @@
     "startAnyway": "Start without shortcut"
   },
   "status": {
+    "adminBlocked": "Blocked: admin window",
     "idle": "Stopped",
     "countdown": "Starting in {seconds} s",
     "running": "Running",
@@ -108,7 +109,6 @@
   "errors": {
     "INPUT_BLOCKED": "Input blocked",
     "OUTSIDE_DESKTOP": "Point off screen",
-    "TARGET_ELEVATED": "Blocked by admin app",
     "PROFILE_INVALID": "The profile has invalid values.",
     "PROFILE_NOT_FOUND": "Profile not found.",
     "STALE_PROFILE": "The profile was changed in another window. The latest version was reloaded.",
@@ -392,6 +392,7 @@
     "action": "Support ↗"
   },
   "hud": {
+    "adminBlocked": "Admin window under the cursor: clicks on hold",
     "countdown": "Starting",
     "running": "Running",
     "paused": "Paused",

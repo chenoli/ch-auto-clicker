@@ -2,7 +2,7 @@ use ch_core::engine::clock::NANOS_PER_MS;
 use ch_core::engine::scheduler::Scheduler;
 use ch_core::engine::timeline::{IntervalTimeline, StopTimeline, Timeline};
 use ch_core::geometry::{DisplayLayout, Point, Rect};
-use ch_core::input::{InputBackend, InputError, TargetGuard};
+use ch_core::input::{InputBackend, TargetGuard};
 use ch_core::model::{Mode, Position, Profile, ScanAction};
 use ch_core::scan::{ScanPath, ScanTimeline};
 use ch_core::validate::{ValidationError, validate_profile};
@@ -166,8 +166,10 @@ pub fn build_plan(
                         shared.add_skipped_self();
                         return Ok(());
                     }
-                    if guard.target_is_elevated() {
-                        return Err(InputError::TargetElevated);
+                    let elevated = guard.target_is_elevated();
+                    shared.set_blocked_by_admin(elevated);
+                    if elevated {
+                        return Ok(());
                     }
                     backend.click(click.button, click.kind)?;
                     shared.add_clicks(clicks_per_tick);
@@ -193,8 +195,10 @@ pub fn build_plan(
                         shared.add_skipped_self();
                         return Ok(());
                     }
-                    if guard.target_is_elevated() {
-                        return Err(InputError::TargetElevated);
+                    let elevated = guard.target_is_elevated();
+                    shared.set_blocked_by_admin(elevated);
+                    if elevated {
+                        return Ok(());
                     }
                     backend.click(click.button, click.kind)?;
                     shared.add_clicks(clicks_per_tick);
@@ -423,21 +427,40 @@ mod tests {
     }
 
     #[test]
-    fn an_elevated_target_ends_the_run_without_clicking() {
-        struct Elevated;
+    fn an_elevated_target_skips_clicks_and_flags_the_run() {
+        struct Elevated(Arc<AtomicBool>);
         impl TargetGuard for Elevated {
             fn blocks_click(&self) -> bool {
                 false
             }
             fn target_is_elevated(&self) -> bool {
-                true
+                self.0.load(Ordering::SeqCst)
             }
         }
-        let plan = build_plan(&profile(), 0, desk(), Box::new(Elevated)).expect("plan");
-        let (calls, _, shared, end) = simulate(plan, 3);
+        let elevated = Arc::new(AtomicBool::new(true));
+        let plan = build_plan(
+            &profile(),
+            0,
+            desk(),
+            Box::new(Elevated(Arc::clone(&elevated))),
+        )
+        .expect("plan");
+        let (calls, _, shared, _) = simulate(plan, 3);
         assert!(calls.is_empty(), "nothing injected: {calls:?}");
         assert_eq!(shared.clicks(), 0);
-        assert_eq!(end, RunEnd::Failed(InputError::TargetElevated));
+        assert!(shared.snapshot(0).blocked_by_admin);
+
+        elevated.store(false, Ordering::SeqCst);
+        let plan = build_plan(
+            &profile(),
+            0,
+            desk(),
+            Box::new(Elevated(Arc::clone(&elevated))),
+        )
+        .expect("plan");
+        let (calls, _, shared, _) = simulate(plan, 2);
+        assert_eq!(calls.len(), 2);
+        assert!(!shared.snapshot(0).blocked_by_admin);
     }
 
     #[test]

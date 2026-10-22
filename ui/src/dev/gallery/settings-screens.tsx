@@ -74,6 +74,7 @@ export function HudStatesDemo(): ReactElement {
       <HudView {...common} state="running" countdownRemainingMs={null} remainingMs={272_000} />
       <HudView {...common} state="paused" countdownRemainingMs={null} remainingMs={272_000} />
       <HudView {...common} state="running" countdownRemainingMs={null} remainingMs={272_000} hover />
+      <HudView {...common} state="running" countdownRemainingMs={null} remainingMs={272_000} blockedByAdmin />
     </div>
   );
 }

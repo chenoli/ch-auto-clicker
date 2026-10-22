@@ -20,6 +20,7 @@ pub struct EngineTick {
     pub fires: u32,
     pub clicks: u32,
     pub skipped_self: u32,
+    pub blocked_by_admin: bool,
     pub missed: u32,
     pub elapsed_ms: f64,
     pub countdown_remaining_ms: Option<f64>,
@@ -33,6 +34,7 @@ impl From<Snapshot> for EngineTick {
             fires: saturating_u32(s.fires),
             clicks: saturating_u32(s.clicks),
             skipped_self: saturating_u32(s.skipped_self),
+            blocked_by_admin: s.blocked_by_admin,
             missed: saturating_u32(s.missed),
             elapsed_ms: s.elapsed_ns as f64 / NANOS_PER_MS,
             countdown_remaining_ms: s.countdown_remaining_ns.map(|n| n as f64 / NANOS_PER_MS),
@@ -61,7 +63,6 @@ impl From<&StateChange> for EngineStatus {
             error_code: c.error.as_ref().map(|e| match e {
                 ch_core::input::InputError::Blocked { .. } => "INPUT_BLOCKED".to_owned(),
                 ch_core::input::InputError::OutsideDesktop { .. } => "OUTSIDE_DESKTOP".to_owned(),
-                ch_core::input::InputError::TargetElevated => "TARGET_ELEVATED".to_owned(),
             }),
         }
     }
@@ -115,15 +116,48 @@ pub struct ProfilesChanged {
     pub active_profile_id: Option<String>,
 }
 
-pub struct EventSink<R: Runtime>(pub AppHandle<R>);
+#[derive(Debug, Default)]
+pub struct AdminNotice {
+    shown: bool,
+}
+
+impl AdminNotice {
+    pub fn should_notify(&mut self, snapshot: &Snapshot) -> bool {
+        if !snapshot.state.is_active() {
+            self.shown = false;
+            return false;
+        }
+        let notify = snapshot.blocked_by_admin && !self.shown;
+        self.shown |= snapshot.blocked_by_admin;
+        notify
+    }
+}
+
+pub struct EventSink<R: Runtime> {
+    app: AppHandle<R>,
+    admin: AdminNotice,
+}
+
+impl<R: Runtime> EventSink<R> {
+    pub fn new(app: AppHandle<R>) -> Self {
+        Self {
+            app,
+            admin: AdminNotice::default(),
+        }
+    }
+}
 
 impl<R: Runtime> TelemetrySink for EventSink<R> {
     fn tick(&mut self, snapshot: Snapshot) {
-        let _ = EngineTick::from(snapshot).emit(&self.0);
+        if self.admin.should_notify(&snapshot) {
+            log::info!("clicks skipped: the window under the cursor runs as administrator");
+            crate::tray::notify_admin_target(&self.app);
+        }
+        let _ = EngineTick::from(snapshot).emit(&self.app);
     }
 
     fn jitter(&mut self, stats: JitterStats) {
-        let _ = EngineJitter::from(stats).emit(&self.0);
+        let _ = EngineJitter::from(stats).emit(&self.app);
     }
 
     fn degraded(&mut self, degraded: bool) {
@@ -131,7 +165,7 @@ impl<R: Runtime> TelemetrySink for EventSink<R> {
             degraded,
             reason: DegradedReason::Timing,
         }
-        .emit(&self.0);
+        .emit(&self.app);
     }
 }
 
@@ -148,6 +182,7 @@ mod tests {
             fires: 12,
             clicks: u64::MAX,
             skipped_self: 1,
+            blocked_by_admin: true,
             missed: 0,
             elapsed_ns: 2_500_000,
             countdown_remaining_ns: None,
@@ -158,6 +193,7 @@ mod tests {
         assert_eq!(t.remaining_ms, Some(1_000.0));
         let json = serde_json::to_value(&t).expect("json");
         assert_eq!(json["state"], "running");
+        assert_eq!(json["blockedByAdmin"], true);
         assert_eq!(json["countdownRemainingMs"], serde_json::Value::Null);
     }
 
@@ -183,14 +219,35 @@ mod tests {
             error: Some(InputError::OutsideDesktop { x: 0, y: 0 }),
         });
         assert_eq!(outside.error_code.as_deref(), Some("OUTSIDE_DESKTOP"));
-        let elevated = EngineStatus::from(&StateChange {
-            state: EngineState::Error,
-            prev: EngineState::Stopping,
-            reason: None,
-            countdown_total_ns: None,
-            error: Some(InputError::TargetElevated),
-        });
-        assert_eq!(elevated.error_code.as_deref(), Some("TARGET_ELEVATED"));
+    }
+
+    #[test]
+    fn the_admin_notice_shows_once_per_run() {
+        let snap = |state, blocked_by_admin| Snapshot {
+            state,
+            fires: 0,
+            clicks: 0,
+            skipped_self: 0,
+            blocked_by_admin,
+            missed: 0,
+            elapsed_ns: 0,
+            countdown_remaining_ns: None,
+            remaining_ns: None,
+        };
+        let mut notice = AdminNotice::default();
+        assert!(!notice.should_notify(&snap(EngineState::Running, false)));
+        assert!(notice.should_notify(&snap(EngineState::Running, true)));
+        assert!(!notice.should_notify(&snap(EngineState::Running, true)));
+        assert!(!notice.should_notify(&snap(EngineState::Running, false)));
+        assert!(
+            !notice.should_notify(&snap(EngineState::Running, true)),
+            "once per run"
+        );
+        assert!(!notice.should_notify(&snap(EngineState::Idle, true)));
+        assert!(
+            notice.should_notify(&snap(EngineState::Running, true)),
+            "next run"
+        );
     }
 
     #[test]

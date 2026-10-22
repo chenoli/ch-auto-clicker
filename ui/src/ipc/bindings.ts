@@ -168,6 +168,7 @@ export type EngineTick = {
 	fires: number,
 	clicks: number,
 	skippedSelf: number,
+	blockedByAdmin: boolean,
 	missed: number,
 	elapsedMs: number | null,
 	countdownRemainingMs: number | null,

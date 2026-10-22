@@ -53,6 +53,7 @@ export function HudWindow(): ReactElement | null {
           clicks={engine.clicks}
           countdownRemainingMs={engine.countdownRemainingMs}
           remainingMs={engine.remainingMs}
+          blockedByAdmin={engine.blockedByAdmin}
           startStop={hotkeyLabel(settings.hotkeys.startStop)}
           pauseResume={hotkeyLabel(settings.hotkeys.pauseResume)}
           hover={hover.hover}

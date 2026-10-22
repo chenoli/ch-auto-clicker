@@ -46,6 +46,7 @@
     "startAnyway": "Iniciar sin atajo"
   },
   "status": {
+    "adminBlocked": "Bloqueado: ventana admin",
     "idle": "Detenido",
     "countdown": "Inicia en {seconds} s",
     "running": "En ejecución",
@@ -108,7 +109,6 @@
   "errors": {
     "INPUT_BLOCKED": "Entrada bloqueada",
     "OUTSIDE_DESKTOP": "Punto fuera de la pantalla",
-    "TARGET_ELEVATED": "Bloqueado por app admin",
     "PROFILE_INVALID": "El perfil tiene valores inválidos.",
     "PROFILE_NOT_FOUND": "Perfil no encontrado.",
     "STALE_PROFILE": "El perfil cambió en otra ventana. Se recargó la versión más reciente.",
@@ -392,6 +392,7 @@
     "action": "Apoyar ↗"
   },
   "hud": {
+    "adminBlocked": "Ventana de admin bajo el cursor: clics en pausa",
     "countdown": "Iniciando",
     "running": "En ejecución",
     "paused": "En pausa",
