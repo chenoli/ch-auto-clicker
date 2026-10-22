@@ -1,9 +1,10 @@
 use std::sync::Mutex;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, Instant};
 
 use tauri::{
     AppHandle, LogicalSize, Manager, PhysicalPosition, Runtime, WebviewUrl, WebviewWindow,
-    WebviewWindowBuilder, WindowEvent,
+    WebviewWindowBuilder,
 };
 use tauri_specta::Event;
 
@@ -12,9 +13,12 @@ const TITLE: &str = "CH Auto Clicker menu";
 const DEFAULT_SIZE: (f64, f64) = (498.0, 470.0);
 const EDGE: f64 = 16.0;
 const REOPEN_GUARD: Duration = Duration::from_millis(300);
+const OPEN_GRACE: Duration = Duration::from_millis(400);
+const FOCUS_POLL: Duration = Duration::from_millis(50);
 
 static SIZE: Mutex<(f64, f64)> = Mutex::new(DEFAULT_SIZE);
 static HIDDEN_AT: Mutex<Option<Instant>> = Mutex::new(None);
+static OPENED: AtomicU64 = AtomicU64::new(0);
 
 #[derive(
     Debug,
@@ -72,13 +76,58 @@ pub fn create<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
         .focused(false)
         .visible(false)
         .build()?;
-    let handle = app.clone();
-    menu.on_window_event(move |event| {
-        if matches!(event, WindowEvent::Focused(false)) {
-            hide(&handle);
-        }
-    });
+    #[cfg(not(windows))]
+    {
+        let handle = app.clone();
+        menu.on_window_event(move |event| {
+            if matches!(event, tauri::WindowEvent::Focused(false)) {
+                hide(&handle);
+            }
+        });
+    }
+    #[cfg(windows)]
+    drop(menu);
     Ok(())
+}
+
+#[cfg(windows)]
+fn watch_foreground<R: Runtime>(app: &AppHandle<R>, menu: &WebviewWindow<R>) {
+    let Ok(hwnd) = menu.hwnd() else {
+        return;
+    };
+    let hwnd = hwnd.0 as isize;
+    let opening = OPENED.fetch_add(1, Ordering::SeqCst) + 1;
+    let app = app.clone();
+    let menu = menu.clone();
+    let _ = std::thread::Builder::new()
+        .name("ch-tray-menu-focus".into())
+        .spawn(move || {
+            let opened_at = Instant::now();
+            let mut reclaimed = false;
+            loop {
+                std::thread::sleep(FOCUS_POLL);
+                if OPENED.load(Ordering::SeqCst) != opening || !menu.is_visible().unwrap_or(false) {
+                    return;
+                }
+                if ch_win::window::is_foreground(hwnd) {
+                    continue;
+                }
+                if opened_at.elapsed() < OPEN_GRACE {
+                    if !reclaimed {
+                        log::info!("tray menu lost the foreground while opening; taking it back");
+                        reclaimed = true;
+                    }
+                    crate::windowing::bring_to_front(&menu);
+                    continue;
+                }
+                log::info!(
+                    "tray menu closed: another window took the foreground after {} ms",
+                    opened_at.elapsed().as_millis()
+                );
+                hide(&app);
+                return;
+            }
+        });
 }
 
 pub fn open<R: Runtime>(app: &AppHandle<R>, anchor: PhysicalPosition<f64>) {
@@ -116,6 +165,8 @@ pub fn open<R: Runtime>(app: &AppHandle<R>, anchor: PhysicalPosition<f64>) {
     let _ = menu.show();
     let _ = TrayMenuOpened.emit(app);
     crate::windowing::bring_to_front(&menu);
+    #[cfg(windows)]
+    watch_foreground(app, &menu);
 }
 
 pub fn hide<R: Runtime>(app: &AppHandle<R>) {

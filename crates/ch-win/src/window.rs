@@ -25,6 +25,12 @@ pub fn ctrl_down() -> bool {
     unsafe { GetAsyncKeyState(i32::from(VK_CONTROL.0)) < 0 }
 }
 
+pub fn is_foreground(hwnd: isize) -> bool {
+    // SAFETY: GetForegroundWindow only reads which window is active.
+    let foreground = unsafe { GetForegroundWindow() };
+    hwnd != 0 && foreground.0 as isize == hwnd
+}
+
 pub fn bring_to_front(hwnd: isize) -> bool {
     let hwnd = HWND(hwnd as *mut core::ffi::c_void);
     // SAFETY: plain user32 calls on a window handle checked with IsWindow; the input
@@ -57,5 +63,10 @@ mod tests {
     #[test]
     fn bring_to_front_rejects_a_handle_that_is_not_a_window() {
         assert!(!bring_to_front(0));
+    }
+
+    #[test]
+    fn a_null_handle_is_never_the_foreground_window() {
+        assert!(!is_foreground(0));
     }
 }
