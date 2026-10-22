@@ -18,6 +18,7 @@ use crate::windowing;
 pub struct Bootstrap {
     pub version: String,
     pub dpi_awareness: String,
+    pub elevated: bool,
     pub settings: Settings,
     pub profiles: Vec<Profile>,
     pub engine: EngineTick,
@@ -40,6 +41,7 @@ pub fn app_bootstrap(app: AppHandle, state: State<'_, AppState>) -> Bootstrap {
     Bootstrap {
         version: app.package_info().version.to_string(),
         dpi_awareness: dpi_awareness().to_owned(),
+        elevated: is_elevated(),
         profiles: ch_core::profiles::ordered(&data.settings, &data.profiles),
         settings: data.settings,
         engine: engine_tick(&state),
@@ -135,6 +137,62 @@ pub fn sync_autostart(app: &AppHandle, wanted: bool) {
             ),
             Err(e) => log::warn!("autostart: {e}"),
         }
+    }
+}
+
+pub fn is_elevated() -> bool {
+    #[cfg(windows)]
+    return ch_win::elevation::is_elevated();
+    #[cfg(not(windows))]
+    false
+}
+
+pub const AFTER_PID: &str = "--after-pid";
+
+pub fn relaunch_args(current: &[String], keep_minimized: bool, pid: u32) -> Vec<String> {
+    let mut args: Vec<String> = Vec::new();
+    let mut rest = current.iter().skip(1);
+    while let Some(arg) = rest.next() {
+        if arg == AFTER_PID {
+            rest.next();
+        } else if arg != crate::STARTED_MINIMIZED || keep_minimized {
+            args.push(arg.clone());
+        }
+    }
+    args.push(AFTER_PID.to_owned());
+    args.push(pid.to_string());
+    args
+}
+
+#[cfg(windows)]
+pub fn relaunch_as_admin(keep_minimized: bool) -> Result<bool, String> {
+    let current: Vec<String> = std::env::args().collect();
+    let args = relaunch_args(&current, keep_minimized, std::process::id());
+    ch_win::elevation::relaunch_elevated(&args).map(|r| r == ch_win::elevation::Relaunch::Started)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn app_restart_as_admin(app: AppHandle) -> AppResult<()> {
+    #[cfg(windows)]
+    {
+        match relaunch_as_admin(false) {
+            Ok(true) => {
+                log::info!("restarting as administrator");
+                app.exit(0);
+                Ok(())
+            }
+            Ok(false) => Err(AppError::new("ELEVATION_DECLINED", "UAC was declined")),
+            Err(e) => {
+                log::warn!("restart as administrator: {e}");
+                Err(AppError::new("ELEVATION_FAILED", e))
+            }
+        }
+    }
+    #[cfg(not(windows))]
+    {
+        let _ = app;
+        Err(AppError::new("ELEVATION_FAILED", "not supported"))
     }
 }
 
@@ -570,6 +628,23 @@ pub fn dpi_awareness() -> &'static str {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn relaunch_args_drop_the_old_pid_and_keep_minimized_only_when_asked() {
+        let current = ["app.exe", "--minimized", "--after-pid", "7", "--x"].map(String::from);
+        assert_eq!(
+            relaunch_args(&current, true, 42),
+            ["--minimized", "--x", "--after-pid", "42"]
+        );
+        assert_eq!(
+            relaunch_args(&current, false, 42),
+            ["--x", "--after-pid", "42"]
+        );
+        assert_eq!(
+            relaunch_args(&["app.exe".into()], false, 1),
+            ["--after-pid", "1"]
+        );
+    }
 
     #[test]
     fn autostart_follows_the_saved_setting() {

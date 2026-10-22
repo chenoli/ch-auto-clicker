@@ -231,6 +231,7 @@ Following **design decision 1**, the click settings (`click`) and the timer (`st
   "theme": "grafite",
   "followSystemTheme": false,
   "autostart": false,
+  "runAsAdmin": false,
   "minimizeToTray": true,
   "showHud": true,
   "closeAction": "minimize",
@@ -667,6 +668,7 @@ True "hardware-level clicking" (a physical HID device, e.g. a microcontroller) i
 - **Installer:** Tauri NSIS (per-user, no admin) with the WebView2 bootstrapper and a language selector (pt-BR, en-US, es-419) whose choice becomes the app's initial language. Optional MSI for those who prefer it.
 - **Signing:** Authenticode in CI (see D9). **Updater:** `tauri-plugin-updater` with a minisign key (GitHub secret), `latest.json` manifest on GitHub Releases. Manual check through "Check for updates" and an automatic, silent check every 24 h.
 - **Autostart:** `tauri-plugin-autostart` (HKCU Run key) with `--minimized`, which opens in the tray. On launch the Run entry is brought in line with `settings.autostart` (the uninstaller removes it even when the data is kept).
+- **Run as administrator (`runAsAdmin`):** off by default. When it is on and the process is not elevated, startup relaunches the executable through `ShellExecuteExW` with the `runas` verb (UAC prompt), passing `--after-pid <pid>`, and exits; the new process waits up to 10 s for that PID to end before it registers the single instance. A declined prompt keeps the app running without elevation. Settings also offers "Restart as administrator now" while the option is on and the app is not elevated. Trade-offs: the UAC prompt shows on every launch, including autostart, and an elevated app cannot receive files dragged from a non-elevated Explorer (UIPI), so `.chprofile` import goes through the file picker there.
 - **Single instance:** `tauri-plugin-single-instance`. A second launch focuses the existing window.
 - **CI (GitHub Actions):** `ci.yml` on PRs (fmt, clippy `-D warnings`, `cargo test`, eslint, tsc, vitest, Playwright visual, token/i18n checks, `cargo audit`/`pnpm audit`). `release.yml` on `v*` tags (build, signing, upload of the installer + `latest.json` to Releases).
 

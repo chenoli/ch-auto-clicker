@@ -58,8 +58,10 @@ export interface SettingsScreenProps {
   capabilities: Capabilities | null;
   themeLabel: string;
   measuring?: boolean;
+  elevated?: boolean;
   errorCode?: string | null;
   onChange: (next: Settings) => void;
+  onRestartAsAdmin?: () => void;
   onLocale: (locale: Locale) => void;
   onOpenThemes: () => void;
   onOpenHotkeys: () => void;
@@ -194,6 +196,19 @@ export function SettingsScreen(props: SettingsScreenProps): ReactElement {
           checked={settings.autostart}
           onChange={(autostart) => set({ autostart })}
         />
+        <ToggleRow
+          title={t("settings.runAsAdmin")}
+          hint={t(props.elevated ? "settings.runAsAdminActive" : "settings.runAsAdminHint")}
+          checked={settings.runAsAdmin ?? false}
+          onChange={(runAsAdmin) => set({ runAsAdmin })}
+        />
+        {settings.runAsAdmin && !props.elevated && (
+          <div className="pb-3">
+            <button type="button" className="link" onClick={props.onRestartAsAdmin}>
+              {t("settings.restartAsAdmin")}
+            </button>
+          </div>
+        )}
         <ToggleRow
           title={t("settings.tray")}
           hint={t("settings.trayHint")}

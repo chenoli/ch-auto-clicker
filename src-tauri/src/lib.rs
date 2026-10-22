@@ -24,7 +24,8 @@ mod windowing;
 
 use tauri::Manager;
 
-const STARTED_MINIMIZED: &str = "--minimized";
+pub(crate) const STARTED_MINIMIZED: &str = "--minimized";
+const RELAUNCH_WAIT: std::time::Duration = std::time::Duration::from_secs(10);
 
 fn on_main_event(
     app: &tauri::AppHandle,
@@ -60,7 +61,23 @@ fn on_main_event(
     }
 }
 
+fn wait_for_previous_instance() {
+    let args: Vec<String> = std::env::args().collect();
+    let pid = args
+        .iter()
+        .position(|a| a == commands::AFTER_PID)
+        .and_then(|i| args.get(i + 1))
+        .and_then(|p| p.parse::<u32>().ok());
+    #[cfg(windows)]
+    if let Some(pid) = pid {
+        ch_win::elevation::wait_for_exit(pid, RELAUNCH_WAIT);
+    }
+    #[cfg(not(windows))]
+    let _ = (pid, RELAUNCH_WAIT);
+}
+
 pub fn run() {
+    wait_for_previous_instance();
     let specta = ipc::builder();
     #[cfg(debug_assertions)]
     ipc::export_bindings(&specta);
@@ -88,6 +105,17 @@ pub fn run() {
             let state = state::AppState::new(app.handle())?;
             app.manage(state);
             let state = app.state::<state::AppState>();
+            #[cfg(windows)]
+            if state.settings().run_as_admin && !commands::is_elevated() {
+                let minimized = std::env::args().any(|a| a == STARTED_MINIMIZED);
+                match commands::relaunch_as_admin(minimized) {
+                    Ok(true) => std::process::exit(0),
+                    Ok(false) => {
+                        log::info!("run as administrator: UAC declined, running without it")
+                    }
+                    Err(e) => log::warn!("run as administrator: {e}"),
+                }
+            }
             state.hotkeys().apply(app.handle(), &state.data());
             theme::apply(app.handle(), &state.data().settings);
             commands::sync_autostart(app.handle(), state.settings().autostart);

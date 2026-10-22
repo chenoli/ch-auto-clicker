@@ -25,6 +25,7 @@ interface SettingsRouteProps {
 export function SettingsRoute({ settings, ...nav }: SettingsRouteProps): ReactElement {
   const { t } = useTranslation();
   const version = useAppStore((s) => s.version);
+  const elevated = useAppStore((s) => s.elevated);
   const capabilities = useAppStore((s) => s.capabilities);
   const [error, setError] = useState<string | null>(null);
   const [measuring, setMeasuring] = useState(false);
@@ -47,9 +48,16 @@ export function SettingsRoute({ settings, ...nav }: SettingsRouteProps): ReactEl
       capabilities={capabilities}
       themeLabel={themeLabel(settings, t)}
       measuring={measuring}
+      elevated={elevated}
       errorCode={error}
       onChange={save}
       onLocale={(locale) => save({ ...settings, locale })}
+      onRestartAsAdmin={() => {
+        setError(null);
+        void commands.appRestartAsAdmin().then((r) => {
+          if (r.status === "error") setError(r.error.code);
+        });
+      }}
       onSupport={() =>
         void commands.appOpenSupport().then((r) => {
           if (r.status === "error") setError(r.error.code);

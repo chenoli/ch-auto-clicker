@@ -27,6 +27,7 @@ export const IDLE_TICK: EngineTick = {
 export interface AppState {
   ready: boolean;
   version: string;
+  elevated: boolean;
   settings: Settings | null;
   profiles: Profile[];
   engine: EngineTick;
@@ -42,6 +43,7 @@ export interface AppState {
 export const useAppStore = create<AppState>(() => ({
   ready: false,
   version: "",
+  elevated: false,
   settings: null,
   profiles: [],
   engine: IDLE_TICK,
@@ -58,6 +60,7 @@ export function hydrate(b: Bootstrap): void {
   useAppStore.setState({
     ready: true,
     version: b.version,
+    elevated: b.elevated,
     settings: b.settings,
     profiles: b.profiles,
     engine: b.engine,

@@ -42,6 +42,7 @@ const mocks = vi.hoisted(() => ({
     hotkeySet: vi.fn(),
     settingsUpdate: vi.fn(),
     settingsAcknowledgeAntiCheat: vi.fn(),
+    appRestartAsAdmin: vi.fn(),
     appOpenSupport: vi.fn(),
     engineRunBenchmark: vi.fn(),
     hudResize: vi.fn(),
@@ -335,6 +336,22 @@ describe("ThemesRoute", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("SETTINGS_INVALID");
     fireEvent.click(screen.getByRole("button", { name: "Voltar" }));
     expect(screen.getByRole("heading", { name: "Configurações" })).toBeInTheDocument();
+  });
+
+  it("restarts as administrator from Configurações and shows a declined UAC", async () => {
+    mocks.commands.appBootstrap.mockResolvedValue({
+      ...bootstrap(),
+      settings: { ...bootstrap().settings, runAsAdmin: true },
+    });
+    mocks.commands.appRestartAsAdmin.mockResolvedValueOnce({
+      status: "error",
+      error: { code: "ELEVATION_DECLINED", message: "" },
+    });
+    render(<MainWindow />);
+    fireEvent.click(await screen.findByRole("button", { name: "Configurações" }));
+    fireEvent.click(screen.getByRole("button", { name: /Reiniciar como administrador/ }));
+    expect(mocks.commands.appRestartAsAdmin).toHaveBeenCalledOnce();
+    expect(await screen.findByRole("alert")).toHaveTextContent("não autorizou");
   });
 
   it("labels the Tema row when following Windows", async () => {

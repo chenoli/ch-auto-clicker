@@ -346,6 +346,8 @@ pub struct Settings {
     pub window: WindowPosition,
     #[serde(default)]
     pub anti_cheat_acknowledged: bool,
+    #[serde(default)]
+    pub run_as_admin: bool,
 }
 
 impl Settings {
@@ -378,6 +380,7 @@ impl Settings {
             profile_order: Vec::new(),
             hotkeys: HotkeyBindings::default(),
             anti_cheat_acknowledged: false,
+            run_as_admin: false,
             hud: WindowPosition::default(),
             window: WindowPosition::default(),
         }
@@ -485,6 +488,7 @@ mod tests {
         assert_eq!(v["countdownSec"], 3);
         assert_eq!(v["closeAction"], "minimize");
         assert_eq!(v["theme"], "grafite");
+        assert_eq!(v["runAsAdmin"], false);
         assert_eq!(
             serde_json::from_value::<Settings>(v).expect("round trip"),
             s

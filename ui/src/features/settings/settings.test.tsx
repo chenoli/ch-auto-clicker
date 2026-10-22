@@ -80,6 +80,25 @@ describe("SettingsScreen", () => {
     expect(props.onLocale).toHaveBeenCalledWith("en-US");
   });
 
+  it("turns on running as administrator and offers to restart until it is elevated", () => {
+    const props = setup();
+    expect(screen.queryByRole("button", { name: /Reiniciar como administrador/ })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("switch", { name: "Sempre abrir como administrador" }));
+    expect(props.onChange).toHaveBeenLastCalledWith({ ...settings, runAsAdmin: true });
+  });
+
+  it("shows the restart link only while the option is on and the app is not elevated", () => {
+    const props = setup({ settings: { ...settings, runAsAdmin: true }, onRestartAsAdmin: vi.fn() });
+    fireEvent.click(screen.getByRole("button", { name: /Reiniciar como administrador/ }));
+    expect(props.onRestartAsAdmin).toHaveBeenCalledOnce();
+  });
+
+  it("says when it already runs as administrator", () => {
+    setup({ settings: { ...settings, runAsAdmin: true }, elevated: true });
+    expect(screen.getByText("Rodando como administrador agora")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Reiniciar como administrador/ })).not.toBeInTheDocument();
+  });
+
   it("limits the countdown to 0–10 s", () => {
     setup({ settings: { ...settings, countdownSec: 10 } });
     expect(screen.getByRole("button", { name: "Mais segundos" })).toBeDisabled();
