@@ -16,7 +16,7 @@ Trade-off decisions (cost, security, scope changes) still go to the user before 
 - Format: Conventional Commits (`feat:`, `fix:`, `chore:`, `test:`, `docs:`, `refactor:`), with the phase scope when useful (`feat(engine): ...`).
 - Granularity: one commit per phase, with a bulleted body explaining what and why, plus any accepted limitations.
 - Message language: English (open-source project; decided by the user on 2026-10-05).
-- Branches: straight to `main` (solo project). Remote: `github.com/chenoli/chenoli-auto-clicker`.
+- Branches: straight to `main` (solo project). Remote: `github.com/chenoli/ch-auto-clicker`.
 - Never push, open a PR, `--amend` or `--no-verify` without an explicit request.
 
 ## 3. 10-layer review + lint --fix

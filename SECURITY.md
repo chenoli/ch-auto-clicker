@@ -13,7 +13,7 @@ Only the latest release receives security fixes. The app updates itself, so keep
 
 Please do not open a public issue for security problems.
 
-Report it privately through [GitHub private vulnerability reporting](https://github.com/chenoli/chenoli-auto-clicker/security/advisories/new). Include:
+Report it privately through [GitHub private vulnerability reporting](https://github.com/chenoli/ch-auto-clicker/security/advisories/new). Include:
 
 - what the problem is and what an attacker could do with it;
 - steps to reproduce, or a proof of concept;

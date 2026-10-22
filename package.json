@@ -2,7 +2,7 @@
   "name": "ch-clicker",
   "private": true,
   "license": "MIT",
-  "repository": "github:chenoli/chenoli-auto-clicker",
+  "repository": "github:chenoli/ch-auto-clicker",
   "version": "0.1.0",
   "type": "module",
   "packageManager": "pnpm@12.8.1",

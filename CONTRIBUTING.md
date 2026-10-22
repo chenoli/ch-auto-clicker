@@ -4,7 +4,7 @@ Thanks for your interest in improving CH. Clicker. Bug reports, translations, do
 
 ## Before you start
 
-- Search the [existing issues](https://github.com/chenoli/chenoli-auto-clicker/issues) first.
+- Search the [existing issues](https://github.com/chenoli/ch-auto-clicker/issues) first.
 - For anything bigger than a small fix, open an issue to discuss the idea before writing code.
 - Security problems go through [`SECURITY.md`](SECURITY.md), never a public issue.
 - By contributing you agree that your work is released under the [MIT license](LICENSE) and that you follow the [Code of Conduct](CODE_OF_CONDUCT.md).

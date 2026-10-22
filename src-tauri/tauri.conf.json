@@ -62,7 +62,7 @@
   "plugins": {
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEFFRTEyQzU1M0NBOURERTkKUldUcDNhazhWU3pocnRkcHJsUy81dXNOL2l6elE4Umx0NHpNaXNtMU1QeHdEblZnNldCV010TjAK",
-      "endpoints": ["https://github.com/chenoli/chenoli-auto-clicker/releases/latest/download/latest.json"],
+      "endpoints": ["https://github.com/chenoli/ch-auto-clicker/releases/latest/download/latest.json"],
       "windows": {
         "installMode": "passive"
       }
