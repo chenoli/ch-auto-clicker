@@ -254,6 +254,7 @@
     "arrows": "Las flechas mueven 1 px",
     "space": "Espacio agrega",
     "undo": "Ctrl Z deshace",
+    "escCancels": "Esc cancela",
     "finish": "para terminar",
     "mode": "Modo de captura",
     "modeArea": "Área",

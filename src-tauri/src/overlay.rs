@@ -1,7 +1,7 @@
 use std::sync::{Mutex, MutexGuard, mpsc};
 
 use ch_core::geometry::{DisplayLayout, Monitor};
-use ch_core::model::{Area, Position, SCAN_AREA_MIN, ScreenPoint};
+use ch_core::model::{Area, ClickMode, Position, SCAN_AREA_MIN, ScreenPoint};
 use serde::{Deserialize, Serialize};
 use tauri::http::{Response, StatusCode};
 use tauri::{
@@ -72,6 +72,7 @@ pub struct Session {
     fingerprint: String,
     captures: Vec<Vec<u8>>,
     added: Vec<String>,
+    original: Option<ClickMode>,
     done: Option<mpsc::Sender<()>>,
 }
 
@@ -203,6 +204,10 @@ fn open<R: Runtime>(app: &AppHandle<R>, mode: OverlayMode) -> AppResult<mpsc::Re
         .active_profile_id
         .ok_or_else(|| AppError::new("PROFILE_NOT_FOUND", "no active profile"))?;
 
+    let original = state
+        .data()
+        .profile(&profile_id)
+        .map(|p| p.modes.click.clone());
     let layout = display_layout();
     let captures = layout
         .monitors
@@ -217,6 +222,7 @@ fn open<R: Runtime>(app: &AppHandle<R>, mode: OverlayMode) -> AppResult<mpsc::Re
         monitors: layout.monitors.clone(),
         captures,
         added: Vec::new(),
+        original,
         done: Some(tx),
     });
 
@@ -467,6 +473,29 @@ pub fn undo<R: Runtime>(app: &AppHandle<R>) -> AppResult<()> {
     Ok(())
 }
 
+pub fn cancel<R: Runtime>(app: &AppHandle<R>) {
+    let state = app.state::<AppState>();
+    let restore = lock(&state.overlays().session)
+        .as_ref()
+        .and_then(|session| {
+            restored_click(session.original.as_ref(), &session.added)
+                .map(|click| (session.profile_id.clone(), click))
+        });
+    if let Some((profile_id, click)) = restore
+        && let Err(e) = update_profile(app, &profile_id, |profile| profile.modes.click = click)
+    {
+        log::warn!("capture cancel: {e:?}");
+    }
+    finish(app);
+}
+
+fn restored_click(original: Option<&ClickMode>, added: &[String]) -> Option<ClickMode> {
+    if added.is_empty() {
+        return None;
+    }
+    original.cloned()
+}
+
 fn update_points<R: Runtime>(
     app: &AppHandle<R>,
     profile_id: &str,
@@ -613,6 +642,21 @@ mod tests {
         );
         assert_eq!(local_cursor(rect, Some(Point { x: 10, y: 30 })), None);
         assert_eq!(local_cursor(rect, None), None);
+    }
+
+    #[test]
+    fn cancel_restores_the_click_settings_only_after_adding_points() {
+        let original = ClickMode {
+            position: Position::Cursor,
+            points: Vec::new(),
+            layout_fingerprint: None,
+        };
+        assert_eq!(restored_click(Some(&original), &[]), None);
+        assert_eq!(
+            restored_click(Some(&original), &["p".into()]),
+            Some(original.clone())
+        );
+        assert_eq!(restored_click(None, &["p".into()]), None);
     }
 
     #[test]

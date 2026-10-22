@@ -89,6 +89,7 @@ export function OverlayWindow(): ReactElement | null {
     void commands.overlayConfirmArea(INDEX, r.x, r.y, r.w, r.h);
   };
   const finish = () => void commands.overlayFinish();
+  const cancel = () => void commands.overlayCancel();
   const setMode = (mode: OverlayMode) => void commands.overlaySetMode(mode);
 
   useEffect(() => {
@@ -96,7 +97,7 @@ export function OverlayWindow(): ReactElement | null {
       const action = overlayKeyAction(e);
       if (state?.mode === "area") {
         if (e.key === "Enter") confirm();
-        else if (e.key === "Escape") finish();
+        else if (e.key === "Escape") cancel();
         else if (action.kind === "nudge" && rect) {
           const dx = action.dx / scale;
           const dy = action.dy / scale;
@@ -121,6 +122,9 @@ export function OverlayWindow(): ReactElement | null {
           return;
         case "finish":
           finish();
+          return;
+        case "cancel":
+          cancel();
       }
     };
     window.addEventListener("keydown", onKey);
@@ -187,7 +191,7 @@ export function OverlayWindow(): ReactElement | null {
           }}
           onConfirm={confirm}
           onMode={setMode}
-          onFinish={finish}
+          onFinish={cancel}
         />
       </div>
     );

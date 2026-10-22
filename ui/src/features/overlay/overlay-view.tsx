@@ -118,6 +118,8 @@ export function OverlayView({
         <span className="overlay-bar__sep" />
         <span>{t("overlay.undo")}</span>
         <span className="overlay-bar__sep" />
+        <span>{t("overlay.escCancels")}</span>
+        <span className="overlay-bar__sep" />
       </OverlayBar>
     </div>
   );

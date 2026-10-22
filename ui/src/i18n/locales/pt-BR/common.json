@@ -254,6 +254,7 @@
     "arrows": "Setas movem 1 px",
     "space": "Espaço adiciona",
     "undo": "Ctrl Z desfaz",
+    "escCancels": "Esc cancela",
     "finish": "para concluir",
     "mode": "Modo de captura",
     "modeArea": "Área",

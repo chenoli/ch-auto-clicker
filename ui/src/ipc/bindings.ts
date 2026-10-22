@@ -52,6 +52,7 @@ export const commands = {
 	overlayAddPoint: (monitor: number, x: number | null, y: number | null) => typedError<OverlayState, AppError>(__TAURI_INVOKE("overlay_add_point", { monitor, x, y })),
 	overlayUndo: () => typedError<null, AppError>(__TAURI_INVOKE("overlay_undo")),
 	overlayFinish: () => __TAURI_INVOKE<void>("overlay_finish"),
+	overlayCancel: () => __TAURI_INVOKE<void>("overlay_cancel"),
 	overlayFocus: (monitor: number) => __TAURI_INVOKE<void>("overlay_focus", { monitor }),
 	overlayFocusCursor: () => __TAURI_INVOKE<void>("overlay_focus_cursor"),
 	windowSetContentHeight: (height: number | null) => typedError<number | null, AppError>(__TAURI_INVOKE("window_set_content_height", { height })),

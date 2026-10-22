@@ -25,6 +25,7 @@ const mocks = vi.hoisted(() => ({
     overlayAddPoint: vi.fn(),
     overlayUndo: vi.fn(),
     overlayFinish: vi.fn(),
+    overlayCancel: vi.fn(),
     overlayFocus: vi.fn(),
     overlayFocusCursor: vi.fn(),
     overlayPickArea: vi.fn(),
@@ -556,8 +557,11 @@ describe("OverlayWindow", () => {
     fireEvent.keyDown(window, { key: "z", ctrlKey: true });
     expect(mocks.commands.overlayUndo).toHaveBeenCalledOnce();
     fireEvent.keyDown(window, { key: "Escape" });
+    expect(mocks.commands.overlayCancel).toHaveBeenCalledOnce();
+    expect(screen.getByText("Esc cancela")).toBeInTheDocument();
+    fireEvent.keyDown(window, { key: "Enter" });
     expect(mocks.commands.overlayFinish).toHaveBeenCalledOnce();
-    fireEvent.click(screen.getByRole("button", { name: /para concluir/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Enter.*para concluir/ }));
     expect(mocks.commands.overlayFinish).toHaveBeenCalledTimes(2);
     fireEvent.keyDown(window, { key: "q" });
     fireEvent.pointerLeave(root);
@@ -664,7 +668,10 @@ describe("OverlayWindow", () => {
     fireEvent.click(screen.getByRole("radio", { name: "Ponto" }));
     expect(mocks.commands.overlaySetMode).toHaveBeenCalledWith("points");
     fireEvent.keyDown(window, { key: "Escape" });
-    expect(mocks.commands.overlayFinish).toHaveBeenCalledOnce();
+    expect(mocks.commands.overlayCancel).toHaveBeenCalledOnce();
+    fireEvent.click(screen.getByRole("button", { name: /Esc.*para cancelar/ }));
+    expect(mocks.commands.overlayCancel).toHaveBeenCalledTimes(2);
+    expect(mocks.commands.overlayFinish).not.toHaveBeenCalled();
     await act(async () => {});
   });
 

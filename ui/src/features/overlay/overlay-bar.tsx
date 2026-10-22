@@ -36,7 +36,7 @@ export function OverlayBar({ mode, onMode, onFinish, children }: OverlayBarProps
       )}
       {children}
       <button type="button" className="overlay-bar__finish" onClick={onFinish}>
-        <kbd className="kbd">Esc</kbd>
+        <kbd className="kbd">{mode === "area" ? "Esc" : "Enter"}</kbd>
         {mode === "area" ? t("overlay.cancel") : t("overlay.finish")}
       </button>
     </div>

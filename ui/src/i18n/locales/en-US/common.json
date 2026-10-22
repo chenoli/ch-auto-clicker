@@ -254,6 +254,7 @@
     "arrows": "Arrows move 1 px",
     "space": "Space adds",
     "undo": "Ctrl Z undoes",
+    "escCancels": "Esc cancels",
     "finish": "to finish",
     "mode": "Capture mode",
     "modeArea": "Area",

@@ -21,7 +21,7 @@ describe("overlay keys", () => {
     expect(overlayKeyAction(key("ArrowDown", { shiftKey: true }))).toEqual({ kind: "nudge", dx: 0, dy: 10 });
     expect(overlayKeyAction(key(" "))).toEqual({ kind: "add" });
     expect(overlayKeyAction(key("Enter"))).toEqual({ kind: "finish" });
-    expect(overlayKeyAction(key("Escape"))).toEqual({ kind: "finish" });
+    expect(overlayKeyAction(key("Escape"))).toEqual({ kind: "cancel" });
     expect(overlayKeyAction(key("Z", { ctrlKey: true }))).toEqual({ kind: "undo" });
     expect(overlayKeyAction(key("z"))).toEqual({ kind: "none" });
   });

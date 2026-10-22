@@ -3,6 +3,7 @@ export type OverlayKeyAction =
   | { kind: "add" }
   | { kind: "undo" }
   | { kind: "finish" }
+  | { kind: "cancel" }
   | { kind: "none" };
 
 const NUDGES: Record<string, [number, number]> = {
@@ -19,7 +20,8 @@ export function overlayKeyAction(e: { key: string; ctrlKey: boolean; shiftKey: b
     return { kind: "nudge", dx: nudge[0] * step, dy: nudge[1] * step };
   }
   if (e.key === " ") return { kind: "add" };
-  if (e.key === "Enter" || e.key === "Escape") return { kind: "finish" };
+  if (e.key === "Enter") return { kind: "finish" };
+  if (e.key === "Escape") return { kind: "cancel" };
   if (e.ctrlKey && e.key.toLowerCase() === "z") return { kind: "undo" };
   return { kind: "none" };
 }

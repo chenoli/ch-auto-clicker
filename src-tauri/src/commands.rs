@@ -497,6 +497,12 @@ pub fn overlay_focus_cursor(app: AppHandle) {
 
 #[tauri::command]
 #[specta::specta]
+pub fn overlay_cancel(app: AppHandle) {
+    crate::overlay::cancel(&app);
+}
+
+#[tauri::command]
+#[specta::specta]
 pub fn overlay_finish(app: AppHandle) {
     crate::overlay::finish(&app);
 }
