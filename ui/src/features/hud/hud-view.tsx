@@ -16,7 +16,6 @@ export interface HudViewProps {
   pauseResume: string;
   hover?: boolean;
   draggable?: boolean;
-  showHint?: boolean;
   onDragStart?: () => void;
 }
 
@@ -82,7 +81,7 @@ export function HudView(props: HudViewProps): ReactElement | null {
           {chip.verb}
         </span>
       </div>
-      {props.showHint && <span className="hud-hint">{t("hud.hint")}</span>}
+      <span className="hud-hint">{t("hud.hint")}</span>
     </div>
   );
 }

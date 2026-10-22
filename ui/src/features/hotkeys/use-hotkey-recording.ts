@@ -6,6 +6,8 @@ import { commands, events, inTauri } from "../../ipc";
 
 import { setCommandError, useAppStore } from "../../store/app-store";
 
+import { keyNameFromCode, keyNameFromMouseButton } from "./key-name";
+
 import type { Hotkey, HotkeyAction, HotkeyTarget, Modifier } from "../../ipc";
 import type { PendingConflict } from "./hotkeys-screen";
 
@@ -80,6 +82,39 @@ export function useHotkeyRecording(): HotkeyRecordingApi {
       unlisten?.();
     };
   }, [recording, save]);
+
+  useEffect(() => {
+    if (!inTauri || !recording) return;
+    const feed = (key: string | null, down: boolean) => {
+      if (key) void commands.hotkeyRecordKey(key, down);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.type === "keydown" && e.repeat) return;
+      feed(keyNameFromCode(e.code), e.type === "keydown");
+    };
+    const onMouse = (e: MouseEvent) => {
+      const key = keyNameFromMouseButton(e.button);
+      if (!key) return;
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.type === "mousedown") feed(key, true);
+    };
+    const options = { capture: true };
+    window.addEventListener("keydown", onKey, options);
+    window.addEventListener("keyup", onKey, options);
+    window.addEventListener("mousedown", onMouse, options);
+    window.addEventListener("mouseup", onMouse, options);
+    window.addEventListener("auxclick", onMouse, options);
+    return () => {
+      window.removeEventListener("keydown", onKey, options);
+      window.removeEventListener("keyup", onKey, options);
+      window.removeEventListener("mousedown", onMouse, options);
+      window.removeEventListener("mouseup", onMouse, options);
+      window.removeEventListener("auxclick", onMouse, options);
+    };
+  }, [recording]);
 
   const start = useCallback((target: HotkeyTarget) => {
     setConflict(null);

@@ -346,21 +346,9 @@ pub struct Settings {
     pub window: WindowPosition,
     #[serde(default)]
     pub anti_cheat_acknowledged: bool,
-    #[serde(default)]
-    pub hud_hints_shown: u8,
 }
 
-pub const HUD_HINT_RUNS: u8 = 3;
-
 impl Settings {
-    pub fn count_hud_hint(&mut self) -> bool {
-        if self.hud_hints_shown > HUD_HINT_RUNS {
-            return false;
-        }
-        self.hud_hints_shown += 1;
-        true
-    }
-
     pub fn merge_user_edit(&self, incoming: Self) -> Self {
         Self {
             active_profile_id: self.active_profile_id.clone(),
@@ -370,7 +358,6 @@ impl Settings {
             window: self.window,
             anti_cheat_acknowledged: self.anti_cheat_acknowledged
                 || incoming.anti_cheat_acknowledged,
-            hud_hints_shown: self.hud_hints_shown.max(incoming.hud_hints_shown),
             ..incoming
         }
     }
@@ -391,7 +378,6 @@ impl Settings {
             profile_order: Vec::new(),
             hotkeys: HotkeyBindings::default(),
             anti_cheat_acknowledged: false,
-            hud_hints_shown: 0,
             hud: WindowPosition::default(),
             window: WindowPosition::default(),
         }
@@ -447,7 +433,6 @@ mod tests {
             y: Some(20),
         };
         current.anti_cheat_acknowledged = true;
-        current.hud_hints_shown = 2;
         current.hotkeys.start_stop = Some(Hotkey::new(&[], "F9"));
         let mut stale = Settings::new_default(Locale::PtBr);
         stale.countdown_sec = 7;
@@ -462,11 +447,7 @@ mod tests {
         assert_eq!(merged.profile_order, ["a", "b"]);
         assert_eq!(merged.hud, current.hud);
         assert!(merged.anti_cheat_acknowledged);
-        assert_eq!(merged.hud_hints_shown, 2);
         assert_eq!(merged.hotkeys, current.hotkeys);
-        let mut later = merged.clone();
-        later.hud_hints_shown = 3;
-        assert_eq!(merged.merge_user_edit(later).hud_hints_shown, 3);
         assert_eq!(Locale::from_tag(" es-419 "), Some(Locale::Es419));
         assert_eq!(Locale::from_tag("pt-BR"), Some(Locale::PtBr));
         assert_eq!(Locale::from_tag("en-US"), Some(Locale::EnUs));
@@ -475,6 +456,14 @@ mod tests {
         assert_eq!(Locale::from_primary_language(0x0A), Locale::Es419);
         assert_eq!(Locale::from_primary_language(0x09), Locale::EnUs);
         assert_eq!(Locale::from_primary_language(0x07), Locale::EnUs);
+    }
+
+    #[test]
+    fn settings_saved_with_the_old_hud_hint_counter_still_load() {
+        let mut v = serde_json::to_value(Settings::new_default(Locale::PtBr)).expect("json");
+        v["hudHintsShown"] = json!(3);
+        let s: Settings = serde_json::from_value(v).expect("unknown fields are ignored");
+        assert_eq!(s, Settings::new_default(Locale::PtBr));
     }
 
     #[test]

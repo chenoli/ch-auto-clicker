@@ -70,7 +70,7 @@ export function HotkeysScreen({
         title={t("hotkeys.title")}
         onBack={onBack}
         action={
-          <button type="button" className="button--text text-12 font-semibold text-fg-2" onClick={onReset}>
+          <button type="button" className="button--text text-12 font-semibold" onClick={onReset}>
             {t("hotkeys.reset")}
           </button>
         }

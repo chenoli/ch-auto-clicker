@@ -67,6 +67,9 @@ pub fn settings_update(
     state.persister.save_settings(&saved);
     emit_settings(&app, &saved);
     crate::theme::apply(&app, &saved);
+    if previous.locale != saved.locale {
+        localize_default_profiles(&app, &state, saved.locale);
+    }
     if previous.autostart != saved.autostart
         && let Err(e) = set_autostart(&app, saved.autostart)
     {
@@ -74,6 +77,30 @@ pub fn settings_update(
         return Err(AppError::new("AUTOSTART_FAILED", e));
     }
     Ok(saved)
+}
+
+fn localize_default_profiles(app: &AppHandle, state: &AppState, locale: ch_core::model::Locale) {
+    let renamed = state.with_data(|data| {
+        let names: Vec<&str> = data.profiles.iter().map(|p| p.name.as_str()).collect();
+        let indexes = crate::native_text::localize_default_names(&names, locale);
+        let name = crate::native_text::text(locale, crate::native_text::Text::DefaultProfileName);
+        let changed: Vec<Profile> = indexes
+            .into_iter()
+            .map(|i| {
+                let profile = &mut data.profiles[i];
+                profile.name = name.to_owned();
+                profile.updated_at = next_version();
+                profile.clone()
+            })
+            .collect();
+        (!changed.is_empty()).then(|| (changed, data.clone()))
+    });
+    if let Some((changed, data)) = renamed {
+        for profile in &changed {
+            state.persister.save_profile(profile);
+        }
+        emit_profiles(app, &data);
+    }
 }
 
 fn set_autostart(app: &AppHandle, enabled: bool) -> Result<(), String> {
@@ -285,6 +312,12 @@ pub fn hotkey_status(state: State<'_, AppState>) -> Vec<HotkeyStatus> {
 #[specta::specta]
 pub fn hotkey_begin_record(state: State<'_, AppState>) {
     state.hotkeys().begin_recording();
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn hotkey_record_key(state: State<'_, AppState>, key: String, down: bool) -> bool {
+    state.hotkeys().feed_key(&key, down)
 }
 
 #[tauri::command]

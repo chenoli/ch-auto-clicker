@@ -29,7 +29,6 @@ const SETTINGS = {
   hud: { x: null, y: null },
   window: { x: null, y: null },
   antiCheatAcknowledged: false,
-  hudHintsShown: 0,
 } as unknown as Settings;
 
 const CAPABILITIES = { minReliableIntervalMs: 4, measured: false, results: [] } as unknown as Capabilities;
@@ -74,7 +73,7 @@ export function HudStatesDemo(): ReactElement {
       <HudView {...common} state="countdown" countdownRemainingMs={2400} remainingMs={null} />
       <HudView {...common} state="running" countdownRemainingMs={null} remainingMs={272_000} />
       <HudView {...common} state="paused" countdownRemainingMs={null} remainingMs={272_000} />
-      <HudView {...common} state="running" countdownRemainingMs={null} remainingMs={272_000} hover showHint />
+      <HudView {...common} state="running" countdownRemainingMs={null} remainingMs={272_000} hover />
     </div>
   );
 }

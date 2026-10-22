@@ -174,6 +174,16 @@ impl HotkeyManager {
         self.service.set_recording(false);
     }
 
+    pub fn feed_key(&self, key: &str, down: bool) -> bool {
+        #[cfg(windows)]
+        return self.service.feed_key(key, down);
+        #[cfg(not(windows))]
+        {
+            let _ = (key, down);
+            false
+        }
+    }
+
     fn target_of(&self, id: u32) -> Option<HotkeyTarget> {
         lock(&self.registry).ids.get(&id).cloned()
     }

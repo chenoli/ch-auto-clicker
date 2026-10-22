@@ -120,12 +120,6 @@ pub fn sync<R: Runtime>(app: &AppHandle<R>) {
     let visible = hud.is_visible().unwrap_or(false);
     if want && !visible {
         let _ = hud.show();
-        if let Some(saved) =
-            state.with_data(|d| d.settings.count_hud_hint().then(|| d.settings.clone()))
-        {
-            state.persister.save_settings(&saved);
-            let _ = crate::events::SettingsChanged(saved).emit(app);
-        }
     } else if !want && visible {
         let _ = hud.hide();
     }

@@ -101,6 +101,20 @@ pub const fn text(locale: Locale, key: Text) -> &'static str {
     }
 }
 
+pub fn localize_default_names(names: &[&str], locale: Locale) -> Vec<usize> {
+    let target = text(locale, Text::DefaultProfileName);
+    if names.iter().any(|n| n.eq_ignore_ascii_case(target)) {
+        return Vec::new();
+    }
+    let defaults =
+        [Locale::PtBr, Locale::EnUs, Locale::Es419].map(|l| text(l, Text::DefaultProfileName));
+    names
+        .iter()
+        .position(|n| defaults.contains(n))
+        .into_iter()
+        .collect()
+}
+
 pub fn hotkey_taken_title(locale: Locale, combo: &str) -> String {
     match locale {
         Locale::PtBr => format!("{combo} não pôde ser registrado"),
@@ -151,5 +165,25 @@ mod tests {
             "CH Auto Clicker — Interval variation"
         );
         assert_eq!(text(Locale::EnUs, Text::DefaultProfileName), "My profile");
+    }
+
+    #[test]
+    fn default_profile_names_follow_the_language() {
+        assert_eq!(
+            localize_default_names(&["Mi perfil", "Farm"], Locale::PtBr),
+            vec![0]
+        );
+        assert_eq!(
+            localize_default_names(&["Farm", "Meu perfil", "My profile"], Locale::EnUs),
+            Vec::<usize>::new()
+        );
+        assert_eq!(
+            localize_default_names(&["Meu perfil (2)", "Farm"], Locale::Es419),
+            Vec::<usize>::new()
+        );
+        assert_eq!(
+            localize_default_names(&["Meu perfil", "My profile"], Locale::Es419),
+            vec![0]
+        );
     }
 }

@@ -23,6 +23,7 @@ export const commands = {
 	engineRunBenchmark: () => typedError<Capabilities, string>(__TAURI_INVOKE("engine_run_benchmark")),
 	hotkeyStatus: () => __TAURI_INVOKE<HotkeyStatus[]>("hotkey_status"),
 	hotkeyBeginRecord: () => __TAURI_INVOKE<void>("hotkey_begin_record"),
+	hotkeyRecordKey: (key: string, down: boolean) => __TAURI_INVOKE<boolean>("hotkey_record_key", { key, down }),
 	hotkeyCancelRecord: () => __TAURI_INVOKE<HotkeyStatus[]>("hotkey_cancel_record"),
 	hotkeySet: (target: HotkeyTarget, combo: {
 	mods: Modifier[],
@@ -324,7 +325,6 @@ export type Settings = {
 	hud: WindowPosition,
 	window: WindowPosition,
 	antiCheatAcknowledged?: boolean,
-	hudHintsShown?: number,
 };
 
 export type SettingsChanged = Settings;

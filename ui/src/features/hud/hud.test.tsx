@@ -52,7 +52,7 @@ describe("HudView", () => {
   });
 
   it("fades on hover, drags only with Ctrl and shows the hint", () => {
-    const { props, view } = setup({ hover: true, showHint: true });
+    const { props, view } = setup({ hover: true });
     const pill = screen.getByRole("status");
     expect(pill).toHaveAttribute("data-hover", "true");
     expect(screen.getByText("Segure Ctrl para mover")).toBeInTheDocument();

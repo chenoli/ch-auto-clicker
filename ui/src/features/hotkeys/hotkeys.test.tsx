@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   commands: {
     hotkeySet: vi.fn(),
     hotkeyBeginRecord: vi.fn(),
+    hotkeyRecordKey: vi.fn(),
     hotkeyCancelRecord: vi.fn(),
   },
   recordingListener: null as null | ((e: { payload: unknown }) => void),
@@ -140,6 +141,43 @@ describe("useHotkeyRecording", () => {
         false,
       ),
     );
+  });
+
+  it("feeds keys pressed in the focused window to the recorder and keeps them from the page", async () => {
+    const { result, unmount } = renderHook(() => useHotkeyRecording());
+    const page = vi.fn();
+    window.addEventListener("keydown", page);
+    act(() => result.current.record("startStop"));
+    const down = new KeyboardEvent("keydown", { code: "F5", cancelable: true, bubbles: true });
+    window.dispatchEvent(down);
+    expect(down.defaultPrevented).toBe(true);
+    expect(page).not.toHaveBeenCalled();
+    window.dispatchEvent(new KeyboardEvent("keydown", { code: "F5", repeat: true }));
+    window.dispatchEvent(new KeyboardEvent("keyup", { code: "F5" }));
+    window.dispatchEvent(new KeyboardEvent("keydown", { code: "IntlRo" }));
+    expect(mocks.commands.hotkeyRecordKey.mock.calls).toEqual([
+      ["F5", true],
+      ["F5", false],
+    ]);
+    const side = new MouseEvent("mousedown", { button: 3, cancelable: true });
+    window.dispatchEvent(side);
+    window.dispatchEvent(new MouseEvent("mouseup", { button: 3 }));
+    window.dispatchEvent(new MouseEvent("mousedown", { button: 0 }));
+    expect(side.defaultPrevented).toBe(true);
+    expect(mocks.commands.hotkeyRecordKey).toHaveBeenLastCalledWith("MouseX1", true);
+    expect(mocks.commands.hotkeyRecordKey).toHaveBeenCalledTimes(3);
+    unmount();
+    window.removeEventListener("keydown", page);
+  });
+
+  it("stops listening to the window when recording ends", async () => {
+    const { result } = renderHook(() => useHotkeyRecording());
+    act(() => result.current.record("startStop"));
+    act(() => result.current.cancel());
+    const down = new KeyboardEvent("keydown", { code: "F8", cancelable: true });
+    window.dispatchEvent(down);
+    expect(down.defaultPrevented).toBe(false);
+    expect(mocks.commands.hotkeyRecordKey).not.toHaveBeenCalled();
   });
 
   it("turns a conflict into a pending choice and replaces on request", async () => {

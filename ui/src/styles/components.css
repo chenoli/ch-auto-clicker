@@ -344,8 +344,13 @@
   .button--text {
     height: auto;
     padding: 0;
+    border: 0;
     background: transparent;
     color: var(--fg-2);
+    cursor: pointer;
+  }
+  .button--text:hover {
+    color: var(--fg);
   }
   .button:disabled {
     opacity: 0.4;
@@ -1109,7 +1114,7 @@
     border-radius: 21px;
     background: color-mix(in oklch, var(--bg) 95%, transparent);
     border: 1px solid color-mix(in oklch, var(--fg) 16%, transparent);
-    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
     white-space: nowrap;
     transition: opacity 0.15s;
     --hud-tone: var(--fg-2);

@@ -25,7 +25,6 @@ const settings = {
   hud: { x: null, y: null },
   window: { x: null, y: null },
   antiCheatAcknowledged: false,
-  hudHintsShown: 0,
 } as unknown as Settings;
 
 const capabilities = {

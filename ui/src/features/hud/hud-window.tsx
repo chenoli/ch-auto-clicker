@@ -13,7 +13,6 @@ import { HudView } from "./hud-view";
 import type { ReactElement } from "react";
 
 const PAD = 12;
-const HINT_RUNS = 3;
 
 export function HudWindow(): ReactElement | null {
   const engine = useAppStore((s) => s.engine);
@@ -44,7 +43,6 @@ export function HudWindow(): ReactElement | null {
   }, [ready]);
 
   if (!settings) return null;
-  const hints = settings.hudHintsShown ?? 0;
   return (
     <div className="hud-root" style={{ padding: PAD }}>
       <div ref={rootRef} className="inline-block">
@@ -59,7 +57,6 @@ export function HudWindow(): ReactElement | null {
           pauseResume={hotkeyLabel(settings.hotkeys.pauseResume)}
           hover={hover.hover}
           draggable={hover.draggable}
-          showHint={hints > 0 && hints <= HINT_RUNS}
           onDragStart={() => void getCurrentWindow().startDragging()}
         />
       </div>

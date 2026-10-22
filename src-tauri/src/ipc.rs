@@ -25,6 +25,7 @@ pub fn builder() -> Builder<tauri::Wry> {
             commands::engine_run_benchmark,
             commands::hotkey_status,
             commands::hotkey_begin_record,
+            commands::hotkey_record_key,
             commands::hotkey_cancel_record,
             commands::hotkey_set,
             commands::hotkey_reset_defaults,

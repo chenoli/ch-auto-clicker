@@ -112,6 +112,7 @@ enum Request {
 
 pub struct HotkeyService {
     tx: mpsc::Sender<Request>,
+    state: Arc<HookState>,
     hwnd: isize,
     thread: Option<JoinHandle<()>>,
 }
@@ -207,6 +208,7 @@ impl HotkeyService {
         }
         let (tx, rx) = mpsc::channel::<Request>();
         let (ready_tx, ready_rx) = mpsc::channel::<windows::core::Result<isize>>();
+        let thread_state = Arc::clone(&state);
 
         let thread = std::thread::Builder::new()
             .name("ch-hotkeys".into())
@@ -251,6 +253,7 @@ impl HotkeyService {
                 // SAFETY: timer on our own window; it lives as long as the window.
                 unsafe { SetTimer(Some(hwnd), WATCHDOG_TIMER, WATCHDOG_PERIOD_MS, None) };
 
+                let state = thread_state;
                 let mut hooks = Hooks::default();
                 hooks.install(wants_mouse_hook(&state));
                 let mut registered: Vec<u32> = Vec::new();
@@ -288,6 +291,7 @@ impl HotkeyService {
             .map_err(|_| windows::core::Error::empty())??;
         Ok(Self {
             tx,
+            state,
             hwnd,
             thread: Some(thread),
         })
@@ -330,6 +334,10 @@ impl HotkeyService {
 
     pub fn set_recording(&self, on: bool) {
         self.send(Request::Record(on));
+    }
+
+    pub fn feed_key(&self, key: &str, down: bool) -> bool {
+        record_key(&self.state, key, down)
     }
 
     pub fn hwnd(&self) -> isize {
@@ -420,6 +428,19 @@ unsafe extern "system" fn window_proc(
     }
 }
 
+fn record_key(state: &HookState, key: &str, down: bool) -> bool {
+    if !state.recording.load(Ordering::Acquire) {
+        return false;
+    }
+    let step = if down {
+        lock(&state.recorder).key_down(key)
+    } else {
+        lock(&state.recorder).key_up(key)
+    };
+    (state.sink)(ServiceEvent::Recording(step));
+    true
+}
+
 fn next(code: i32, wparam: WPARAM, lparam: LPARAM) -> LRESULT {
     // SAFETY: forwarding the hook arguments unchanged.
     unsafe { CallNextHookEx(None, code, wparam, lparam) }
@@ -448,13 +469,7 @@ unsafe extern "system" fn keyboard_proc(code: i32, wparam: WPARAM, lparam: LPARA
     }
 
     let injected = info.flags.0 & LLKHF_INJECTED.0 != 0;
-    if state.recording.load(Ordering::Acquire) && !injected && (down || up) {
-        let step = if down {
-            lock(&state.recorder).key_down(&key)
-        } else {
-            lock(&state.recorder).key_up(&key)
-        };
-        (state.sink)(ServiceEvent::Recording(step));
+    if !injected && (down || up) && record_key(&state, &key, down) {
         return LRESULT(1);
     }
     next(code, wparam, lparam)
@@ -483,8 +498,7 @@ unsafe extern "system" fn mouse_proc(code: i32, wparam: WPARAM, lparam: LPARAM) 
 
     if state.recording.load(Ordering::Acquire) {
         if down {
-            let step = lock(&state.recorder).key_down(key);
-            (state.sink)(ServiceEvent::Recording(step));
+            record_key(&state, key, true);
         }
         return LRESULT(1);
     }
@@ -616,6 +630,35 @@ mod tests {
         f.service.set_recording(false);
         f.service.unregister_all();
         assert!(format!("{:?}", f.service).contains("HotkeyService"));
+    }
+
+    #[test]
+    fn fed_keys_record_only_while_recording() {
+        let _serial = lock(&SERIAL);
+        let f = fixture();
+        assert!(!f.service.feed_key("F8", true));
+        f.service.set_recording(true);
+        let deadline = std::time::Instant::now() + REPLY_TIMEOUT;
+        while !f.service.feed_key("Control", true) {
+            assert!(
+                std::time::Instant::now() < deadline,
+                "recording never started"
+            );
+            std::thread::yield_now();
+        }
+        assert_eq!(
+            f.events.recv_timeout(REPLY_TIMEOUT),
+            Ok(ServiceEvent::Recording(RecordStep::Partial(vec![Ctrl])))
+        );
+        assert!(f.service.feed_key("F8", true));
+        assert_eq!(
+            f.events.recv_timeout(REPLY_TIMEOUT),
+            Ok(ServiceEvent::Recording(RecordStep::Done(Hotkey::new(
+                &[Ctrl],
+                "F8"
+            ))))
+        );
+        f.service.set_recording(false);
     }
 
     #[test]

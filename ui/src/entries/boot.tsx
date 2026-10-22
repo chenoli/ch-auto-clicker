@@ -9,6 +9,8 @@ import { commands, events, inTauri } from "../ipc";
 import "../styles/base.css";
 import { initialTheme, syncTheme } from "../styles/theme";
 
+import { installBrowserKeyGuard } from "./browser-keys";
+
 import type { Settings } from "../ipc";
 import type { ReactNode } from "react";
 
@@ -27,6 +29,7 @@ function followSettings(): void {
 export function boot(app: ReactNode): void {
   document.documentElement.dataset.theme = initialTheme();
   if (inTauri) followSettings();
+  if (inTauri && !import.meta.env.DEV) installBrowserKeyGuard();
   const root = document.getElementById("root");
   if (!root) throw new Error("#root is missing");
   createRoot(root).render(<StrictMode>{app}</StrictMode>);
