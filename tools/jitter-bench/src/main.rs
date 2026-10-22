@@ -190,7 +190,7 @@ fn main() {
     );
     let _ = writeln!(
         md,
-        "- Reliable means: p99 delay < 25% of the interval and no missed events\n"
+        "- Reliable means: p99 delay < 25% of the interval and at most 0.1% of the deadlines skipped\n"
     );
     for (label, report) in [("Idle", &idle), ("CPU at 100% on every core", &stressed)] {
         let _ = writeln!(md, "## {label}\n");

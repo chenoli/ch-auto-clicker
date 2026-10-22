@@ -355,12 +355,14 @@ engine loop:
   stats.record(lateness)                                 // SPSC ring buffer, no allocation
   t.fire(backend)                                        // injection
   t.advance()                                            // deadline += next interval (absolute, no drift)
-  if lateness > max(2 × interval, 50 ms):                // fell behind (e.g. suspend, hang)
-      t.rebase(now)                                      // SKIP policy: no catch-up burst
-      stats.missed += skipped events
+  tolerance = min(interval / 2, 5 ms)
+  if t.deadline < now + interval - tolerance:            // the next click would come too soon (or is already late)
+      stats.missed += deadlines already passed
+      t.rebase(now)                                      // deadline = now + interval: no catch-up burst
 ```
 
-- **Absolute deadlines** (`deadline_{n+1} = deadline_n + interval_n`): error does not accumulate, and the average CPS stays exact even with per-event jitter.
+- **Absolute deadlines** (`deadline_{n+1} = deadline_n + interval_n`): while the lateness stays within the tolerance, error does not accumulate and the average CPS stays exact.
+- **Late clicks:** a late click fires once. Two consecutive clicks are never closer than `interval − tolerance`, with `tolerance = min(interval / 2, 5 ms)` (50% up to 10 ms, 5% at 100 ms). Past the tolerance the lost time is dropped instead of replayed, so a stall never turns into a burst; skipping time never skips a point of a multi-point sequence.
 - **Waiter:** `CreateWaitableTimerExW(CREATE_WAITABLE_TIMER_HIGH_RESOLUTION)` (Win10 1803+). Fallback: `timeBeginPeriod(1)` + a regular waitable timer. `timeBeginPeriod` is only active between `running` and `stopping`, so the system is not kept at 1 ms while idle.
 - **Hybrid spin:** the last 1.0 ms is spent spinning. The cost is up to one core during very short intervals. For intervals ≥ 20 ms the spin window drops to 0.3 ms.
 - **Pause:** stores `paused_at` and, on resume, adds `now - paused_at` to every deadline.
@@ -370,7 +372,7 @@ engine loop:
 ### 5.3 Jitter, capabilities and the infeasibility warning
 
 - **Continuous measurement:** lateness histogram with logarithmic buckets from 1 µs to 1 s. The telemetry thread publishes `p50/p95/p99/max/missed` every second.
-- **Capability benchmark** (`engine_run_benchmark`, run in the background on first launch and after a Windows update; ~3 s): runs the scheduler with a no-op action at 1, 2, 4, 8 and 16 ms. `minReliableIntervalMs` is the shortest interval with `p99 lateness < 25% of the interval` and `missed = 0`. It is cached in `capabilities.json` and exposed through `engine.capabilities` (design decision 3). Until the benchmark finishes, the UI uses 4 ms.
+- **Capability benchmark** (`engine_run_benchmark`, run in the background on first launch and after a Windows update; ~3 s): runs the scheduler with a no-op action at 1, 2, 4, 8 and 16 ms. `minReliableIntervalMs` is the shortest interval with `p99 lateness < 25% of the interval` and at most 0.1% of the deadlines skipped. It is cached in `capabilities.json` and exposed through `engine.capabilities` (design decision 3). Until the benchmark finishes, the UI uses 4 ms.
 - **Static warning (UI):** blocks or intervals below `minReliableIntervalMs` get the `--warn` dot and the screen 02.B callout.
 - **Dynamic warning:** if `p95` stays above 50% of the interval for 2 s in a row, the engine emits `engine-degraded {reason: "timing"}` and the UI shows a warn callout on the panel. It clears after 5 normal seconds.
 - **Honest limit:** the app can measure when the injection happened, not when the target app processed the event. Many apps read input once per frame. The diagnostics UI says so.

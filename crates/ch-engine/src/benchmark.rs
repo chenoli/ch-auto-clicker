@@ -9,6 +9,7 @@ use ch_core::stats::{Histogram, JitterStats};
 pub const BENCH_INTERVALS_MS: [u64; 5] = [1, 2, 4, 8, 16];
 pub const DEFAULT_MIN_RELIABLE_MS: u64 = 4;
 const MAX_P99_FRACTION: f64 = 0.25;
+const MAX_MISSED_PER_SAMPLES: u64 = 1_000;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct IntervalResult {
@@ -18,7 +19,7 @@ pub struct IntervalResult {
 
 impl IntervalResult {
     pub fn is_reliable(&self) -> bool {
-        self.stats.missed == 0
+        self.stats.missed * MAX_MISSED_PER_SAMPLES <= self.stats.samples
             && self.stats.p99_us < self.interval_ms as f64 * 1_000.0 * MAX_P99_FRACTION
     }
 }
@@ -136,13 +137,23 @@ mod tests {
     }
 
     #[test]
-    fn reliability_requires_low_p99_and_nothing_missed() {
+    fn reliability_requires_low_p99_and_almost_nothing_missed() {
         assert!(result(4, 999.0, 0).is_reliable());
         assert!(
             !result(4, 1_000.0, 0).is_reliable(),
             "25% of 4 ms is the limit"
         );
         assert!(!result(16, 10.0, 1).is_reliable());
+        let many = |missed| IntervalResult {
+            interval_ms: 2,
+            stats: JitterStats {
+                samples: 5_000,
+                missed,
+                ..JitterStats::default()
+            },
+        };
+        assert!(many(5).is_reliable(), "0.1% of the samples");
+        assert!(!many(6).is_reliable());
     }
 
     #[test]

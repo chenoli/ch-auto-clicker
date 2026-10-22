@@ -5,7 +5,7 @@ use crate::input::{InputBackend, InputError};
 pub const SPIN_WINDOW_NS: u64 = NANOS_PER_MS;
 pub const SPIN_WINDOW_LONG_NS: u64 = 300_000;
 pub const LONG_INTERVAL_NS: u64 = 20 * NANOS_PER_MS;
-pub const SKIP_GRACE_NS: u64 = 50 * NANOS_PER_MS;
+pub const MAX_TOLERANCE_NS: u64 = 5 * NANOS_PER_MS;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Due {
@@ -54,6 +54,10 @@ impl Scheduler {
             .min_by_key(|due| (due.deadline, due.index))
     }
 
+    pub fn tolerance(interval: u64) -> u64 {
+        (interval / 2).min(MAX_TOLERANCE_NS)
+    }
+
     pub fn spin_window(interval: u64) -> u64 {
         if interval >= LONG_INTERVAL_NS {
             SPIN_WINDOW_LONG_NS
@@ -75,12 +79,14 @@ impl Scheduler {
         let complete_run = timeline.completes_run();
 
         let mut missed = 0;
-        if lateness_ns > (2 * due.interval).max(SKIP_GRACE_NS)
-            && let Some(next) = timeline.deadline()
-            && next < now
-        {
-            missed = (now - next) / timeline.interval().max(1) + 1;
-            timeline.rebase(now);
+        if let Some(next) = timeline.deadline() {
+            let gap = timeline.interval();
+            if next < now + gap - Self::tolerance(gap) {
+                if next <= now {
+                    missed = (now - next) / gap.max(1) + 1;
+                }
+                timeline.rebase(now);
+            }
         }
         result.map(|()| FireReport {
             lateness_ns,
@@ -137,11 +143,27 @@ mod tests {
         assert_eq!(Scheduler::spin_window(20 * MS), SPIN_WINDOW_LONG_NS);
     }
 
+    fn fire_at(s: &mut Scheduler, now: u64) -> FireReport {
+        let due = s.next_due().expect("due");
+        s.fire(due, now, &mut NoopBackend).expect("ok")
+    }
+
+    fn next(s: &Scheduler) -> Option<u64> {
+        s.next_due().map(|d| d.deadline)
+    }
+
+    #[test]
+    fn tolerance_is_half_the_interval_up_to_five_ms() {
+        assert_eq!(Scheduler::tolerance(2 * MS), MS);
+        assert_eq!(Scheduler::tolerance(10 * MS), 5 * MS);
+        assert_eq!(Scheduler::tolerance(100 * MS), 5 * MS);
+        assert_eq!(Scheduler::tolerance(0), 0);
+    }
+
     #[test]
     fn small_lateness_keeps_the_absolute_schedule() {
         let mut s = Scheduler::new(vec![noop(0, MS)]);
-        let due = s.next_due().expect("due");
-        let report = s.fire(due, 400_000, &mut NoopBackend).expect("ok");
+        let report = fire_at(&mut s, 400_000);
         assert_eq!(
             report,
             FireReport {
@@ -151,30 +173,108 @@ mod tests {
                 complete_run: false
             }
         );
+        assert_eq!(next(&s), Some(MS), "next stays on the grid");
+    }
+
+    #[test]
+    fn lateness_past_the_tolerance_moves_the_next_click_instead_of_squeezing_it() {
+        let mut s = Scheduler::new(vec![noop(0, 100 * MS)]);
+        assert_eq!(fire_at(&mut s, 4 * MS).missed, 0);
         assert_eq!(
-            s.next_due().map(|d| d.deadline),
-            Some(MS),
-            "next stays on the grid"
+            next(&s),
+            Some(100 * MS),
+            "4 ms is inside the 5 ms tolerance"
+        );
+
+        let mut s = Scheduler::new(vec![noop(0, 100 * MS)]);
+        assert_eq!(
+            fire_at(&mut s, 8 * MS).missed,
+            0,
+            "nothing was skipped, only delayed"
+        );
+        assert_eq!(next(&s), Some(108 * MS));
+    }
+
+    #[test]
+    fn a_stall_never_turns_into_a_burst() {
+        let mut s = Scheduler::new(vec![noop(0, 2 * MS)]);
+        let report = fire_at(&mut s, 40 * MS);
+        assert_eq!(report.missed, 20, "deadlines 2..=40 ms were skipped");
+        assert_eq!(next(&s), Some(42 * MS));
+
+        let mut s = Scheduler::new(vec![noop(0, MS)]);
+        let report = fire_at(&mut s, 200 * MS);
+        assert_eq!(report.missed, 200);
+        assert_eq!(next(&s), Some(201 * MS));
+    }
+
+    #[test]
+    fn consecutive_clicks_keep_the_minimum_gap_under_random_stalls() {
+        for interval in [MS, 2 * MS, 10 * MS, 37 * MS, 100 * MS] {
+            let min_gap = interval - Scheduler::tolerance(interval);
+            let mut s = Scheduler::new(vec![noop(0, interval)]);
+            let mut seed = 0x9e37_79b9_u64;
+            let mut last: Option<u64> = None;
+            for _ in 0..2_000 {
+                seed = seed.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(1);
+                let stall = (seed >> 33) % (3 * interval);
+                let deadline = next(&s).expect("due");
+                let now = deadline + stall;
+                fire_at(&mut s, now);
+                if let Some(prev) = last {
+                    assert!(
+                        now - prev >= min_gap,
+                        "{interval}: gap {} < {min_gap}",
+                        now - prev
+                    );
+                }
+                last = Some(now);
+            }
+        }
+    }
+
+    #[test]
+    fn variation_uses_the_gap_of_the_next_click() {
+        let gaps = [20 * MS, 70 * MS].into_iter().cycle();
+        let mut s = Scheduler::new(vec![Box::new(IntervalTimeline::new(
+            0,
+            gaps,
+            Box::new(|_| Ok(())),
+        ))]);
+        fire_at(&mut s, 0);
+        assert_eq!(next(&s), Some(20 * MS));
+        fire_at(&mut s, 26 * MS);
+        assert_eq!(
+            next(&s),
+            Some(96 * MS),
+            "70 ms gap, 6 ms late > 5 ms tolerance"
+        );
+        fire_at(&mut s, 98 * MS);
+        assert_eq!(
+            next(&s),
+            Some(116 * MS),
+            "20 ms gap, 2 ms late keeps the grid"
         );
     }
 
     #[test]
-    fn a_long_stall_skips_the_backlog_instead_of_bursting() {
-        let mut s = Scheduler::new(vec![noop(0, MS)]);
-        let due = s.next_due().expect("due");
-        let report = s.fire(due, 200 * MS, &mut NoopBackend).expect("ok");
-        assert_eq!(report.lateness_ns, 200 * MS);
-        assert_eq!(report.missed, 200, "deadlines 1..=200 ms were skipped");
-        assert_eq!(s.next_due().map(|d| d.deadline), Some(201 * MS));
-    }
-
-    #[test]
-    fn lateness_under_the_grace_period_is_replayed() {
-        let mut s = Scheduler::new(vec![noop(0, MS)]);
-        let due = s.next_due().expect("due");
-        let report = s.fire(due, 30 * MS, &mut NoopBackend).expect("ok");
-        assert_eq!(report.missed, 0);
-        assert_eq!(s.next_due().map(|d| d.deadline), Some(MS));
+    fn skipping_time_never_skips_a_point() {
+        let order = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
+        let seen = std::sync::Arc::clone(&order);
+        let mut point = 0_u32;
+        let mut s = Scheduler::new(vec![Box::new(IntervalTimeline::fixed(
+            0,
+            10 * MS,
+            Box::new(move |_| {
+                seen.lock().expect("lock").push(point % 3);
+                point += 1;
+                Ok(())
+            }),
+        ))]);
+        for now in [0, 50 * MS, 61 * MS, 400 * MS, 410 * MS] {
+            fire_at(&mut s, now);
+        }
+        assert_eq!(*order.lock().expect("lock"), [0, 1, 2, 0, 1]);
     }
 
     #[test]
