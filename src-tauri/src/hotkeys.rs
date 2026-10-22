@@ -226,14 +226,17 @@ fn on_triggered<R: Runtime>(app: &AppHandle<R>, id: u32) {
     let engine_state = state.engine.shared().state();
     let active = engine_state.is_active();
     let result = match target {
-        HotkeyTarget::Action(HotkeyAction::StartStop) => {
-            if active {
+        HotkeyTarget::Action(HotkeyAction::StartStop) => match start_stop(engine_state) {
+            StartStop::Resume => {
+                state.engine.toggle_pause();
+                Ok(())
+            }
+            StartStop::Stop => {
                 state.engine.stop();
                 Ok(())
-            } else {
-                crate::commands::start_profile(&state, None)
             }
-        }
+            StartStop::Start => crate::commands::start_profile(&state, None),
+        },
         HotkeyTarget::Action(HotkeyAction::PauseResume) => {
             if matches!(engine_state, EngineState::Running | EngineState::Paused) {
                 state.engine.toggle_pause();
@@ -285,6 +288,21 @@ fn on_triggered<R: Runtime>(app: &AppHandle<R>, id: u32) {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum StartStop {
+    Start,
+    Stop,
+    Resume,
+}
+
+fn start_stop(state: EngineState) -> StartStop {
+    match state {
+        EngineState::Paused => StartStop::Resume,
+        s if s.is_active() => StartStop::Stop,
+        _ => StartStop::Start,
+    }
+}
+
 pub fn switch_profile<R: Runtime>(app: &AppHandle<R>, state: &AppState, id: Option<&str>) {
     let data = state.with_data(|data| {
         let order = &data.settings.profile_order;
@@ -311,4 +329,18 @@ pub fn switch_profile<R: Runtime>(app: &AppHandle<R>, state: &AppState, id: Opti
     state.persister.save_settings(&data.settings);
     emit_settings(app, &data.settings);
     emit_profiles(app, &data);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn start_stop_resumes_a_paused_run_like_the_main_button() {
+        assert_eq!(start_stop(EngineState::Paused), StartStop::Resume);
+        assert_eq!(start_stop(EngineState::Running), StartStop::Stop);
+        assert_eq!(start_stop(EngineState::Countdown), StartStop::Stop);
+        assert_eq!(start_stop(EngineState::Idle), StartStop::Start);
+        assert_eq!(start_stop(EngineState::Error), StartStop::Start);
+    }
 }

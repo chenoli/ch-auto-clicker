@@ -290,10 +290,10 @@ On import the profile gets a new `id`. The `hotkey` is dropped if it conflicts, 
            └────────┘                                 └───────────┘
              ▲   ▲  ▲                                       │ countdown ends
              │   │  │                                       ▼
-             │   │  │   F7    ┌────────┐    F7     ┌───────────┐
+             │   │  │   F7    ┌────────┐  F7/F6    ┌───────────┐
              │   │  └──────── │ paused │ ◀───────▶ │  running  │
              │   │            └────────┘           └───────────┘
-             │   │                 │ F6/emergency/timer   │ F6, timer, emergency, scan without loop done
+             │   │                 │ Stop/emergency/timer │ F6, timer, emergency, scan without loop done
              │   │                 ▼                      ▼
              │   │            ┌──────────────────────────────┐
              │   └─────────── │ stopping (releases buttons,  │
