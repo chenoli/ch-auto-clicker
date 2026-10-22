@@ -41,13 +41,38 @@ jobs:
           tagName: ${{ github.ref_name }}
           releaseName: CH Auto Clicker ${{ github.ref_name }}
           releaseBody: |
-            Install with `CH Auto Clicker_*_x64-setup.exe` (per user, no admin rights needed).
+            Install with `ch-auto-clicker-setup.exe` (per user, no admin rights needed). It is the same file as
+            `CH.Auto.Clicker_*_x64-setup.exe`; the first name always points to the latest release.
 
             **Note:** this build is not code-signed yet. Windows shows "Unknown publisher":
             click "More info" → "Run anyway". With Smart App Control turned on, Windows 11
             blocks the app until it is signed.
 
             Anti-cheat systems detect automated input. Do not use it where the terms of service forbid automation.
-          releaseDraft: false
+          releaseDraft: true
           prerelease: false
           includeUpdaterJson: true
+      - name: Upload the installer under a stable name and publish
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          shopt -s nullglob
+          installers=(target/release/bundle/nsis/*_x64-setup.exe)
+          if [ "${#installers[@]}" -ne 1 ]; then
+            echo "Expected one NSIS installer, found ${#installers[@]}"; exit 1
+          fi
+          cp "${installers[0]}" ch-auto-clicker-setup.exe
+          gh release upload "$GITHUB_REF_NAME" ch-auto-clicker-setup.exe --clobber
+          gh release edit "$GITHUB_REF_NAME" --draft=false --latest
+      - name: Notify the landing page
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.LANDING_DISPATCH_TOKEN }}
+          LANDING_REPO: ${{ vars.LANDING_REPO }}
+        run: |
+          if [ -z "$GH_TOKEN" ] || [ -z "$LANDING_REPO" ]; then
+            echo "::warning::LANDING_REPO or LANDING_DISPATCH_TOKEN is not set; the landing page picks up the release within an hour"
+            exit 0
+          fi
+          gh api "repos/$LANDING_REPO/dispatches" -f event_type=app-release

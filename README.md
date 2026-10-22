@@ -9,7 +9,7 @@ A native auto clicker for Windows 10/11 by Chenoli Labs. The core is written in 
 
 ## Installation
 
-Download `CH Auto Clicker_*_x64-setup.exe` from [Releases](https://github.com/chenoli/ch-auto-clicker/releases). It installs for your user only, without admin rights, and the app keeps itself up to date. The installer asks for your language and the app starts in it.
+Download [`ch-auto-clicker-setup.exe`](https://github.com/chenoli/ch-auto-clicker/releases/latest/download/ch-auto-clicker-setup.exe), which always points to the latest release (also listed under [Releases](https://github.com/chenoli/ch-auto-clicker/releases)). It installs for your user only, without admin rights, and the app keeps itself up to date. The installer asks for your language and the app starts in it.
 
 > **Not code-signed yet.** Windows shows "Unknown publisher": click **More info → Run anyway**. With **Smart App Control** turned on, Windows 11 blocks the app until it is signed. We are applying for free open-source signing through SignPath Foundation; see the [code signing policy](docs/code-signing-policy.md).
 

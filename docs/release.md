@@ -10,6 +10,13 @@ Create `TAURI_SIGNING_PRIVATE_KEY` under **Settings â†’ Secrets and variables â†
 gh secret set TAURI_SIGNING_PRIVATE_KEY -R chenoli/ch-auto-clicker < "$USERPROFILE/.tauri/ch-clicker-updater.key"
 ```
 
+Optional, to refresh the landing page right after a release: a repository variable `LANDING_REPO` (`owner/repo` of the landing) and a secret `LANDING_DISPATCH_TOKEN`, a fine-grained token limited to that repository with **Contents: read and write** (required by `repository_dispatch`). Without them the release still publishes, and the landing picks it up within an hour.
+
+```bash
+gh variable set LANDING_REPO -R chenoli/ch-auto-clicker --body "chenoli/<landing-repo>"
+gh secret set LANDING_DISPATCH_TOKEN -R chenoli/ch-auto-clicker
+```
+
 Do not create `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`: GitHub rejects empty secrets, and a missing secret reaches the workflow as an empty string, which is what a key without a password needs.
 
 The matching public key is already in `src-tauri/tauri.conf.json` (`plugins.updater.pubkey`). **Keep a copy of the private key off this computer**: without it, existing installs stop receiving updates and users would have to reinstall by hand.
@@ -20,7 +27,8 @@ This key signs updates only (the app checks it before installing). It is not a W
 
 1. Bump the version in `src-tauri/tauri.conf.json`, `package.json` and `Cargo.toml` (`workspace.package.version`).
 2. Commit to `main`, then `git tag v0.1.0 && git push origin main --tags`.
-3. The `Release` workflow runs every CI check, builds the NSIS installer, the MSIs and `latest.json`, and publishes the release. Installed apps find the new version within 24 hours, or right away through "Check for updates" in Settings.
+3. The `Release` workflow runs every CI check and builds the NSIS installer, the MSIs and `latest.json` into a draft release. It then uploads a copy of the NSIS installer as `ch-auto-clicker-setup.exe`, publishes the release as the latest one and sends an `app-release` dispatch to the landing page. Installed apps find the new version within 24 hours, or right away through "Check for updates" in Settings.
+4. The stable download link is `https://github.com/chenoli/ch-auto-clicker/releases/latest/download/ch-auto-clicker-setup.exe`. It only serves the new file after step 3 publishes the release, so it never points to a release without the copy.
 
 ## 3. Windows code signing (free, SignPath Foundation)
 
