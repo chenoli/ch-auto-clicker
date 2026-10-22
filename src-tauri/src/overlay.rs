@@ -284,6 +284,8 @@ fn bring_to_front<R: Runtime>(window: &tauri::WebviewWindow<R>) {
     }
     #[cfg(not(windows))]
     let _ = window.set_focus();
+    let webview: &tauri::Webview<R> = window.as_ref();
+    let _ = webview.set_focus();
 }
 
 pub fn focus<R: Runtime>(app: &AppHandle<R>, index: usize) {

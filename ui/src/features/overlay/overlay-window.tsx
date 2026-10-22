@@ -55,7 +55,9 @@ export function OverlayWindow(): ReactElement | null {
   useEffect(() => {
     refresh(setState, (s) => {
       const start = s.cursor;
-      if (start) setCursor((current) => current ?? start);
+      if (!start) return;
+      setCursor((current) => current ?? start);
+      void commands.overlayFocus(INDEX);
     });
     const img = new Image();
     img.crossOrigin = "anonymous";

@@ -569,6 +569,7 @@ describe("OverlayWindow", () => {
     mocks.commands.overlayAddPoint.mockResolvedValue({ status: "ok", data: state });
     render(<OverlayWindow />);
     expect(await screen.findByText("50, 60")).toBeInTheDocument();
+    expect(mocks.commands.overlayFocus).toHaveBeenCalledWith(0);
     fireEvent.keyDown(window, { key: " " });
     expect(mocks.commands.overlayAddPoint).toHaveBeenLastCalledWith(0, 50, 60);
     fireEvent.keyDown(window, { key: "ArrowDown", shiftKey: true });
