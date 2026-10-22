@@ -12,6 +12,7 @@ import { AreaOverlayScreenDemo, OverlayScreenDemo, PointsScreenDemo } from "./po
 import { ProfilesEmptyDemo, ProfilesScreenDemo, ThemesScreenDemo } from "./profiles-screens";
 import { HudStatesDemo, SettingsScreenDemo } from "./settings-screens";
 import { TokensScreen } from "./tokens-screen";
+import { TrayMenuDemo } from "./tray-screens";
 
 import type { ScreenMeta } from "./manifest";
 import type { ReactNode } from "react";
@@ -36,6 +37,7 @@ const RENDERERS: Record<string, () => ReactNode> = {
   settings: () => <SettingsScreenDemo />,
   hud: () => <HudStatesDemo />,
   themes: () => <ThemesScreenDemo />,
+  "tray-menu": () => <TrayMenuDemo />,
   tokens: () => <TokensScreen />,
 };
 

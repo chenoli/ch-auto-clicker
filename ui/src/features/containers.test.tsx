@@ -45,6 +45,9 @@ const mocks = vi.hoisted(() => ({
     appOpenSupport: vi.fn(),
     engineRunBenchmark: vi.fn(),
     hudResize: vi.fn(),
+    trayMenuResize: vi.fn(),
+    trayMenuClose: vi.fn(),
+    trayMenuAction: vi.fn(),
     updateCheck: vi.fn(),
     updateInstall: vi.fn(),
   },
@@ -70,6 +73,7 @@ vi.mock("../ipc", () => {
       overlayChanged: event,
       navigateRequested: event,
       hudHover: event,
+      trayMenuOpened: event,
       updateAvailable: event,
     },
   };
@@ -79,6 +83,7 @@ const { MainWindow } = await import("./main/main-window");
 const { VariationWindow } = await import("./variation/variation-window");
 const { OverlayWindow } = await import("./overlay/overlay-window");
 const { HudWindow } = await import("./hud/hud-window");
+const { TrayMenuWindow } = await import("./tray/tray-menu-window");
 const { useAppStore } = await import("../store/app-store");
 
 function bootstrap(profile: Profile = prototypeProfile()) {
@@ -283,6 +288,29 @@ describe("HudWindow", () => {
   it("renders nothing before the state arrives", () => {
     mocks.commands.appBootstrap.mockReturnValue(new Promise(() => {}));
     const { container } = render(<HudWindow />);
+    expect(container).toBeEmptyDOMElement();
+  });
+});
+
+describe("TrayMenuWindow", () => {
+  it("shows the live state, reports its size and forwards actions", async () => {
+    mocks.commands.appBootstrap.mockResolvedValue({ ...bootstrap(), engine: tick({ state: "running" }) });
+    const { container } = render(<TrayMenuWindow />);
+    expect(await screen.findByText("RODANDO")).toBeInTheDocument();
+    await waitFor(() => expect(mocks.commands.trayMenuResize).toHaveBeenCalled());
+    fireEvent.click(screen.getByRole("menuitem", { name: /Parar/ }));
+    expect(mocks.commands.trayMenuAction).toHaveBeenCalledWith("start");
+    fireEvent.pointerDown(container.querySelector(".tray-menu") as Element);
+    expect(mocks.commands.trayMenuClose).not.toHaveBeenCalled();
+    fireEvent.pointerDown(container.querySelector(".tray-root") as Element);
+    expect(mocks.commands.trayMenuClose).toHaveBeenCalledOnce();
+    fireEvent.keyDown(screen.getByRole("menu", { name: "Menu do CH Auto Clicker" }), { key: "Escape" });
+    expect(mocks.commands.trayMenuClose).toHaveBeenCalledTimes(2);
+  });
+
+  it("renders nothing before the state arrives", () => {
+    mocks.commands.appBootstrap.mockReturnValue(new Promise(() => {}));
+    const { container } = render(<TrayMenuWindow />);
     expect(container).toBeEmptyDOMElement();
   });
 });

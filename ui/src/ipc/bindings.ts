@@ -8,6 +8,9 @@ export const commands = {
 	settingsAcknowledgeAntiCheat: () => __TAURI_INVOKE<Settings>("settings_acknowledge_anti_cheat"),
 	appOpenSupport: () => typedError<null, AppError>(__TAURI_INVOKE("app_open_support")),
 	hudResize: (width: number | null, height: number | null) => __TAURI_INVOKE<void>("hud_resize", { width, height }),
+	trayMenuResize: (width: number | null, height: number | null) => __TAURI_INVOKE<void>("tray_menu_resize", { width, height }),
+	trayMenuClose: () => __TAURI_INVOKE<void>("tray_menu_close"),
+	trayMenuAction: (action: string) => __TAURI_INVOKE<void>("tray_menu_action", { action }),
 	updateCheck: () => typedError<{
 	version: string,
 	notes: string | null,
@@ -74,6 +77,7 @@ export const events = {
 	overlayChanged: makeEvent<OverlayChanged>("overlay-changed"),
 	profilesChanged: makeEvent<ProfilesChanged>("profiles-changed"),
 	settingsChanged: makeEvent<SettingsChanged>("settings-changed"),
+	trayMenuOpened: makeEvent<TrayMenuOpened>("tray-menu-opened"),
 	updateAvailable: makeEvent<UpdateAvailable>("update-available"),
 };
 
@@ -346,6 +350,8 @@ export type StopAfter = {
 export type StopReason = "user" | "timer" | "emergency" | "completed" | "error" | "profileSwitch";
 
 export type ThemeId = "grafite" | "blueprint" | "fosforo" | "bancada" | "papel" | "contraste";
+
+export type TrayMenuOpened = null;
 
 export type UpdateAvailable = {
 	version: string,

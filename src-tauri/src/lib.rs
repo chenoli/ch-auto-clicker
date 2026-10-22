@@ -18,6 +18,7 @@ mod thumbs;
 mod tokens;
 mod tray;
 mod tray_icon;
+mod tray_menu;
 mod updater;
 mod windowing;
 
@@ -92,6 +93,7 @@ pub fn run() {
             commands::sync_autostart(app.handle(), state.settings().autostart);
             tray::install(app.handle())?;
             hud::create(app.handle())?;
+            tray_menu::create(app.handle())?;
             display_watch::spawn(app.handle().clone());
             updater::spawn(app.handle().clone());
             let minimized = std::env::args().any(|a| a == STARTED_MINIMIZED);

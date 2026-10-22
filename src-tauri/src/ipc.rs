@@ -1,6 +1,8 @@
 use tauri_specta::{Builder, collect_commands, collect_events};
 
-use crate::{capabilities, commands, events, hotkeys, hud, overlay, profiles, tray, updater};
+use crate::{
+    capabilities, commands, events, hotkeys, hud, overlay, profiles, tray, tray_menu, updater,
+};
 
 const BINDINGS_PATH: &str = "../ui/src/ipc/bindings.ts";
 
@@ -13,6 +15,9 @@ pub fn builder() -> Builder<tauri::Wry> {
             commands::settings_acknowledge_anti_cheat,
             commands::app_open_support,
             hud::hud_resize,
+            tray_menu::tray_menu_resize,
+            tray_menu::tray_menu_close,
+            tray_menu::tray_menu_action,
             updater::update_check,
             updater::update_install,
             commands::profile_update,
@@ -68,6 +73,7 @@ pub fn builder() -> Builder<tauri::Wry> {
             capabilities::Capabilities,
             overlay::OverlayChanged,
             hud::HudHover,
+            tray_menu::TrayMenuOpened,
             tray::NavigateRequested,
             updater::UpdateAvailable
         ])

@@ -6,7 +6,7 @@ import { defineConfig } from "vite";
 
 const uiRoot = resolve(import.meta.dirname, "ui");
 
-const pages = ["index", "variation", "hud", "overlay"];
+const pages = ["index", "variation", "hud", "overlay", "tray-menu"];
 
 export default defineConfig({
   root: uiRoot,

@@ -411,5 +411,26 @@
     "installing": "Baixando a atualização…",
     "available": "A versão {version} está disponível.",
     "open": "Atualizar ›"
+  },
+  "tray": {
+    "menu": "Menu do CH Auto Clicker",
+    "state": {
+      "idle": "PARADO",
+      "countdown": "INICIANDO",
+      "running": "RODANDO",
+      "paused": "PAUSADO",
+      "error": "ERRO"
+    },
+    "start": "Iniciar",
+    "stop": "Parar",
+    "pause": "Pausar",
+    "resume": "Retomar",
+    "profile": "Perfil",
+    "showWindow": "Mostrar janela",
+    "showHud": "Mostrar HUD",
+    "resetHud": "Restaurar posição do HUD",
+    "settings": "Configurações",
+    "support": "Me pague um café",
+    "quit": "Sair"
   }
 }

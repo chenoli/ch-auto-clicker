@@ -4,7 +4,6 @@ use std::time::Duration;
 use ch_core::engine::state::EngineState;
 use ch_core::model::{Hotkey, Modifier, WindowPosition};
 use tauri::image::Image;
-use tauri::menu::{CheckMenuItem, Menu, MenuEvent, MenuItem, PredefinedMenuItem, Submenu};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIcon, TrayIconBuilder, TrayIconEvent};
 use tauri::{AppHandle, Manager, Runtime};
 use tauri_specta::Event;
@@ -88,119 +87,6 @@ fn icon<R: Runtime>(app: &AppHandle<R>, state: EngineState, pulse_on: bool) -> I
     Image::new_owned(tray_icon::render(size, dot), size, size)
 }
 
-fn state_label(state: EngineState) -> Text {
-    match state {
-        EngineState::Idle | EngineState::Stopping => Text::StateIdle,
-        EngineState::Countdown => Text::StateCountdown,
-        EngineState::Running => Text::StateRunning,
-        EngineState::Paused => Text::StatePaused,
-        EngineState::Error => Text::StateError,
-    }
-}
-
-fn with_hint(label: &str, hotkey: Option<&Hotkey>) -> String {
-    hotkey.map_or_else(
-        || label.to_owned(),
-        |h| format!("{label}\t{}", combo_label(h)),
-    )
-}
-
-fn build_menu<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
-    let app_state = app.state::<AppState>();
-    let data = app_state.data();
-    let locale = data.settings.locale;
-    let t = |key| text(locale, key);
-    let engine = app_state.engine.shared().state();
-    let active = engine.is_active();
-    let bindings = &data.settings.hotkeys;
-    let profile_name = data.active_profile().map_or("—", |p| p.name.as_str());
-
-    let header = MenuItem::with_id(
-        app,
-        "header",
-        format!("{profile_name} · {}", t(state_label(engine))),
-        false,
-        None::<&str>,
-    )?;
-    let start = MenuItem::with_id(
-        app,
-        "start",
-        with_hint(
-            t(if active { Text::Stop } else { Text::Start }),
-            bindings.start_stop.as_ref(),
-        ),
-        true,
-        None::<&str>,
-    )?;
-    let pause = MenuItem::with_id(
-        app,
-        "pause",
-        with_hint(
-            t(if engine == EngineState::Paused {
-                Text::Resume
-            } else {
-                Text::Pause
-            }),
-            bindings.pause_resume.as_ref(),
-        ),
-        matches!(engine, EngineState::Running | EngineState::Paused),
-        None::<&str>,
-    )?;
-    let profiles = ch_core::profiles::ordered(&data.settings, &data.profiles);
-    let items = profiles
-        .iter()
-        .map(|p| {
-            CheckMenuItem::with_id(
-                app,
-                format!("profile:{}", p.id),
-                &p.name,
-                true,
-                data.settings.active_profile_id.as_deref() == Some(p.id.as_str()),
-                None::<&str>,
-            )
-        })
-        .collect::<tauri::Result<Vec<_>>>()?;
-    let item_refs: Vec<&dyn tauri::menu::IsMenuItem<R>> = items.iter().map(|i| i as _).collect();
-    let profile_menu = Submenu::with_items(app, t(Text::Profile), true, &item_refs)?;
-    let show = MenuItem::with_id(app, "show", t(Text::ShowWindow), true, None::<&str>)?;
-    let hud = CheckMenuItem::with_id(
-        app,
-        "hud",
-        t(Text::ShowHud),
-        true,
-        data.settings.show_hud,
-        None::<&str>,
-    )?;
-    let hud_reset = MenuItem::with_id(
-        app,
-        "hud-reset",
-        t(Text::ResetHudPosition),
-        true,
-        None::<&str>,
-    )?;
-    let settings = MenuItem::with_id(app, "settings", t(Text::Settings), true, None::<&str>)?;
-    let support = MenuItem::with_id(app, "support", t(Text::Support), true, None::<&str>)?;
-    let quit = MenuItem::with_id(app, "quit", t(Text::Quit), true, None::<&str>)?;
-    Menu::with_items(
-        app,
-        &[
-            &header,
-            &PredefinedMenuItem::separator(app)?,
-            &start,
-            &pause,
-            &profile_menu,
-            &PredefinedMenuItem::separator(app)?,
-            &show,
-            &hud,
-            &hud_reset,
-            &settings,
-            &support,
-            &PredefinedMenuItem::separator(app)?,
-            &quit,
-        ],
-    )
-}
-
 pub fn show_main<R: Runtime>(app: &AppHandle<R>) {
     crate::windowing::show_main(app);
 }
@@ -219,9 +105,8 @@ pub fn quit<R: Runtime>(app: &AppHandle<R>) {
     app.exit(0);
 }
 
-fn on_menu<R: Runtime>(app: &AppHandle<R>, event: MenuEvent) {
+pub fn run_action<R: Runtime>(app: &AppHandle<R>, id: &str) {
     let state = app.state::<AppState>();
-    let id = event.id().as_ref();
     match id {
         "start" => {
             if state.engine.shared().state().is_active() {
@@ -281,17 +166,19 @@ pub fn install<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<TrayIcon<R>> {
     let tray = TrayIconBuilder::with_id(TRAY_ID)
         .icon(icon(app, EngineState::Idle, true))
         .tooltip(ch_core::PRODUCT_NAME)
-        .menu(&build_menu(app)?)
-        .show_menu_on_left_click(false)
-        .on_menu_event(on_menu)
         .on_tray_icon_event(|tray, event| {
             if let TrayIconEvent::Click {
-                button: MouseButton::Left,
+                button,
                 button_state: MouseButtonState::Up,
+                position,
                 ..
             } = event
             {
-                show_main(tray.app_handle());
+                match button {
+                    MouseButton::Left => show_main(tray.app_handle()),
+                    MouseButton::Right => crate::tray_menu::open(tray.app_handle(), position),
+                    MouseButton::Middle => {}
+                }
             }
         })
         .build(app)?;
@@ -305,9 +192,6 @@ pub fn refresh<R: Runtime>(app: &AppHandle<R>) {
     };
     let engine = state.engine.shared().state();
     let _ = tray.set_icon(Some(icon(app, engine, PULSE_ON.load(Ordering::Relaxed))));
-    if let Ok(menu) = build_menu(app) {
-        let _ = tray.set_menu(Some(menu));
-    }
 }
 
 fn spawn_pulse<R: Runtime>(app: AppHandle<R>) {
@@ -362,17 +246,5 @@ mod tests {
             combo_label(&Hotkey::new(&[Modifier::Shift], "Right")),
             "Shift →"
         );
-        assert_eq!(
-            with_hint("Iniciar", Some(&Hotkey::new(&[], "F6"))),
-            "Iniciar\tF6"
-        );
-        assert_eq!(with_hint("Pausar", None), "Pausar");
-    }
-
-    #[test]
-    fn every_state_has_a_label() {
-        assert_eq!(state_label(EngineState::Stopping), Text::StateIdle);
-        assert_eq!(state_label(EngineState::Error), Text::StateError);
-        assert_eq!(state_label(EngineState::Countdown), Text::StateCountdown);
     }
 }

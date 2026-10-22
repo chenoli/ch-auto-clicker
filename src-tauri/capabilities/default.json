@@ -1,8 +1,8 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Permissions for the main window, the variation editor and the capture overlays.",
-  "windows": ["main", "variation", "overlay-*", "hud"],
+  "description": "Permissions for the main window, the variation editor, the capture overlays, the HUD and the tray menu.",
+  "windows": ["main", "variation", "overlay-*", "hud", "tray-menu"],
   "permissions": [
     "core:default",
     "core:window:allow-start-dragging",

@@ -411,5 +411,26 @@
     "installing": "Downloading the update…",
     "available": "Version {version} is available.",
     "open": "Update ›"
+  },
+  "tray": {
+    "menu": "CH Auto Clicker menu",
+    "state": {
+      "idle": "STOPPED",
+      "countdown": "STARTING",
+      "running": "RUNNING",
+      "paused": "PAUSED",
+      "error": "ERROR"
+    },
+    "start": "Start",
+    "stop": "Stop",
+    "pause": "Pause",
+    "resume": "Resume",
+    "profile": "Profile",
+    "showWindow": "Show window",
+    "showHud": "Show HUD",
+    "resetHud": "Reset HUD position",
+    "settings": "Settings",
+    "support": "Buy me a coffee",
+    "quit": "Quit"
   }
 }

@@ -308,6 +308,20 @@ pub fn open_variation<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
     Ok(())
 }
 
+pub fn bring_to_front<R: Runtime>(window: &tauri::WebviewWindow<R>) {
+    #[cfg(windows)]
+    if let Ok(hwnd) = window.hwnd() {
+        let hwnd = hwnd.0 as isize;
+        let _ = window.run_on_main_thread(move || {
+            ch_win::window::bring_to_front(hwnd);
+        });
+    }
+    #[cfg(not(windows))]
+    let _ = window.set_focus();
+    let webview: &tauri::Webview<R> = window.as_ref();
+    let _ = webview.set_focus();
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

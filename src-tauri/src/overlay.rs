@@ -263,7 +263,7 @@ fn open<R: Runtime>(app: &AppHandle<R>, mode: OverlayMode) -> AppResult<mpsc::Re
         });
     }
     if let Some(window) = focus_target {
-        bring_to_front(&window);
+        crate::windowing::bring_to_front(&window);
     }
     Ok(rx)
 }
@@ -285,20 +285,6 @@ fn monitor_filter_allows(filter: Option<&str>, monitor: &Monitor) -> bool {
     }
 }
 
-fn bring_to_front<R: Runtime>(window: &tauri::WebviewWindow<R>) {
-    #[cfg(windows)]
-    if let Ok(hwnd) = window.hwnd() {
-        let hwnd = hwnd.0 as isize;
-        let _ = window.run_on_main_thread(move || {
-            ch_win::window::bring_to_front(hwnd);
-        });
-    }
-    #[cfg(not(windows))]
-    let _ = window.set_focus();
-    let webview: &tauri::Webview<R> = window.as_ref();
-    let _ = webview.set_focus();
-}
-
 pub fn focus_cursor_monitor<R: Runtime>(app: &AppHandle<R>) {
     let state = app.state::<AppState>();
     let index = lock(&state.overlays().session)
@@ -317,7 +303,7 @@ pub fn focus_cursor_monitor<R: Runtime>(app: &AppHandle<R>) {
 
 pub fn focus<R: Runtime>(app: &AppHandle<R>, index: usize) {
     if let Some(window) = app.get_webview_window(&label(index)) {
-        bring_to_front(&window);
+        crate::windowing::bring_to_front(&window);
     }
 }
 

@@ -289,7 +289,11 @@ pub fn switch_profile<R: Runtime>(app: &AppHandle<R>, state: &AppState, id: Opti
     let data = state.with_data(|data| {
         let order = &data.settings.profile_order;
         let next = match id {
-            Some(id) => Some(id.to_owned()),
+            Some(id) => data
+                .profiles
+                .iter()
+                .any(|p| p.id == id)
+                .then(|| id.to_owned()),
             None => {
                 let current = data.settings.active_profile_id.as_deref();
                 let index = order.iter().position(|p| Some(p.as_str()) == current);

@@ -1101,6 +1101,109 @@
   .transparent-window #root {
     background: transparent;
   }
+  .tray-demo {
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end;
+    gap: 24px;
+    height: 100%;
+    padding: 24px;
+    background: repeating-linear-gradient(
+      135deg,
+      color-mix(in oklch, var(--fg) 5%, var(--bg)) 0 10px,
+      color-mix(in oklch, var(--fg) 3%, var(--bg)) 10px 20px
+    );
+  }
+  .tray-root {
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end;
+    width: 100vw;
+    height: 100vh;
+    padding: 16px;
+  }
+  .tray-menu {
+    display: flex;
+    flex-direction: column;
+    width: 252px;
+    padding: 5px;
+    border-radius: 10px;
+    background: var(--bg-2);
+    border: 1px solid color-mix(in oklch, var(--fg) 14%, transparent);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5);
+    outline: none;
+  }
+  .tray-menu__header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 10px 12px;
+  }
+  .tray-menu__state {
+    font-size: var(--text-10);
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: var(--fg-2);
+  }
+  .tray-menu__first-divider {
+    margin: 0 6px 4px;
+  }
+  .tray-submenu {
+    position: absolute;
+    right: calc(100% + 10px);
+    top: -5px;
+    width: 204px;
+  }
+  .tray-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: 34px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    font: inherit;
+    font-size: var(--text-13);
+    color: var(--fg);
+    text-align: left;
+    cursor: default;
+  }
+  .tray-item[data-focused="true"] {
+    background: color-mix(in oklch, var(--fg) 6%, transparent);
+  }
+  .tray-item:disabled {
+    color: var(--fg-3);
+  }
+  .tray-item[data-tone="support"] {
+    color: var(--accent-b);
+  }
+  .tray-item[data-tone="muted"] {
+    color: var(--fg-2);
+  }
+  .tray-item__hint {
+    font-size: var(--text-11);
+    color: var(--fg-3);
+  }
+  .tray-item[data-tone="support"] .tray-item__hint {
+    color: inherit;
+  }
+  .tray-item__check-end {
+    font-size: var(--text-11);
+    color: var(--accent);
+  }
+  .tray-item--sub {
+    justify-content: flex-start;
+    gap: 8px;
+    height: 32px;
+    font-size: var(--text-12);
+  }
+  .tray-item__check {
+    flex: none;
+    width: 12px;
+    color: var(--accent);
+  }
   .hud-root {
     display: flex;
     justify-content: flex-end;
