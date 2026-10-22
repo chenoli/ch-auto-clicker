@@ -348,7 +348,33 @@
   },
   "themes": {
     "title": "Tema",
-    "followSystem": "Seguir a Windows"
+    "followSystem": "Seguir a Windows",
+    "items": {
+      "grafite": {
+        "tag": "Predeterminado",
+        "description": "El oscuro del sitio. Neutro cálido, verde de marca como señal."
+      },
+      "blueprint": {
+        "tag": "Técnico",
+        "description": "Azul de plano, cuadrícula más presente, acento cian."
+      },
+      "fosforo": {
+        "tag": "Terminal",
+        "description": "Ámbar monocromático de terminal, para sesiones largas de noche."
+      },
+      "bancada": {
+        "tag": "Laboratorio",
+        "description": "Verde clínico y sereno, como un osciloscopio de banco."
+      },
+      "papel": {
+        "tag": "Claro",
+        "description": "El crema del sitio. Para ambientes iluminados y capturas de pantalla."
+      },
+      "contraste": {
+        "tag": "Accesible",
+        "description": "Negro absoluto, bordes fuertes, foco siempre visible. AAA."
+      }
+    }
   },
   "antiCheat": {
     "title": "Juegos en línea con anti-cheat",

@@ -356,6 +356,20 @@ mod tests {
     }
 
     #[test]
+    fn saved_settings_ignore_the_first_run_defaults() {
+        let dir = TempDir::new("keep-locale");
+        let store = Store::open(&dir.0).expect("open");
+        init(&store);
+
+        let again = store
+            .load_or_init(|| Settings::new_default(Locale::Es419), || profile("other"))
+            .expect("load");
+        assert_eq!(again.settings.locale, Locale::PtBr);
+        assert_eq!(again.profiles.len(), 1);
+        assert_eq!(again.profiles[0].id, "default");
+    }
+
+    #[test]
     fn profiles_follow_the_saved_order() {
         let dir = TempDir::new("order");
         let store = Store::open(&dir.0).expect("open");

@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import "../../i18n";
+import { applyLocale } from "../../i18n";
 
 import { applyTheme, initialTheme, isThemeId, resolveTheme, syncTheme } from "../../styles/theme";
 
@@ -109,5 +109,27 @@ describe("ThemesScreen", () => {
     expect(props.onToggleFollow).toHaveBeenCalledOnce();
     act(() => fireEvent.click(screen.getByRole("button", { name: "Voltar" })));
     expect(props.onBack).toHaveBeenCalledOnce();
+  });
+
+  it("labels the themes in the app language", () => {
+    act(() => applyLocale("en-US"));
+    const noop = vi.fn();
+    render(
+      <ThemesScreen
+        shown="papel"
+        followSystem={false}
+        onSelect={noop}
+        onToggleFollow={noop}
+        onBack={noop}
+        onMinimize={noop}
+        onClose={noop}
+      />,
+    );
+    expect(screen.getByText("05 · Light")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Papel · Light" })).toHaveAttribute(
+      "title",
+      "The site's cream. For bright rooms and screenshots.",
+    );
+    act(() => applyLocale("pt-BR"));
   });
 });

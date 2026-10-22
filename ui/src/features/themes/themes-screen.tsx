@@ -84,6 +84,7 @@ export function ThemesScreen({
       <div className="grid min-h-0 flex-1 grid-cols-2 content-start gap-2.5 overflow-auto px-4 pt-0.5 pb-4">
         {THEMES.map((theme, i) => {
           const on = theme.id === shown;
+          const tag = t(`themes.items.${theme.id}.tag`);
           return (
             <button
               key={theme.id}
@@ -91,8 +92,8 @@ export function ThemesScreen({
               className="theme-card"
               data-on={on}
               aria-pressed={on}
-              aria-label={`${theme.name} · ${theme.tag}`}
-              title={theme.description}
+              aria-label={`${theme.name} · ${tag}`}
+              title={t(`themes.items.${theme.id}.description`)}
               onClick={() => onSelect(theme.id)}
             >
               <ThemePreview id={theme.id} />
@@ -100,7 +101,7 @@ export function ThemesScreen({
                 <span className="flex flex-col items-start gap-0.5">
                   <span className="text-13 font-semibold text-fg">{theme.name}</span>
                   <span className="theme-card__tag">
-                    {String(i + 1).padStart(2, "0")} · {theme.tag}
+                    {String(i + 1).padStart(2, "0")} · {tag}
                   </span>
                 </span>
                 {on && <span className="theme-card__check">✓</span>}

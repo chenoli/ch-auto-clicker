@@ -85,22 +85,15 @@ pub fn place<R: Runtime>(app: &AppHandle<R>, settings: &Settings) {
         return;
     };
     let saved = match (settings.hud.x, settings.hud.y) {
-        (Some(x), Some(y)) if on_a_monitor(app, x, y) => Some(PhysicalPosition::new(x, y)),
+        (Some(x), Some(y)) if crate::windowing::on_a_monitor(app, x, y) => {
+            Some(PhysicalPosition::new(x, y))
+        }
         _ => None,
     };
     let pos = saved.or_else(|| default_position(app, &hud));
     if let Some(pos) = pos {
         let _ = hud.set_position(pos);
     }
-}
-
-fn on_a_monitor<R: Runtime>(app: &AppHandle<R>, x: i32, y: i32) -> bool {
-    app.available_monitors().is_ok_and(|monitors| {
-        monitors.iter().any(|m| {
-            let (p, s) = (m.position(), m.size());
-            x >= p.x && y >= p.y && x < p.x + s.width as i32 && y < p.y + s.height as i32
-        })
-    })
 }
 
 fn save_position<R: Runtime>(app: &AppHandle<R>, pos: PhysicalPosition<i32>) {
@@ -127,11 +120,9 @@ pub fn sync<R: Runtime>(app: &AppHandle<R>) {
     let visible = hud.is_visible().unwrap_or(false);
     if want && !visible {
         let _ = hud.show();
-        if settings.hud_hints_shown < 3 {
-            let saved = state.with_data(|d| {
-                d.settings.hud_hints_shown = d.settings.hud_hints_shown.saturating_add(1);
-                d.settings.clone()
-            });
+        if let Some(saved) =
+            state.with_data(|d| d.settings.count_hud_hint().then(|| d.settings.clone()))
+        {
             state.persister.save_settings(&saved);
             let _ = crate::events::SettingsChanged(saved).emit(app);
         }

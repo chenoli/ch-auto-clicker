@@ -67,20 +67,48 @@ pub fn settings_update(
     state.persister.save_settings(&saved);
     emit_settings(&app, &saved);
     crate::theme::apply(&app, &saved);
-    if previous.autostart != saved.autostart {
-        use tauri_plugin_autostart::ManagerExt;
-        let launcher = app.autolaunch();
-        let result = if saved.autostart {
-            launcher.enable()
-        } else {
-            launcher.disable()
-        };
-        if let Err(e) = result {
-            log::warn!("autostart: {e}");
-            return Err(AppError::new("AUTOSTART_FAILED", e.to_string()));
-        }
+    if previous.autostart != saved.autostart
+        && let Err(e) = set_autostart(&app, saved.autostart)
+    {
+        log::warn!("autostart: {e}");
+        return Err(AppError::new("AUTOSTART_FAILED", e));
     }
     Ok(saved)
+}
+
+fn set_autostart(app: &AppHandle, enabled: bool) -> Result<(), String> {
+    use tauri_plugin_autostart::ManagerExt;
+    let launcher = app.autolaunch();
+    let result = if enabled {
+        launcher.enable()
+    } else {
+        launcher.disable()
+    };
+    result.map_err(|e| e.to_string())
+}
+
+pub fn autostart_fix(wanted: bool, registered: bool) -> Option<bool> {
+    (wanted != registered).then_some(wanted)
+}
+
+pub fn sync_autostart(app: &AppHandle, wanted: bool) {
+    use tauri_plugin_autostart::ManagerExt;
+    let registered = match app.autolaunch().is_enabled() {
+        Ok(registered) => registered,
+        Err(e) => {
+            log::warn!("autostart: could not read the Run entry: {e}");
+            return;
+        }
+    };
+    if let Some(enabled) = autostart_fix(wanted, registered) {
+        match set_autostart(app, enabled) {
+            Ok(()) => log::info!(
+                "autostart: Run entry {}",
+                if enabled { "restored" } else { "removed" }
+            ),
+            Err(e) => log::warn!("autostart: {e}"),
+        }
+    }
 }
 
 pub const ANTI_CHEAT_ACK: &str = "ANTI_CHEAT_ACK";
@@ -491,6 +519,14 @@ pub fn dpi_awareness() -> &'static str {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn autostart_follows_the_saved_setting() {
+        assert_eq!(autostart_fix(true, false), Some(true));
+        assert_eq!(autostart_fix(false, true), Some(false));
+        assert_eq!(autostart_fix(true, true), None);
+        assert_eq!(autostart_fix(false, false), None);
+    }
 
     #[test]
     fn versions_always_move_forward() {

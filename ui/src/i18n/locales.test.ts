@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { THEMES } from "../styles/tokens";
+
 import i18n, { LOCALES, applyLocale, isLocale, resources } from ".";
 
 type Tree = { [key: string]: string | Tree };
@@ -23,6 +25,13 @@ describe("locales", () => {
 
     it(`${locale} has exactly the keys of pt-BR`, () => {
       expect(Object.keys(messages).sort()).toEqual(Object.keys(base).sort());
+    });
+
+    it(`${locale} names every theme`, () => {
+      for (const theme of THEMES) {
+        expect(messages[`themes.items.${theme.id}.tag`], theme.id).toBeTruthy();
+        expect(messages[`themes.items.${theme.id}.description`], theme.id).toBeTruthy();
+      }
     });
 
     it(`${locale} keeps every placeholder and leaves nothing empty`, () => {

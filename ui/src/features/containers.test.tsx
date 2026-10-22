@@ -278,6 +278,17 @@ describe("HudWindow", () => {
     await waitFor(() => expect(mocks.commands.hudResize).toHaveBeenCalled());
   });
 
+  it("drops the move hint after the first three runs", async () => {
+    mocks.commands.appBootstrap.mockResolvedValue({
+      ...bootstrap(),
+      engine: tick({ state: "running", clicks: 7 }),
+      settings: { ...bootstrap().settings, hudHintsShown: 4 },
+    });
+    render(<HudWindow />);
+    expect(await screen.findByRole("status")).toHaveTextContent("7");
+    expect(screen.queryByText("Segure Ctrl para mover")).not.toBeInTheDocument();
+  });
+
   it("renders nothing before the state arrives", () => {
     mocks.commands.appBootstrap.mockReturnValue(new Promise(() => {}));
     const { container } = render(<HudWindow />);

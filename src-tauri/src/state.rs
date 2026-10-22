@@ -51,27 +51,23 @@ impl AppState {
     #[cfg(windows)]
     pub fn new<R: Runtime>(app: &AppHandle<R>) -> Result<Self, String> {
         let store = Store::open(Store::default_root()).map_err(|e| e.to_string())?;
+        let first_locale =
+            ch_win::system::take_installer_locale().unwrap_or_else(ch_win::system::ui_locale);
         let loaded = store
             .load_or_init(
-                || Settings::new_default(ch_win::system::ui_locale()),
+                || Settings::new_default(first_locale),
                 || {
                     Profile::new_default(
                         uuid::Uuid::new_v4().to_string(),
-                        "Meu perfil",
+                        crate::native_text::text(
+                            first_locale,
+                            crate::native_text::Text::DefaultProfileName,
+                        ),
                         &ch_core::time::iso_utc(ch_core::time::now_epoch_ms()),
                     )
                 },
             )
             .map_err(|e| e.to_string())?;
-        let mut loaded = loaded;
-        if let Some(locale) = ch_win::system::take_installer_locale()
-            && loaded.settings.locale != locale
-        {
-            loaded.settings.locale = locale;
-            if let Err(e) = store.save_settings(&loaded.settings) {
-                log::warn!("could not save the installer language: {e}");
-            }
-        }
         for issue in &loaded.issues {
             log::warn!(
                 "could not load {}: {} (moved to {:?})",

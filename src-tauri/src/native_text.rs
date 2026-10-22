@@ -22,6 +22,7 @@ pub enum Text {
     Support,
     Quit,
     HotkeyTakenBody,
+    DefaultProfileName,
 }
 
 pub const fn text(locale: Locale, key: Text) -> &'static str {
@@ -94,6 +95,9 @@ pub const fn text(locale: Locale, key: Text) -> &'static str {
         (Es419, HotkeyTakenBody) => {
             "Otra aplicación ya usa este atajo global. Iniciar / Detener no tiene atajo hasta que elijas otro."
         }
+        (PtBr, DefaultProfileName) => "Meu perfil",
+        (EnUs, DefaultProfileName) => "My profile",
+        (Es419, DefaultProfileName) => "Mi perfil",
     }
 }
 
@@ -109,7 +113,7 @@ pub fn hotkey_taken_title(locale: Locale, combo: &str) -> String {
 mod tests {
     use super::*;
 
-    const ALL: [Text; 20] = [
+    const ALL: [Text; 21] = [
         Text::CaptureTitle,
         Text::VariationTitle,
         Text::ProfileFileType,
@@ -130,6 +134,7 @@ mod tests {
         Text::Support,
         Text::Quit,
         Text::HotkeyTakenBody,
+        Text::DefaultProfileName,
     ];
 
     #[test]
@@ -145,5 +150,6 @@ mod tests {
             text(Locale::EnUs, Text::VariationTitle),
             "CH. Clicker — Interval variation"
         );
+        assert_eq!(text(Locale::EnUs, Text::DefaultProfileName), "My profile");
     }
 }

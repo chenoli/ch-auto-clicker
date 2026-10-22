@@ -50,6 +50,11 @@ fn on_main_event(
         {
             let _ = window.hide();
         }
+        tauri::WindowEvent::Moved(pos)
+            if window.is_visible().unwrap_or(false) && !window.is_minimized().unwrap_or(false) =>
+        {
+            windowing::save_main_position(app, *pos);
+        }
         _ => {}
     }
 }
@@ -84,12 +89,14 @@ pub fn run() {
             let state = app.state::<state::AppState>();
             state.hotkeys().apply(app.handle(), &state.data());
             theme::apply(app.handle(), &state.data().settings);
+            commands::sync_autostart(app.handle(), state.settings().autostart);
             tray::install(app.handle())?;
             hud::create(app.handle())?;
             display_watch::spawn(app.handle().clone());
             updater::spawn(app.handle().clone());
             let minimized = std::env::args().any(|a| a == STARTED_MINIMIZED);
             if let Some(main) = app.get_webview_window("main") {
+                windowing::restore_main_position(&main, state.settings().window);
                 if !minimized {
                     let _ = main.show();
                 }

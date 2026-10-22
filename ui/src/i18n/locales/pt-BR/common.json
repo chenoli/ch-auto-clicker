@@ -348,7 +348,33 @@
   },
   "themes": {
     "title": "Tema",
-    "followSystem": "Seguir o Windows"
+    "followSystem": "Seguir o Windows",
+    "items": {
+      "grafite": {
+        "tag": "Padrão",
+        "description": "O escuro do site. Neutro quente, verde de marca como sinal."
+      },
+      "blueprint": {
+        "tag": "Técnico",
+        "description": "Azul de prancheta, grade mais presente, acento ciano."
+      },
+      "fosforo": {
+        "tag": "Terminal",
+        "description": "Âmbar monocromático de terminal, para sessões longas à noite."
+      },
+      "bancada": {
+        "tag": "Laboratório",
+        "description": "Verde clínico e calmo, como um osciloscópio de bancada."
+      },
+      "papel": {
+        "tag": "Claro",
+        "description": "O creme do site. Para ambientes iluminados e capturas de tela."
+      },
+      "contraste": {
+        "tag": "Acessível",
+        "description": "Preto absoluto, bordas fortes, foco sempre visível. AAA."
+      }
+    }
   },
   "antiCheat": {
     "title": "Jogos online com anti-cheat",

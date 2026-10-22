@@ -2,7 +2,8 @@ use std::sync::{Mutex, mpsc};
 use std::time::{Duration, Instant};
 
 use ch_core::easing::EASE_OUT;
-use ch_core::geometry::Rect;
+use ch_core::geometry::{Point, Rect};
+use ch_core::model::WindowPosition;
 use tauri::{
     AppHandle, LogicalPosition, LogicalSize, Manager, PhysicalPosition, PhysicalSize, Runtime,
     WebviewUrl, WebviewWindow, WebviewWindowBuilder,
@@ -172,6 +173,54 @@ pub fn ensure_on_screen<R: Runtime>(window: &WebviewWindow<R>, height: f64) {
     let _ = window.set_position(PhysicalPosition::new(target.left, target.top));
 }
 
+pub fn inside_any(areas: &[Rect], p: Point) -> bool {
+    areas.iter().any(|area| area.contains(p))
+}
+
+pub fn on_a_monitor<R: Runtime>(app: &AppHandle<R>, x: i32, y: i32) -> bool {
+    app.available_monitors().is_ok_and(|monitors| {
+        let areas: Vec<Rect> = monitors
+            .iter()
+            .map(|m| {
+                let (p, s) = (m.position(), m.size());
+                Rect::new(p.x, p.y, s.width as i32, s.height as i32)
+            })
+            .collect();
+        inside_any(&areas, Point::new(x, y))
+    })
+}
+
+pub fn restore_main_position<R: Runtime>(window: &WebviewWindow<R>, saved: WindowPosition) {
+    if let (Some(x), Some(y)) = (saved.x, saved.y)
+        && on_a_monitor(window.app_handle(), x, y)
+    {
+        let _ = window.set_position(PhysicalPosition::new(x, y));
+        ensure_on_screen(window, MIN_HEIGHT);
+    }
+}
+
+pub fn save_main_position<R: Runtime>(app: &AppHandle<R>, pos: PhysicalPosition<i32>) {
+    if !on_a_monitor(app, pos.x, pos.y) {
+        return;
+    }
+    let Some(state) = app.try_state::<crate::state::AppState>() else {
+        return;
+    };
+    let next = WindowPosition {
+        x: Some(pos.x),
+        y: Some(pos.y),
+    };
+    let changed = state.with_data(|d| {
+        (d.settings.window != next).then(|| {
+            d.settings.window = next;
+            d.settings.clone()
+        })
+    });
+    if let Some(settings) = changed {
+        state.persister.save_settings(&settings);
+    }
+}
+
 fn main_height<R: Runtime>(app: &AppHandle<R>) -> f64 {
     app.try_state::<crate::state::AppState>()
         .and_then(|state| state.animator.get().and_then(HeightAnimator::last_target))
@@ -281,6 +330,19 @@ mod tests {
 
     fn rescue(window: Rect, works: &[Rect]) -> Option<Rect> {
         rescue_rect(window, (210, 320), (420, 760), works, works[0])
+    }
+
+    #[test]
+    fn finds_points_on_any_screen_including_negative_ones() {
+        let screens = [
+            Rect::new(0, 0, 1920, 1080),
+            Rect::new(-1080, -400, 1080, 1920),
+        ];
+        assert!(inside_any(&screens, Point::new(1919, 1079)));
+        assert!(inside_any(&screens, Point::new(-500, -300)));
+        assert!(!inside_any(&screens, Point::new(1920, 0)));
+        assert!(!inside_any(&screens, Point::new(-32000, -32000)));
+        assert!(!inside_any(&[], Point::new(0, 0)));
     }
 
     #[test]

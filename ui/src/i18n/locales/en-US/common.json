@@ -348,7 +348,33 @@
   },
   "themes": {
     "title": "Theme",
-    "followSystem": "Follow Windows"
+    "followSystem": "Follow Windows",
+    "items": {
+      "grafite": {
+        "tag": "Default",
+        "description": "The site's dark look. Warm neutrals, brand green as the signal."
+      },
+      "blueprint": {
+        "tag": "Technical",
+        "description": "Drafting-table blue, a more visible grid, cyan accent."
+      },
+      "fosforo": {
+        "tag": "Terminal",
+        "description": "Monochrome terminal amber, for long sessions at night."
+      },
+      "bancada": {
+        "tag": "Lab",
+        "description": "Calm clinical green, like a bench oscilloscope."
+      },
+      "papel": {
+        "tag": "Light",
+        "description": "The site's cream. For bright rooms and screenshots."
+      },
+      "contraste": {
+        "tag": "Accessible",
+        "description": "Pure black, strong borders, focus always visible. AAA."
+      }
+    }
   },
   "antiCheat": {
     "title": "Online games with anti-cheat",

@@ -350,7 +350,17 @@ pub struct Settings {
     pub hud_hints_shown: u8,
 }
 
+pub const HUD_HINT_RUNS: u8 = 3;
+
 impl Settings {
+    pub fn count_hud_hint(&mut self) -> bool {
+        if self.hud_hints_shown > HUD_HINT_RUNS {
+            return false;
+        }
+        self.hud_hints_shown += 1;
+        true
+    }
+
     pub fn merge_user_edit(&self, incoming: Self) -> Self {
         Self {
             active_profile_id: self.active_profile_id.clone(),
