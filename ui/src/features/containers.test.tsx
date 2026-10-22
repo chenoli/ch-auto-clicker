@@ -26,6 +26,7 @@ const mocks = vi.hoisted(() => ({
     overlayUndo: vi.fn(),
     overlayFinish: vi.fn(),
     overlayFocus: vi.fn(),
+    overlayFocusCursor: vi.fn(),
     overlayPickArea: vi.fn(),
     overlaySetMode: vi.fn(),
     overlayConfirmArea: vi.fn(),
@@ -575,6 +576,24 @@ describe("OverlayWindow", () => {
     fireEvent.keyDown(window, { key: "ArrowDown", shiftKey: true });
     expect(screen.getByText("50, 70")).toBeInTheDocument();
     await act(async () => {});
+  });
+
+  it("hands the keyboard to the monitor under the cursor when a window without it gets focus", async () => {
+    mocks.commands.overlayState.mockResolvedValue({ status: "ok", data: { ...state, cursor: null } });
+    render(<OverlayWindow />);
+    expect(await screen.findByText(/Clique para adicionar o ponto/)).toBeInTheDocument();
+    mocks.commands.overlayFocusCursor.mockClear();
+    fireEvent.focus(window);
+    await waitFor(() => expect(mocks.commands.overlayFocusCursor).toHaveBeenCalledOnce());
+
+    mocks.commands.overlayState.mockResolvedValue({ status: "ok", data: { ...state, cursor: { x: 1, y: 2 } } });
+    fireEvent.focus(window);
+    await act(async () => {});
+    expect(mocks.commands.overlayFocusCursor).toHaveBeenCalledOnce();
+    mocks.commands.overlayState.mockResolvedValue({ status: "error", error: { code: "OVERLAY_CLOSED", message: "" } });
+    fireEvent.focus(window);
+    await act(async () => {});
+    expect(mocks.commands.overlayFocusCursor).toHaveBeenCalledOnce();
   });
 
   it("moves the area with the arrows and resizes it with ctrl", async () => {

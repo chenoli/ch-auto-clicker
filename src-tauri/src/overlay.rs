@@ -221,6 +221,7 @@ fn open<R: Runtime>(app: &AppHandle<R>, mode: OverlayMode) -> AppResult<mpsc::Re
     });
 
     let cursor = cursor_position();
+    let mut focus_target = None;
     for (index, monitor) in layout.monitors.iter().enumerate() {
         if !overlay_allowed(monitor) {
             continue;
@@ -237,6 +238,7 @@ fn open<R: Runtime>(app: &AppHandle<R>, mode: OverlayMode) -> AppResult<mpsc::Re
             .skip_taskbar(true)
             .shadow(false)
             .visible(false)
+            .focused(false)
             .background_color(tauri::window::Color(0x14, 0x14, 0x12, 0xFF))
             .build()
             .map_err(|e| AppError::new("OVERLAY_FAILED", e.to_string()))?;
@@ -245,7 +247,7 @@ fn open<R: Runtime>(app: &AppHandle<R>, mode: OverlayMode) -> AppResult<mpsc::Re
         let _ = window.set_size(PhysicalSize::new(r.width as u32, r.height as u32));
         let _ = window.show();
         if cursor.is_some_and(|c| r.contains(c)) {
-            bring_to_front(&window);
+            focus_target = Some(window.clone());
         }
         let close_app = app.clone();
         window.on_window_event(move |event| {
@@ -253,6 +255,9 @@ fn open<R: Runtime>(app: &AppHandle<R>, mode: OverlayMode) -> AppResult<mpsc::Re
                 finish(&close_app);
             }
         });
+    }
+    if let Some(window) = focus_target {
+        bring_to_front(&window);
     }
     Ok(rx)
 }
@@ -286,6 +291,22 @@ fn bring_to_front<R: Runtime>(window: &tauri::WebviewWindow<R>) {
     let _ = window.set_focus();
     let webview: &tauri::Webview<R> = window.as_ref();
     let _ = webview.set_focus();
+}
+
+pub fn focus_cursor_monitor<R: Runtime>(app: &AppHandle<R>) {
+    let state = app.state::<AppState>();
+    let index = lock(&state.overlays().session)
+        .as_ref()
+        .and_then(|session| {
+            let cursor = cursor_position()?;
+            session
+                .monitors
+                .iter()
+                .position(|m| m.rect.contains(cursor))
+        });
+    if let Some(index) = index {
+        focus(app, index);
+    }
 }
 
 pub fn focus<R: Runtime>(app: &AppHandle<R>, index: usize) {

@@ -127,6 +127,15 @@ export function OverlayWindow(): ReactElement | null {
     return () => window.removeEventListener("keydown", onKey);
   });
 
+  useEffect(() => {
+    const onFocus = () =>
+      void commands.overlayState(INDEX).then((r) => {
+        if (r.status === "ok" && !r.data.cursor) void commands.overlayFocusCursor();
+      });
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, []);
+
   if (!state) return null;
   const local = (e: ReactPointerEvent) => ({
     x: Math.min(Math.max(0, e.clientX), viewport.width),

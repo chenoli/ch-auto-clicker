@@ -491,6 +491,12 @@ pub fn overlay_focus(app: AppHandle, monitor: u32) {
 
 #[tauri::command]
 #[specta::specta]
+pub fn overlay_focus_cursor(app: AppHandle) {
+    crate::overlay::focus_cursor_monitor(&app);
+}
+
+#[tauri::command]
+#[specta::specta]
 pub fn overlay_finish(app: AppHandle) {
     crate::overlay::finish(&app);
 }
