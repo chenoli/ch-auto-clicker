@@ -48,6 +48,7 @@ pub fn builder() -> Builder<tauri::Wry> {
             commands::overlay_add_point,
             commands::overlay_undo,
             commands::overlay_finish,
+            commands::overlay_focus,
             commands::window_set_content_height,
             commands::window_open_variation,
             commands::debug_click_once

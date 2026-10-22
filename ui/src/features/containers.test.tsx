@@ -25,6 +25,7 @@ const mocks = vi.hoisted(() => ({
     overlayAddPoint: vi.fn(),
     overlayUndo: vi.fn(),
     overlayFinish: vi.fn(),
+    overlayFocus: vi.fn(),
     overlayPickArea: vi.fn(),
     overlaySetMode: vi.fn(),
     overlayConfirmArea: vi.fn(),
@@ -537,7 +538,7 @@ describe("OverlayWindow", () => {
     const view = await openOverlay();
     const root = view.container.firstElementChild as HTMLElement;
     fireEvent.pointerEnter(root);
-    expect(mocks.window.setFocus).toHaveBeenCalled();
+    expect(mocks.commands.overlayFocus).toHaveBeenCalledWith(0);
     fireEvent.pointerMove(root, { clientX: 10, clientY: 20 });
     expect(screen.getByText("10, 20")).toBeInTheDocument();
     fireEvent.keyDown(window, { key: "ArrowRight" });

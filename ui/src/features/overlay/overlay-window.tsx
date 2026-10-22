@@ -1,7 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 
-import { getCurrentWindow } from "@tauri-apps/api/window";
-
 import { commands, events } from "../../ipc";
 
 import { scaleOf, toOverlay } from "../points/geometry";
@@ -139,7 +137,7 @@ export function OverlayWindow(): ReactElement | null {
   if (state.mode === "area") {
     return (
       <div
-        onPointerEnter={() => void getCurrentWindow().setFocus()}
+        onPointerEnter={() => void commands.overlayFocus(INDEX)}
         onPointerDown={(e) => {
           if (e.button !== 0) return;
           const p = local(e);
@@ -187,7 +185,7 @@ export function OverlayWindow(): ReactElement | null {
   return (
     <div
       onPointerMove={(e) => setCursor(physical(e))}
-      onPointerEnter={() => void getCurrentWindow().setFocus()}
+      onPointerEnter={() => void commands.overlayFocus(INDEX)}
       onPointerLeave={() => setCursor(null)}
       onPointerDown={(e) => {
         if (e.button !== 0) return;

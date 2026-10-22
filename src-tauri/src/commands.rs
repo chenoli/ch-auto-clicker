@@ -485,6 +485,12 @@ pub fn overlay_undo(app: AppHandle) -> AppResult<()> {
 
 #[tauri::command]
 #[specta::specta]
+pub fn overlay_focus(app: AppHandle, monitor: u32) {
+    crate::overlay::focus(&app, monitor as usize);
+}
+
+#[tauri::command]
+#[specta::specta]
 pub fn overlay_finish(app: AppHandle) {
     crate::overlay::finish(&app);
 }

@@ -1,7 +1,10 @@
 use windows::Win32::Foundation::HWND;
+use windows::Win32::System::Threading::{AttachThreadInput, GetCurrentThreadId};
 use windows::Win32::UI::Input::KeyboardAndMouse::{GetAsyncKeyState, VK_CONTROL};
 use windows::Win32::UI::WindowsAndMessaging::{
-    GWL_EXSTYLE, GetWindowLongPtrW, SetWindowLongPtrW, WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW,
+    BringWindowToTop, GWL_EXSTYLE, GetForegroundWindow, GetWindowLongPtrW,
+    GetWindowThreadProcessId, IsWindow, SetForegroundWindow, SetWindowLongPtrW, WS_EX_NOACTIVATE,
+    WS_EX_TOOLWINDOW,
 };
 
 pub fn set_no_activate(hwnd: isize) {
@@ -20,4 +23,39 @@ pub fn set_no_activate(hwnd: isize) {
 pub fn ctrl_down() -> bool {
     // SAFETY: GetAsyncKeyState only reads input state.
     unsafe { GetAsyncKeyState(i32::from(VK_CONTROL.0)) < 0 }
+}
+
+pub fn bring_to_front(hwnd: isize) -> bool {
+    let hwnd = HWND(hwnd as *mut core::ffi::c_void);
+    // SAFETY: plain user32 calls on a window handle checked with IsWindow; the input
+    // attachment is undone before returning, and no input is synthesized.
+    unsafe {
+        if !IsWindow(Some(hwnd)).as_bool() {
+            return false;
+        }
+        let foreground = GetForegroundWindow();
+        if foreground == hwnd || SetForegroundWindow(hwnd).as_bool() {
+            return true;
+        }
+        let current = GetCurrentThreadId();
+        let owner = GetWindowThreadProcessId(foreground, None);
+        let attached =
+            owner != 0 && owner != current && AttachThreadInput(current, owner, true).as_bool();
+        let _ = BringWindowToTop(hwnd);
+        let raised = SetForegroundWindow(hwnd).as_bool();
+        if attached {
+            let _ = AttachThreadInput(current, owner, false);
+        }
+        raised
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn bring_to_front_rejects_a_handle_that_is_not_a_window() {
+        assert!(!bring_to_front(0));
+    }
 }

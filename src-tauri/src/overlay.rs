@@ -245,7 +245,7 @@ fn open<R: Runtime>(app: &AppHandle<R>, mode: OverlayMode) -> AppResult<mpsc::Re
         let _ = window.set_size(PhysicalSize::new(r.width as u32, r.height as u32));
         let _ = window.show();
         if cursor.is_some_and(|c| r.contains(c)) {
-            let _ = window.set_focus();
+            bring_to_front(&window);
         }
         let close_app = app.clone();
         window.on_window_event(move |event| {
@@ -271,6 +271,24 @@ fn monitor_filter_allows(filter: Option<&str>, monitor: &Monitor) -> bool {
         Some(list) => list
             .split(',')
             .any(|name| name.trim().eq_ignore_ascii_case(&monitor.id)),
+    }
+}
+
+fn bring_to_front<R: Runtime>(window: &tauri::WebviewWindow<R>) {
+    #[cfg(windows)]
+    if let Ok(hwnd) = window.hwnd() {
+        let hwnd = hwnd.0 as isize;
+        let _ = window.run_on_main_thread(move || {
+            ch_win::window::bring_to_front(hwnd);
+        });
+    }
+    #[cfg(not(windows))]
+    let _ = window.set_focus();
+}
+
+pub fn focus<R: Runtime>(app: &AppHandle<R>, index: usize) {
+    if let Some(window) = app.get_webview_window(&label(index)) {
+        bring_to_front(&window);
     }
 }
 
