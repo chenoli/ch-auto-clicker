@@ -51,6 +51,7 @@ const OVERLAY_STATE: OverlayState = {
   nextNumber: 5,
   mode: "points",
   area: null,
+  cursor: null,
 };
 
 function fakeCapture(): HTMLCanvasElement | null {

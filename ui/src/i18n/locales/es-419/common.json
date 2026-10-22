@@ -259,6 +259,7 @@
     "modeArea": "Área",
     "modePoint": "Punto",
     "dragToSelect": "Arrastra para seleccionar",
+    "areaArrows": "Flechas mueven · Ctrl+flechas redimensionan",
     "cancel": "para cancelar",
     "confirm": "Confirmar ↵"
   },

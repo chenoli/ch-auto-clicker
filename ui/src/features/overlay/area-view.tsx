@@ -95,6 +95,8 @@ export function AreaView({
       )}
       <OverlayBar mode="area" onMode={onMode} onFinish={onFinish}>
         <span>{t("overlay.dragToSelect")}</span>
+        <span className="overlay-bar__sep" />
+        <span>{t("overlay.areaArrows")}</span>
       </OverlayBar>
     </div>
   );

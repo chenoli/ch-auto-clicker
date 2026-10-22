@@ -563,6 +563,45 @@ describe("OverlayWindow", () => {
     await act(async () => {});
   });
 
+  it("starts the crosshair at the cursor so space and arrows work before the mouse moves", async () => {
+    mocks.commands.overlayState.mockResolvedValue({ status: "ok", data: { ...state, cursor: { x: 50, y: 60 } } });
+    mocks.commands.overlayAddPoint.mockResolvedValue({ status: "ok", data: state });
+    render(<OverlayWindow />);
+    expect(await screen.findByText("50, 60")).toBeInTheDocument();
+    fireEvent.keyDown(window, { key: " " });
+    expect(mocks.commands.overlayAddPoint).toHaveBeenLastCalledWith(0, 50, 60);
+    fireEvent.keyDown(window, { key: "ArrowDown", shiftKey: true });
+    expect(screen.getByText("50, 70")).toBeInTheDocument();
+    await act(async () => {});
+  });
+
+  it("moves the area with the arrows and resizes it with ctrl", async () => {
+    mocks.commands.overlayState.mockResolvedValue({
+      status: "ok",
+      data: { ...state, mode: "area", area: { x: 100, y: 100, w: 200, h: 100 } },
+    });
+    render(<OverlayWindow />);
+    expect(await screen.findByText("200 × 100")).toBeInTheDocument();
+    expect(screen.getByText("Setas movem · Ctrl+setas redimensionam")).toBeInTheDocument();
+    fireEvent.keyDown(window, { key: "ArrowRight" });
+    fireEvent.keyDown(window, { key: "ArrowDown", shiftKey: true });
+    expect(screen.getByText("X 101 · Y 110")).toBeInTheDocument();
+    fireEvent.keyDown(window, { key: "ArrowLeft", ctrlKey: true });
+    fireEvent.keyDown(window, { key: "ArrowUp", ctrlKey: true, shiftKey: true });
+    expect(screen.getByText("199 × 90")).toBeInTheDocument();
+    fireEvent.keyDown(window, { key: "q" });
+    expect(screen.getByText("199 × 90")).toBeInTheDocument();
+  });
+
+  it("ignores the arrows in area mode before an area exists", async () => {
+    mocks.commands.overlayState.mockResolvedValue({ status: "ok", data: { ...state, mode: "area", area: null } });
+    render(<OverlayWindow />);
+    expect(await screen.findByText("Arraste para selecionar")).toBeInTheDocument();
+    const press = new KeyboardEvent("keydown", { key: "ArrowRight", cancelable: true });
+    window.dispatchEvent(press);
+    expect(press.defaultPrevented).toBe(false);
+  });
+
   it("draws, moves and resizes an area, then confirms it", async () => {
     mocks.commands.overlayState.mockResolvedValue({
       status: "ok",

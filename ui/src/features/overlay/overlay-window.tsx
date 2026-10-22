@@ -24,9 +24,11 @@ type Drag =
   | { kind: "move"; x: number; y: number; from: AreaRect }
   | { kind: "resize"; handle: Handle; x: number; y: number; from: AreaRect };
 
-function refresh(setState: (s: OverlayState) => void) {
+function refresh(setState: (s: OverlayState) => void, onFirst?: (s: OverlayState) => void) {
   void commands.overlayState(INDEX).then((r) => {
-    if (r.status === "ok") setState(r.data);
+    if (r.status !== "ok") return;
+    setState(r.data);
+    onFirst?.(r.data);
   });
 }
 
@@ -53,7 +55,10 @@ export function OverlayWindow(): ReactElement | null {
   const drag = useRef<Drag | null>(null);
 
   useEffect(() => {
-    refresh(setState);
+    refresh(setState, (s) => {
+      const start = s.cursor;
+      if (start) setCursor((current) => current ?? start);
+    });
     const img = new Image();
     img.crossOrigin = "anonymous";
     img.onload = () => setImage(img);
@@ -88,14 +93,18 @@ export function OverlayWindow(): ReactElement | null {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      const action = overlayKeyAction(e);
       if (state?.mode === "area") {
         if (e.key === "Enter") confirm();
         else if (e.key === "Escape") finish();
-        else return;
+        else if (action.kind === "nudge" && rect) {
+          const dx = action.dx / scale;
+          const dy = action.dy / scale;
+          setDrawn(e.ctrlKey ? resizeRect(rect, "se", dx, dy, viewport) : moveRect(rect, dx, dy, viewport));
+        } else return;
         e.preventDefault();
         return;
       }
-      const action = overlayKeyAction(e);
       if (action.kind === "none") return;
       e.preventDefault();
       switch (action.kind) {

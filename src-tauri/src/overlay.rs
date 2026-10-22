@@ -36,6 +36,13 @@ pub struct OverlayPoint {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
+pub struct OverlayCursor {
+    pub x: i32,
+    pub y: i32,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
 pub enum OverlayMode {
     Points,
     Area,
@@ -49,6 +56,7 @@ pub struct OverlayState {
     pub points: Vec<OverlayPoint>,
     pub next_number: u32,
     pub area: Option<Area>,
+    pub cursor: Option<OverlayCursor>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, specta::Type, tauri_specta::Event)]
@@ -136,6 +144,7 @@ impl OverlayManager {
             next_number: points.len() as u32 + 1,
             points,
             area: profile.and_then(|p| p.modes.scan.area),
+            cursor: local_cursor(monitor.rect, cursor_position()),
         })
     }
 }
@@ -512,6 +521,16 @@ fn cursor_position() -> Option<ch_core::geometry::Point> {
     None
 }
 
+fn local_cursor(
+    rect: ch_core::geometry::Rect,
+    cursor: Option<ch_core::geometry::Point>,
+) -> Option<OverlayCursor> {
+    cursor.filter(|c| rect.contains(*c)).map(|c| OverlayCursor {
+        x: c.x - rect.left,
+        y: c.y - rect.top,
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use ch_core::geometry::Rect;
@@ -541,6 +560,18 @@ mod tests {
             (-1667, 0),
             "negative origin, rounded"
         );
+    }
+
+    #[test]
+    fn places_the_crosshair_at_the_cursor_only_on_its_monitor() {
+        use ch_core::geometry::Point;
+        let rect = monitor(1920, 1.0).rect;
+        assert_eq!(
+            local_cursor(rect, Some(Point { x: 2000, y: 30 })),
+            Some(OverlayCursor { x: 80, y: 30 })
+        );
+        assert_eq!(local_cursor(rect, Some(Point { x: 10, y: 30 })), None);
+        assert_eq!(local_cursor(rect, None), None);
     }
 
     #[test]

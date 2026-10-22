@@ -241,6 +241,11 @@ export type OverlayChanged = {
 	mode: OverlayMode,
 };
 
+export type OverlayCursor = {
+	x: number,
+	y: number,
+};
+
 export type OverlayMode = "points" | "area";
 
 export type OverlayMonitor = {
@@ -264,6 +269,7 @@ export type OverlayState = {
 	points: OverlayPoint[],
 	nextNumber: number,
 	area: Area | null,
+	cursor: OverlayCursor | null,
 };
 
 export type Position = "cursor" | "points";

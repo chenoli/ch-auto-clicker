@@ -48,6 +48,7 @@ const state: OverlayState = {
   points: [],
   nextNumber: 1,
   area: null,
+  cursor: null,
 };
 
 describe("AreaView", () => {

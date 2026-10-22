@@ -114,6 +114,8 @@ export function OverlayView({
         <span className="overlay-bar__sep" />
         <span>{t("overlay.arrows")}</span>
         <span className="overlay-bar__sep" />
+        <span>{t("overlay.space")}</span>
+        <span className="overlay-bar__sep" />
         <span>{t("overlay.undo")}</span>
         <span className="overlay-bar__sep" />
       </OverlayBar>
