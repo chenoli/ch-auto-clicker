@@ -398,7 +398,7 @@
     "action": "Apoyar ↗"
   },
   "hud": {
-    "adminBlocked": "Ventana de admin bajo el cursor: clics en pausa",
+    "adminBlocked": "Bloqueado por ventana de admin: clics en pausa",
     "countdown": "Iniciando",
     "running": "En ejecución",
     "paused": "En pausa",

@@ -40,13 +40,13 @@ pub const fn text(locale: Locale, key: Text) -> &'static str {
         (EnUs, AdminTargetTitle) => "Clicks blocked by an administrator app",
         (Es419, AdminTargetTitle) => "Clics bloqueados por una app de administrador",
         (PtBr, AdminTargetBody) => {
-            "O Windows não deixa clicar numa janela aberta como administrador. O clicker continua rodando e volta a clicar quando o cursor sair dela. Para clicar nela, ative \"Sempre abrir como administrador\" nas Configurações."
+            "O Windows não deixa clicar numa janela aberta como administrador. O clicker continua rodando e volta a clicar quando ela fechar ou o cursor sair dela. Para clicar nela, ative \"Sempre abrir como administrador\" nas Configurações."
         }
         (EnUs, AdminTargetBody) => {
-            "Windows does not allow clicks on a window running as administrator. The clicker keeps running and clicks again once the cursor leaves it. To click it, turn on \"Always run as administrator\" in Settings."
+            "Windows does not allow clicks on a window running as administrator. The clicker keeps running and clicks again once it closes or the cursor leaves it. To click it, turn on \"Always run as administrator\" in Settings."
         }
         (Es419, AdminTargetBody) => {
-            "Windows no permite hacer clic en una ventana abierta como administrador. El clicker sigue en marcha y vuelve a hacer clic cuando el cursor salga de ella. Para hacer clic en ella, activa \"Abrir siempre como administrador\" en Configuración."
+            "Windows no permite hacer clic en una ventana abierta como administrador. El clicker sigue en marcha y vuelve a hacer clic cuando se cierre o el cursor salga de ella. Para hacer clic en ella, activa \"Abrir siempre como administrador\" en Configuración."
         }
     }
 }

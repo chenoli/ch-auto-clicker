@@ -65,7 +65,7 @@ describe("HudView", () => {
 
   it("swaps the hint for a warning while an administrator window blocks the clicks", () => {
     const { props, view } = setup({ blockedByAdmin: true });
-    expect(screen.getByRole("alert")).toHaveTextContent("Janela de admin sob o cursor");
+    expect(screen.getByRole("alert")).toHaveTextContent("Bloqueado por janela de admin");
     expect(screen.queryByText("Segure Ctrl para mover")).not.toBeInTheDocument();
     view.rerender(<HudView {...props} state="paused" />);
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();

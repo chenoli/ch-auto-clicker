@@ -84,6 +84,10 @@ impl TargetGuard for OwnWindowGuard {
             .cursor_pos()
             .is_some_and(|p| self.is_elevated_window_at(p))
     }
+
+    fn session_locked(&self) -> bool {
+        crate::session::is_locked()
+    }
 }
 
 #[cfg(test)]
@@ -138,5 +142,6 @@ mod tests {
         );
         let _ = guard.blocks_click();
         let _ = guard.target_is_elevated();
+        assert!(!guard.session_locked(), "tests run on an unlocked desktop");
     }
 }

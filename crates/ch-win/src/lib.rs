@@ -8,6 +8,7 @@ pub mod hotkeys;
 pub mod input;
 pub mod integrity;
 pub mod keymap;
+pub mod session;
 pub mod system;
 pub mod timing;
 pub mod window;

@@ -79,6 +79,9 @@ impl AppState {
 
         let hook_app = app.clone();
         let engine = Engine::spawn_system(Box::new(move |change| {
+            if let Some(error) = &change.error {
+                log::warn!("engine stopped: {error}");
+            }
             let _ = EngineStatus::from(change).emit(&hook_app);
             crate::tray::refresh(&hook_app);
             crate::hud::sync(&hook_app);

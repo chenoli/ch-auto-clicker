@@ -2,13 +2,13 @@ use ch_core::engine::clock::NANOS_PER_MS;
 use ch_core::engine::scheduler::Scheduler;
 use ch_core::engine::timeline::{IntervalTimeline, StopTimeline, Timeline};
 use ch_core::geometry::{DisplayLayout, Point, Rect};
-use ch_core::input::{InputBackend, TargetGuard};
+use ch_core::input::{InputBackend, InputError, TargetGuard};
 use ch_core::model::{Mode, Position, Profile, ScanAction};
 use ch_core::scan::{ScanPath, ScanTimeline};
 use ch_core::validate::{ValidationError, validate_profile};
 use ch_core::wiggle::{MOTION_INTERVAL_NS, WiggleTimeline};
 
-use crate::engine::RunPlan;
+use crate::engine::{RunPlan, Shared};
 
 const NANOS_PER_SEC: u64 = 1_000_000_000;
 
@@ -57,6 +57,21 @@ enum Motion {
     None,
     Wiggle { amplitude_pct: f64, speed_hz: u8 },
     Scan { path: ScanPath, speed_px_s: u32 },
+}
+
+fn tolerate(
+    result: Result<(), InputError>,
+    guard: &dyn TargetGuard,
+    shared: &Shared,
+) -> Result<bool, InputError> {
+    match result {
+        Ok(()) => Ok(true),
+        Err(InputError::Blocked { .. }) if !guard.session_locked() => {
+            shared.set_blocked_by_admin(true);
+            Ok(false)
+        }
+        Err(e) => Err(e),
+    }
 }
 
 pub fn build_plan(
@@ -171,8 +186,9 @@ pub fn build_plan(
                     if elevated {
                         return Ok(());
                     }
-                    backend.click(click.button, click.kind)?;
-                    shared.add_clicks(clicks_per_tick);
+                    if tolerate(backend.click(click.button, click.kind), &*guard, &shared)? {
+                        shared.add_clicks(clicks_per_tick);
+                    }
                     Ok(())
                 });
                 Box::new(IntervalTimeline::new(
@@ -190,7 +206,9 @@ pub fn build_plan(
                 let action = Box::new(move |backend: &mut dyn InputBackend| {
                     let target = targets[next];
                     next = (next + 1) % targets.len();
-                    backend.move_to(target)?;
+                    if !tolerate(backend.move_to(target), &*guard, &shared)? {
+                        return Ok(());
+                    }
                     if guard.blocks_click() {
                         shared.add_skipped_self();
                         return Ok(());
@@ -200,8 +218,9 @@ pub fn build_plan(
                     if elevated {
                         return Ok(());
                     }
-                    backend.click(click.button, click.kind)?;
-                    shared.add_clicks(clicks_per_tick);
+                    if tolerate(backend.click(click.button, click.kind), &*guard, &shared)? {
+                        shared.add_clicks(clicks_per_tick);
+                    }
                     Ok(())
                 });
                 Box::new(IntervalTimeline::new(start, gaps, action))
@@ -263,11 +282,18 @@ mod tests {
     }
 
     fn simulate(plan: RunPlan, fires: usize) -> (Vec<Call>, Vec<u64>, Arc<Shared>, RunEnd) {
+        simulate_with(plan, fires, RecordingBackend::default())
+    }
+
+    fn simulate_with(
+        plan: RunPlan,
+        fires: usize,
+        mut backend: RecordingBackend,
+    ) -> (Vec<Call>, Vec<u64>, Arc<Shared>, RunEnd) {
         let shared = Arc::new(Shared::default());
         let clock = FakeClock::with_auto_step(1_000);
         let mut waiter = FakeWaiter::new(clock.clone());
         let mut scheduler = (plan.build_for_test())(0, Arc::clone(&shared));
-        let mut backend = RecordingBackend::default();
         let mut control = Fires(Vec::new(), clock.clone(), fires);
         let end = run(
             &mut scheduler,
@@ -424,6 +450,41 @@ mod tests {
             "moves but never clicks: {calls:?}"
         );
         assert_eq!(shared.snapshot(0).skipped_self, 2);
+    }
+
+    #[test]
+    fn blocked_input_keeps_running_unless_the_session_is_locked() {
+        struct Session(bool);
+        impl TargetGuard for Session {
+            fn blocks_click(&self) -> bool {
+                false
+            }
+            fn session_locked(&self) -> bool {
+                self.0
+            }
+        }
+        let blocked = InputError::Blocked {
+            sent: 0,
+            expected: 2,
+        };
+        let failing = || RecordingBackend {
+            fail_with: Some(blocked.clone()),
+            ..Default::default()
+        };
+        let plan = build_plan(&profile(), 0, desk(), Box::new(Session(false))).expect("plan");
+        let (calls, _, shared, end) = simulate_with(plan, 3, failing());
+        assert_eq!(calls.len(), 3, "it keeps trying");
+        assert_eq!(shared.clicks(), 0);
+        assert!(shared.snapshot(0).blocked_by_admin);
+        assert_eq!(end, RunEnd::Stopped, "ended by the test, not by the block");
+
+        let plan = build_plan(&profile(), 0, desk(), Box::new(Session(true))).expect("plan");
+        let (_, _, _, end) = simulate_with(plan, 3, failing());
+        assert_eq!(
+            end,
+            RunEnd::Failed(blocked),
+            "a locked screen still stops the run"
+        );
     }
 
     #[test]
