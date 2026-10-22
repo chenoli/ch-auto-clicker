@@ -2,7 +2,7 @@ use ch_core::engine::clock::NANOS_PER_MS;
 use ch_core::engine::scheduler::Scheduler;
 use ch_core::engine::timeline::{IntervalTimeline, StopTimeline, Timeline};
 use ch_core::geometry::{DisplayLayout, Point, Rect};
-use ch_core::input::{InputBackend, TargetGuard};
+use ch_core::input::{InputBackend, InputError, TargetGuard};
 use ch_core::model::{Mode, Position, Profile, ScanAction};
 use ch_core::scan::{ScanPath, ScanTimeline};
 use ch_core::validate::{ValidationError, validate_profile};
@@ -166,6 +166,9 @@ pub fn build_plan(
                         shared.add_skipped_self();
                         return Ok(());
                     }
+                    if guard.target_is_elevated() {
+                        return Err(InputError::TargetElevated);
+                    }
                     backend.click(click.button, click.kind)?;
                     shared.add_clicks(clicks_per_tick);
                     Ok(())
@@ -189,6 +192,9 @@ pub fn build_plan(
                     if guard.blocks_click() {
                         shared.add_skipped_self();
                         return Ok(());
+                    }
+                    if guard.target_is_elevated() {
+                        return Err(InputError::TargetElevated);
                     }
                     backend.click(click.button, click.kind)?;
                     shared.add_clicks(clicks_per_tick);
@@ -414,6 +420,24 @@ mod tests {
             "moves but never clicks: {calls:?}"
         );
         assert_eq!(shared.snapshot(0).skipped_self, 2);
+    }
+
+    #[test]
+    fn an_elevated_target_ends_the_run_without_clicking() {
+        struct Elevated;
+        impl TargetGuard for Elevated {
+            fn blocks_click(&self) -> bool {
+                false
+            }
+            fn target_is_elevated(&self) -> bool {
+                true
+            }
+        }
+        let plan = build_plan(&profile(), 0, desk(), Box::new(Elevated)).expect("plan");
+        let (calls, _, shared, end) = simulate(plan, 3);
+        assert!(calls.is_empty(), "nothing injected: {calls:?}");
+        assert_eq!(shared.clicks(), 0);
+        assert_eq!(end, RunEnd::Failed(InputError::TargetElevated));
     }
 
     #[test]

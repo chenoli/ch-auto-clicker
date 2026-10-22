@@ -108,6 +108,7 @@
   "errors": {
     "INPUT_BLOCKED": "Input blocked",
     "OUTSIDE_DESKTOP": "Point off screen",
+    "TARGET_ELEVATED": "Blocked by admin app",
     "PROFILE_INVALID": "The profile has invalid values.",
     "PROFILE_NOT_FOUND": "Profile not found.",
     "STALE_PROFILE": "The profile was changed in another window. The latest version was reloaded.",

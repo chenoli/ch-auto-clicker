@@ -108,6 +108,7 @@
   "errors": {
     "INPUT_BLOCKED": "Entrada bloqueada",
     "OUTSIDE_DESKTOP": "Ponto fora da tela",
+    "TARGET_ELEVATED": "Bloqueado por app admin",
     "PROFILE_INVALID": "O perfil tem valores inválidos.",
     "PROFILE_NOT_FOUND": "Perfil não encontrado.",
     "STALE_PROFILE": "O perfil foi alterado em outra janela. Recarregamos a versão mais recente.",

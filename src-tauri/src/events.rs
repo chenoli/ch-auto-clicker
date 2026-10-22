@@ -61,6 +61,7 @@ impl From<&StateChange> for EngineStatus {
             error_code: c.error.as_ref().map(|e| match e {
                 ch_core::input::InputError::Blocked { .. } => "INPUT_BLOCKED".to_owned(),
                 ch_core::input::InputError::OutsideDesktop { .. } => "OUTSIDE_DESKTOP".to_owned(),
+                ch_core::input::InputError::TargetElevated => "TARGET_ELEVATED".to_owned(),
             }),
         }
     }
@@ -182,6 +183,14 @@ mod tests {
             error: Some(InputError::OutsideDesktop { x: 0, y: 0 }),
         });
         assert_eq!(outside.error_code.as_deref(), Some("OUTSIDE_DESKTOP"));
+        let elevated = EngineStatus::from(&StateChange {
+            state: EngineState::Error,
+            prev: EngineState::Stopping,
+            reason: None,
+            countdown_total_ns: None,
+            error: Some(InputError::TargetElevated),
+        });
+        assert_eq!(elevated.error_code.as_deref(), Some("TARGET_ELEVATED"));
     }
 
     #[test]

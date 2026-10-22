@@ -470,6 +470,8 @@ tick at MOTION_HZ:
 
 Before every click: `WindowFromPoint(target)` → `GetAncestor(GA_ROOT)` → `GetWindowThreadProcessId`. If the PID is ours (main window, variation editor or overlays), the click is **skipped**, `skippedSelf++`, and telemetry reports it. The HUD has `WS_EX_TRANSPARENT | WS_EX_LAYERED`, so hit-testing passes through it and the click lands on the window below, which is the intended behavior.
 
+The same lookup also guards against elevated targets. UIPI drops input sent to a window with a higher integrity level without any error (`SendInput` still reports success), so before every click the guard reads the integrity level of the target process (`OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION)` → `TokenIntegrityLevel`, cached per PID) and compares it with ours. A higher level ends the run with `TARGET_ELEVATED` instead of counting clicks that never land. When the level cannot be read (for example, a process that denies the query), the click goes ahead as before.
+
 ---
 
 ## 7. IPC contracts
@@ -613,7 +615,7 @@ tauri-specta names each event in kebab-case from its type (`EngineTick` → `eng
 7. Change the scale or disconnect a monitor while running → pause + warning. Start with points outside the layout → `POINTS_OFFSCREEN`.
 8. Main window dragged between monitors with different DPI: sharpness, maximum height limited to the work area.
 9. HUD: top-right corner of the primary monitor, click-through, fades on hover, drag (Ctrl + drag, D5).
-10. Elevated (admin) target app with a non-elevated clicker → `uipi_blocked` detected and reported.
+10. Elevated (admin) target app with a non-elevated clicker → stops with `TARGET_ELEVATED` (section 6.6).
 11. Screen lock/UAC while running → stops with an error, no stuck button.
 12. Emergency stop with the target window focused, in a full-screen game and with the app unfocused.
 

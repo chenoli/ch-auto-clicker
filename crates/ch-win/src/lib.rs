@@ -5,6 +5,7 @@ pub mod display;
 pub mod guard;
 pub mod hotkeys;
 pub mod input;
+pub mod integrity;
 pub mod keymap;
 pub mod system;
 pub mod timing;

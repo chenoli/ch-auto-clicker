@@ -1,3 +1,5 @@
+use std::sync::Mutex;
+
 use ch_core::geometry::Point;
 use ch_core::input::TargetGuard;
 use windows::Win32::Foundation::POINT;
@@ -7,31 +9,60 @@ use windows::Win32::UI::WindowsAndMessaging::{
 };
 
 use crate::input::{InputSink, SystemSink};
+use crate::integrity::{current_integrity, process_integrity};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug)]
 pub struct OwnWindowGuard {
     pid: u32,
+    integrity: Option<u32>,
+    elevated: Mutex<Option<(u32, bool)>>,
+}
+
+fn window_pid_at(p: Point) -> Option<u32> {
+    // SAFETY: plain value arguments; handles are only compared, never dereferenced.
+    unsafe {
+        let hwnd = WindowFromPoint(POINT { x: p.x, y: p.y });
+        if hwnd.is_invalid() {
+            return None;
+        }
+        let root = GetAncestor(hwnd, GA_ROOT);
+        let mut pid = 0u32;
+        GetWindowThreadProcessId(if root.is_invalid() { hwnd } else { root }, Some(&mut pid));
+        (pid != 0).then_some(pid)
+    }
 }
 
 impl OwnWindowGuard {
     pub fn new() -> Self {
         // SAFETY: no preconditions.
         let pid = unsafe { GetCurrentProcessId() };
-        Self { pid }
+        Self {
+            pid,
+            integrity: current_integrity(),
+            elevated: Mutex::new(None),
+        }
     }
 
     pub fn is_own_window_at(&self, p: Point) -> bool {
-        // SAFETY: plain value arguments; handles are only compared, never dereferenced.
-        unsafe {
-            let hwnd = WindowFromPoint(POINT { x: p.x, y: p.y });
-            if hwnd.is_invalid() {
-                return false;
-            }
-            let root = GetAncestor(hwnd, GA_ROOT);
-            let mut pid = 0u32;
-            GetWindowThreadProcessId(if root.is_invalid() { hwnd } else { root }, Some(&mut pid));
-            pid == self.pid
+        window_pid_at(p) == Some(self.pid)
+    }
+
+    pub fn is_elevated_window_at(&self, p: Point) -> bool {
+        let Some(own) = self.integrity else {
+            return false;
+        };
+        let Some(pid) = window_pid_at(p).filter(|pid| *pid != self.pid) else {
+            return false;
+        };
+        let mut cache = self.elevated.lock().unwrap_or_else(|e| e.into_inner());
+        if let Some((cached, elevated)) = *cache
+            && cached == pid
+        {
+            return elevated;
         }
+        let elevated = process_integrity(pid).is_some_and(|level| level > own);
+        *cache = Some((pid, elevated));
+        elevated
     }
 }
 
@@ -46,6 +77,12 @@ impl TargetGuard for OwnWindowGuard {
         SystemSink
             .cursor_pos()
             .is_some_and(|p| self.is_own_window_at(p))
+    }
+
+    fn target_is_elevated(&self) -> bool {
+        SystemSink
+            .cursor_pos()
+            .is_some_and(|p| self.is_elevated_window_at(p))
     }
 }
 
@@ -95,6 +132,11 @@ mod tests {
 
         assert!(inside, "our popup is under its own center");
         assert!(!outside, "no other window in the test process");
+        assert!(
+            !guard.is_elevated_window_at(Point::new(x + 60, y + 60)),
+            "our own window is never elevated"
+        );
         let _ = guard.blocks_click();
+        let _ = guard.target_is_elevated();
     }
 }

@@ -38,6 +38,8 @@ pub enum InputError {
     Blocked { sent: u32, expected: u32 },
     #[error("target ({x}, {y}) is outside the virtual desktop")]
     OutsideDesktop { x: i32, y: i32 },
+    #[error("the window under the cursor runs with higher privileges")]
+    TargetElevated,
 }
 
 pub trait InputBackend {
@@ -56,6 +58,10 @@ pub trait InputBackend {
 
 pub trait TargetGuard: Send {
     fn blocks_click(&self) -> bool;
+
+    fn target_is_elevated(&self) -> bool {
+        false
+    }
 }
 
 #[derive(Debug, Default, Clone, Copy)]
@@ -212,6 +218,7 @@ mod tests {
     #[test]
     fn allow_all_never_blocks() {
         assert!(!AllowAll.blocks_click());
+        assert!(!AllowAll.target_is_elevated());
     }
 
     #[test]
