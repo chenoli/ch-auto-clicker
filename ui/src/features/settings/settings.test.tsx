@@ -94,7 +94,7 @@ describe("SettingsScreen", () => {
     expect(props.onOpenHotkeys).toHaveBeenCalledOnce();
     expect(props.onOpenThemes).toHaveBeenCalledOnce();
     expect(props.onSupport).toHaveBeenCalledOnce();
-    expect(screen.getByText("CH. Clicker 0.1.0 · Chenoli Labs")).toBeInTheDocument();
+    expect(screen.getByText("CH Auto Clicker 0.1.0 · Chenoli Labs")).toBeInTheDocument();
     expect(screen.getByRole("note")).toHaveTextContent("Jogos online com anti-cheat");
   });
 

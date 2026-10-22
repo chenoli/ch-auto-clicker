@@ -39,9 +39,9 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           tagName: ${{ github.ref_name }}
-          releaseName: CH. Clicker ${{ github.ref_name }}
+          releaseName: CH Auto Clicker ${{ github.ref_name }}
           releaseBody: |
-            Install with `CH Clicker_*_x64-setup.exe` (per user, no admin rights needed).
+            Install with `CH Auto Clicker_*_x64-setup.exe` (per user, no admin rights needed).
 
             **Note:** this build is not code-signed yet. Windows shows "Unknown publisher":
             click "More info" → "Run anyway". With Smart App Control turned on, Windows 11

@@ -13,4 +13,4 @@ pub mod time;
 pub mod validate;
 pub mod wiggle;
 
-pub const PRODUCT_NAME: &str = "CH. Clicker";
+pub const PRODUCT_NAME: &str = "CH Auto Clicker";

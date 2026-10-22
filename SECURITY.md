@@ -25,12 +25,12 @@ You can expect an acknowledgement within 7 days and an assessment within 14 days
 
 In scope:
 
-- the CH. Clicker app and its installer;
+- the CH Auto Clicker app and its installer;
 - the update channel (`latest.json` and the update signature check);
 - `.chprofile` import (files are validated by content and schema).
 
 Out of scope:
 
-- anti-cheat detection of the app: CH. Clicker never hides its activity by design;
+- anti-cheat detection of the app: CH Auto Clicker never hides its activity by design;
 - Windows SmartScreen or Smart App Control warnings on unsigned builds (see [`docs/release.md`](docs/release.md));
 - problems that require an attacker who already controls your user account.

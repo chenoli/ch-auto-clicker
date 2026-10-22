@@ -1,6 +1,6 @@
 [package]
 name = "ch-win"
-description = "CH. Clicker Windows layer: input, timers, monitors, hotkeys, capture."
+description = "CH Auto Clicker Windows layer: input, timers, monitors, hotkeys, capture."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

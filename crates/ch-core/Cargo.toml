@@ -1,6 +1,6 @@
 [package]
 name = "ch-core"
-description = "CH. Clicker domain: models, movement patterns, scheduler and state machine. No Windows dependency."
+description = "CH Auto Clicker domain: models, movement patterns, scheduler and state machine. No Windows dependency."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

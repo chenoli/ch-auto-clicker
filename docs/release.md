@@ -1,6 +1,6 @@
 # Release
 
-How to publish a CH. Clicker version. Everything here is free.
+How to publish a CH Auto Clicker version. Everything here is free.
 
 ## 1. Repository secrets (once)
 

@@ -1,6 +1,6 @@
 [package]
 name = "ch-storage"
-description = "CH. Clicker persistence: %APPDATA%, atomic writes, backups, import/export."
+description = "CH Auto Clicker persistence: %APPDATA%, atomic writes, backups, import/export."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

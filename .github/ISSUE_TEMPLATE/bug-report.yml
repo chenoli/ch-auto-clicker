@@ -43,5 +43,5 @@ body:
     id: logs
     attributes:
       label: Logs
-      description: Relevant lines from %LOCALAPPDATA%\Chenoli\CH Clicker\logs\ch-clicker.log
+      description: Relevant lines from %LOCALAPPDATA%\Chenoli\CH Auto Clicker\logs\ch-auto-clicker.log
       render: text

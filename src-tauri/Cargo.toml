@@ -1,6 +1,6 @@
 [package]
-name = "ch-clicker"
-description = "CH. Clicker, a native Windows auto clicker (Chenoli Labs)"
+name = "ch-auto-clicker"
+description = "CH Auto Clicker, a native Windows auto clicker (Chenoli Labs)"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -8,10 +8,10 @@ authors.workspace = true
 license.workspace = true
 repository.workspace = true
 publish.workspace = true
-default-run = "ch-clicker"
+default-run = "ch-auto-clicker"
 
 [lib]
-name = "ch_clicker_lib"
+name = "ch_auto_clicker_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]

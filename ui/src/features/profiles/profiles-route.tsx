@@ -14,7 +14,7 @@ import type { HotkeyRecordingApi } from "../hotkeys/use-hotkey-recording";
 import type { ReactNode } from "react";
 
 const MAX_IMPORT_BYTES = 1024 * 1024;
-export const DATA_PATH = "%APPDATA%\\Chenoli\\CH Clicker";
+export const DATA_PATH = "%APPDATA%\\Chenoli\\CH Auto Clicker";
 
 type Notice = { tone: "info" | "warn" | "danger"; content: ReactNode } | null;
 

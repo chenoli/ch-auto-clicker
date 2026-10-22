@@ -123,7 +123,7 @@ pub fn run() {
             Ok(())
         })
         .build(tauri::generate_context!())
-        .expect("failed to start CH. Clicker")
+        .expect("failed to start CH Auto Clicker")
         .run(|app, event| {
             if let tauri::RunEvent::Exit = event
                 && let Some(state) = app.try_state::<state::AppState>()

@@ -74,7 +74,7 @@ pub fn on_battery() -> Option<bool> {
     }
 }
 
-const INSTALLER_KEY: &str = r"Software\Chenoli\CH Clicker";
+const INSTALLER_KEY: &str = r"Software\Chenoli\CH Auto Clicker";
 const PENDING_LOCALE: &str = "PendingLocale";
 
 pub fn take_installer_locale() -> Option<ch_core::model::Locale> {

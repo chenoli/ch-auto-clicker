@@ -1,4 +1,4 @@
-# CH. Clicker — Implementation backlog (v0.1)
+# CH Auto Clicker — Implementation backlog (v0.1)
 
 References: `docs/ARCHITECTURE.md` (sections cited as §N) and the design handoff (screens cited as "Screen 01.A" and so on). Quoted UI labels are the pt-BR prototype strings, which are also the i18n source.
 

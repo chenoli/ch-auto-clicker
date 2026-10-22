@@ -1,4 +1,4 @@
-# CH. Clicker — Architecture (v0.1)
+# CH Auto Clicker — Architecture (v0.1)
 
 > Sources: the requirements prompt, the design handoff (screen specs and the HTML prototype) and the design tokens (`design/tokens.json`).
 > This document contains no implementation code. Pseudocode appears only where an algorithm must be unambiguous.
@@ -89,7 +89,7 @@ ch-auto-clicker/
 ## 3. Architecture diagram
 
 ```
-┌──────────────────────────── Single process: ch-clicker.exe (PerMonitorV2) ────────────────────────────┐
+┌──────────────────────────── Single process: ch-auto-clicker.exe (PerMonitorV2) ────────────────────────────┐
 │                                                                                                       │
 │  WebView2 (React)                                     Rust                                            │
 │  ┌──────────────┐  invoke (cmds)   ┌───────────────────────────────────────────────┐                  │
@@ -257,20 +257,20 @@ Fields owned by Rust (profile order, active profile, hotkeys, HUD and window pos
 ### Files
 
 ```
-%APPDATA%\Chenoli\CH Clicker\
+%APPDATA%\Chenoli\CH Auto Clicker\
 ├─ settings.json
 ├─ profiles\{id}.json            # one file per profile (+ {id}.json.bak with the previous version): isolated corruption
 ├─ backups\                      # pre-migration copies (profile.vN.json), deleted profiles and quarantined corrupt files
-%LOCALAPPDATA%\Chenoli\CH Clicker\
+%LOCALAPPDATA%\Chenoli\CH Auto Clicker\
 ├─ cache\capabilities.json       # benchmark result (key: Windows build + CPU)
 ├─ cache\thumbs\{profileId}.png  # scan area thumbnail
-└─ logs\ch-clicker.log           # tauri-plugin-log (log crate), 5 MB × 5 files
+└─ logs\ch-auto-clicker.log           # tauri-plugin-log (log crate), 5 MB × 5 files
 ```
 
 **`.chprofile` format** (import/export):
 
 ```json
-{ "format": "chprofile", "schemaVersion": 1, "exportedBy": "CH. Clicker 0.1.0", "profile": { ... } }
+{ "format": "chprofile", "schemaVersion": 1, "exportedBy": "CH Auto Clicker 0.1.0", "profile": { ... } }
 ```
 
 On import the profile gets a new `id`. The `hotkey` is dropped if it conflicts, and the name is adjusted if it is taken.
@@ -564,7 +564,7 @@ tauri-specta names each event in kebab-case from its type (`EngineTick` → `eng
 - Typed keys (TS resource declaration), so a missing key is a compile error. The `ui/src/i18n/locales.test.ts` test (runs in CI with Vitest) requires the same keys and the same ICU placeholders in all three languages and no empty strings.
 - Numbers through the active locale's `Intl.NumberFormat` ("10,0" in pt-BR, "10.0" in en-US and es-419). The `mm:ss.d` and `hh:mm:ss` clocks follow the handoff and are the same in every language.
 - Text drawn by Rust (window titles, file type in dialogs, tray menu, notifications) lives in `src-tauri/src/native_text.rs`, one table per language covered by a test.
-- Initial locale: the language picked in the installer, when there is one; otherwise `GetUserDefaultUILanguage` (Portuguese → pt-BR, Spanish → es-419, anything else → en-US). The installer writes `HKCU\Software\Chenoli\CH Clicker\PendingLocale` on interactive installs only; the app always deletes it on launch but uses it only when it creates the settings (first run), so reinstalling over existing data and passive updates never override the user's choice. Live switch through the Screen 08 segmented control; every window applies the settings language at boot and on each `settings-changed`. Adding a language = a catalog folder + a `Locale` enum variant + native texts + an NSIS language.
+- Initial locale: the language picked in the installer, when there is one; otherwise `GetUserDefaultUILanguage` (Portuguese → pt-BR, Spanish → es-419, anything else → en-US). The installer writes `HKCU\Software\Chenoli\CH Auto Clicker\PendingLocale` on interactive installs only; the app always deletes it on launch but uses it only when it creates the settings (first run), so reinstalling over existing data and passive updates never override the user's choice. Live switch through the Screen 08 segmented control; every window applies the settings language at boot and on each `settings-changed`. Adding a language = a catalog folder + a `Locale` enum variant + native texts + an NSIS language.
 - **Every UI string goes through i18n from phase 0**, so there is no rework.
 
 ---

@@ -65,7 +65,7 @@ impl Store {
         std::env::var_os("APPDATA")
             .map_or_else(std::env::temp_dir, PathBuf::from)
             .join("Chenoli")
-            .join("CH Clicker")
+            .join("CH Auto Clicker")
     }
 
     pub fn open(root: impl Into<PathBuf>) -> Result<Self, StorageError> {
@@ -507,8 +507,8 @@ mod tests {
         let path = store.profile_path("..\\..\\evil");
         assert_eq!(path.parent(), Some(store.profiles_dir().as_path()));
         assert!(
-            Store::default_root().ends_with("Chenoli\\CH Clicker")
-                || Store::default_root().ends_with("Chenoli/CH Clicker")
+            Store::default_root().ends_with("Chenoli\\CH Auto Clicker")
+                || Store::default_root().ends_with("Chenoli/CH Auto Clicker")
         );
         assert_eq!(store.root(), dir.0.as_path());
     }

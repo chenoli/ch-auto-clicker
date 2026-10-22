@@ -10,7 +10,7 @@ pub fn plugin<R: Runtime>() -> TauriPlugin<R> {
         .clear_targets()
         .target(Target::new(TargetKind::Folder {
             path: crate::paths::log_dir(),
-            file_name: Some("ch-clicker".into()),
+            file_name: Some("ch-auto-clicker".into()),
         }))
         .target(Target::new(TargetKind::Stdout))
         .max_file_size(MAX_FILE_BYTES)

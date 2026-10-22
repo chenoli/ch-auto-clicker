@@ -1,6 +1,6 @@
 [package]
 name = "jitter-bench"
-description = "Measures CH. Clicker scheduler lateness and writes a report to docs/bench."
+description = "Measures CH Auto Clicker scheduler lateness and writes a report to docs/bench."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

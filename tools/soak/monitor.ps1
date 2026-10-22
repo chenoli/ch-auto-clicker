@@ -1,5 +1,5 @@
 param(
-    [string]$ProcessName = "ch-clicker",
+    [string]$ProcessName = "ch-auto-clicker",
     [int]$IntervalSec = 60,
     [string]$Out = (Join-Path $PSScriptRoot ("soak-" + (Get-Date -Format "yyyyMMdd-HHmmss") + ".csv"))
 )

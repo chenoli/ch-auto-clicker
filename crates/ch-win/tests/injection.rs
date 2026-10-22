@@ -71,14 +71,14 @@ impl TestWindow {
                 style: CS_DBLCLKS,
                 lpfnWndProc: Some(wnd_proc),
                 hInstance: instance.into(),
-                lpszClassName: w!("ChClickerInjectionTest"),
+                lpszClassName: w!("ChAutoClickerInjectionTest"),
                 ..Default::default()
             };
             RegisterClassW(&class);
             let hwnd = CreateWindowExW(
                 WS_EX_TOPMOST | WS_EX_TOOLWINDOW,
-                w!("ChClickerInjectionTest"),
-                w!("CH. Clicker injection test"),
+                w!("ChAutoClickerInjectionTest"),
+                w!("CH Auto Clicker injection test"),
                 WS_POPUP | WS_VISIBLE,
                 rect.left,
                 rect.top,

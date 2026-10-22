@@ -1,19 +1,19 @@
-# CH. Clicker
+# CH Auto Clicker
 
 A native auto clicker for Windows 10/11 by Chenoli Labs. The core is written in Rust (input injection through `SendInput` and a high-precision scheduler) and the interface is React on Tauri 2.
 
 - **Patterns:** single point, multiple points, wiggle and area scan
 - **Profiles:** global hotkeys, import/export (`.chprofile`), tray menu and an always-on-top HUD
-- **Themes and languages:** four themes; English, Brazilian Portuguese and Latin American Spanish
+- **Themes and languages:** six themes (four dark, one light and a high-contrast one); English, Brazilian Portuguese and Latin American Spanish
 - **Safety:** an emergency stop that can never be disabled, and the app never clicks its own window
 
 ## Installation
 
-Download `CH Clicker_*_x64-setup.exe` from [Releases](https://github.com/chenoli/ch-auto-clicker/releases). It installs for your user only, without admin rights, and the app keeps itself up to date. The installer asks for your language and the app starts in it.
+Download `CH Auto Clicker_*_x64-setup.exe` from [Releases](https://github.com/chenoli/ch-auto-clicker/releases). It installs for your user only, without admin rights, and the app keeps itself up to date. The installer asks for your language and the app starts in it.
 
-> **Not code-signed yet.** Windows shows "Unknown publisher": click **More info → Run anyway**. With **Smart App Control** turned on, Windows 11 blocks the app until it is signed. We are applying for free open-source signing; see [`docs/release.md`](docs/release.md).
+> **Not code-signed yet.** Windows shows "Unknown publisher": click **More info → Run anyway**. With **Smart App Control** turned on, Windows 11 blocks the app until it is signed. We are applying for free open-source signing through SignPath Foundation; see the [code signing policy](docs/code-signing-policy.md).
 
-> **Online games with anti-cheat** detect automated input and may suspend or ban your account. CH. Clicker does not hide its activity. Do not use it where the terms of service forbid automation.
+> **Online games with anti-cheat** detect automated input and may suspend or ban your account. CH Auto Clicker does not hide its activity. Do not use it where the terms of service forbid automation.
 
 ## Development
 
@@ -28,22 +28,22 @@ Windows 11 **Smart App Control** blocks the executables produced by local builds
 
 ### Commands
 
-| Command                                                                  | What it does                                                                    |
-| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
-| `pnpm install`                                                           | Installs the frontend dependencies                                              |
-| `pnpm tauri dev`                                                         | Runs the app in development mode                                                |
-| `pnpm dev`                                                               | Frontend only, in the browser (gallery at `http://localhost:1420/gallery.html`) |
-| `pnpm test`                                                              | Frontend tests with coverage (80% minimum)                                      |
-| `pnpm test:visual`                                                       | Visual parity with Playwright                                                   |
-| `pnpm lint` / `pnpm lint:fix`                                            | Strict ESLint (zero warnings)                                                   |
-| `pnpm format`                                                            | Prettier                                                                        |
-| `pnpm typecheck`                                                         | TypeScript                                                                      |
-| `pnpm tokens`                                                            | Regenerates the themes from `design/tokens.json`                                |
-| `cargo test --workspace`                                                 | Rust tests (also regenerates `ui/src/ipc/bindings.ts`)                          |
-| `cargo clippy --workspace --all-targets -- -D warnings`                  | Rust lint                                                                       |
-| `cargo llvm-cov --workspace --exclude ch-clicker --exclude jitter-bench` | Rust coverage (80% minimum)                                                     |
-| `cargo test -p ch-win --test injection -- --ignored`                     | Tests that inject real clicks (only with games and sensitive apps closed)       |
-| `cargo run -p jitter-bench --release -- --seconds 10`                    | Scheduler jitter benchmark (report in `docs/bench/`)                            |
+| Command                                                                       | What it does                                                                    |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `pnpm install`                                                                | Installs the frontend dependencies                                              |
+| `pnpm tauri dev`                                                              | Runs the app in development mode                                                |
+| `pnpm dev`                                                                    | Frontend only, in the browser (gallery at `http://localhost:1420/gallery.html`) |
+| `pnpm test`                                                                   | Frontend tests with coverage (80% minimum)                                      |
+| `pnpm test:visual`                                                            | Visual parity with Playwright                                                   |
+| `pnpm lint` / `pnpm lint:fix`                                                 | Strict ESLint (zero warnings)                                                   |
+| `pnpm format`                                                                 | Prettier                                                                        |
+| `pnpm typecheck`                                                              | TypeScript                                                                      |
+| `pnpm tokens`                                                                 | Regenerates the themes from `design/tokens.json`                                |
+| `cargo test --workspace`                                                      | Rust tests (also regenerates `ui/src/ipc/bindings.ts`)                          |
+| `cargo clippy --workspace --all-targets -- -D warnings`                       | Rust lint                                                                       |
+| `cargo llvm-cov --workspace --exclude ch-auto-clicker --exclude jitter-bench` | Rust coverage (80% minimum)                                                     |
+| `cargo test -p ch-win --test injection -- --ignored`                          | Tests that inject real clicks (only with games and sensitive apps closed)       |
+| `cargo run -p jitter-bench --release -- --seconds 10`                         | Scheduler jitter benchmark (report in `docs/bench/`)                            |
 
 ### Layout
 
@@ -64,6 +64,7 @@ More detail:
 - Architecture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
 - Phased backlog: [`docs/TASKS.md`](docs/TASKS.md)
 - Releasing: [`docs/release.md`](docs/release.md)
+- Code signing policy: [`docs/code-signing-policy.md`](docs/code-signing-policy.md)
 
 ## Contributing
 

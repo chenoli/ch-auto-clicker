@@ -164,7 +164,7 @@ mod tests {
 
     #[test]
     fn export_then_import_gives_an_equivalent_profile() {
-        let text = export(&sample(), "CH. Clicker 0.1.0");
+        let text = export(&sample(), "CH Auto Clicker 0.1.0");
         assert!(text.contains("\"format\": \"chprofile\""));
         let imported = import(&text, "new", NOW, &HotkeyBindings::default(), &[]).expect("import");
         assert!(imported.notes.is_empty());

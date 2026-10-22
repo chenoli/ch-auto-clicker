@@ -1,6 +1,6 @@
-# Contributing to CH. Clicker
+# Contributing to CH Auto Clicker
 
-Thanks for your interest in improving CH. Clicker. Bug reports, translations, documentation fixes and code are all welcome.
+Thanks for your interest in improving CH Auto Clicker. Bug reports, translations, documentation fixes and code are all welcome.
 
 ## Before you start
 
@@ -11,7 +11,7 @@ Thanks for your interest in improving CH. Clicker. Bug reports, translations, do
 
 ## Scope
 
-CH. Clicker is a general-purpose automation tool. Contributions that help hide automated input from games, anti-cheat systems or other detection mechanisms will not be accepted. The emergency stop must always work and can never be made optional.
+CH Auto Clicker is a general-purpose automation tool. Contributions that help hide automated input from games, anti-cheat systems or other detection mechanisms will not be accepted. The emergency stop must always work and can never be made optional.
 
 ## Setting up
 

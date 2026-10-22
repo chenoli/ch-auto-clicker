@@ -158,7 +158,10 @@ mod tests {
 
     fn temp_cache(name: &str) -> PathBuf {
         std::env::temp_dir()
-            .join(format!("ch-clicker-test-{}-{name}", std::process::id()))
+            .join(format!(
+                "ch-auto-clicker-test-{}-{name}",
+                std::process::id()
+            ))
             .join("capabilities.json")
     }
 

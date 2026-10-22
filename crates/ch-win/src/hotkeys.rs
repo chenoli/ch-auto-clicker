@@ -223,13 +223,13 @@ impl HotkeyService {
                     RegisterClassW(&WNDCLASSW {
                         lpfnWndProc: Some(window_proc),
                         hInstance: instance.into(),
-                        lpszClassName: w!("ChClickerHotkeys"),
+                        lpszClassName: w!("ChAutoClickerHotkeys"),
                         ..Default::default()
                     });
                     match CreateWindowExW(
                         WINDOW_EX_STYLE(0),
-                        w!("ChClickerHotkeys"),
-                        w!("CH. Clicker hotkeys"),
+                        w!("ChAutoClickerHotkeys"),
+                        w!("CH Auto Clicker hotkeys"),
                         WINDOW_STYLE(0),
                         0,
                         0,

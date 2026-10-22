@@ -59,7 +59,7 @@ function setup(overrides: Partial<ProfilesScreenProps> = {}) {
     profiles: profiles(),
     activeId: "a",
     locale: "pt-BR",
-    dataPath: "%APPDATA%\\Chenoli\\CH Clicker",
+    dataPath: "%APPDATA%\\Chenoli\\CH Auto Clicker",
     recordingProfile: null,
     heldMods: [],
     conflict: null,
@@ -93,7 +93,7 @@ describe("ProfilesScreen", () => {
     setup();
     expect(card("Coleta rápida")).toHaveAttribute("data-active", "true");
     expect(screen.getByText("Ctrl 1")).toBeInTheDocument();
-    expect(screen.getByText("3 perfis · %APPDATA%\\Chenoli\\CH Clicker")).toBeInTheDocument();
+    expect(screen.getByText("3 perfis · %APPDATA%\\Chenoli\\CH Auto Clicker")).toBeInTheDocument();
     fireEvent.change(screen.getByRole("searchbox", { name: "Buscar perfil" }), { target: { value: "loop" } });
     expect(screen.queryByText("Coleta rápida")).toBeNull();
     fireEvent.change(screen.getByRole("searchbox"), { target: { value: "zzz" } });
@@ -248,7 +248,7 @@ describe("ProfilesScreen", () => {
     fireEvent.click(screen.getByRole("button", { name: "Importar .chprofile" }));
     expect(props.onCreate).toHaveBeenCalledOnce();
     expect(props.onImport).toHaveBeenCalledOnce();
-    expect(screen.getByText("0 perfis · %APPDATA%\\Chenoli\\CH Clicker")).toBeInTheDocument();
+    expect(screen.getByText("0 perfis · %APPDATA%\\Chenoli\\CH Auto Clicker")).toBeInTheDocument();
   });
 });
 

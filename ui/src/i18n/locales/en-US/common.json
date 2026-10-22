@@ -1,5 +1,5 @@
 {
-  "appName": "Clicker",
+  "appName": "Auto Clicker",
   "window": {
     "minimize": "Minimize",
     "close": "Close"
@@ -131,7 +131,7 @@
     "IMPORT_TOO_LARGE": "The file is too large to be a profile.",
     "IMPORT_NOT_JSON": "The file is not a valid profile (not JSON).",
     "IMPORT_NOT_CHPROFILE": "The file is not a .chprofile.",
-    "IMPORT_FUTURE_VERSION": "The file was made by a newer version of CH. Clicker.",
+    "IMPORT_FUTURE_VERSION": "The file was made by a newer version of CH Auto Clicker.",
     "IMPORT_INVALID": "The profile in the file has invalid values.",
     "IMPORT_UNREADABLE": "Could not read the file.",
     "ANTI_CHEAT_ACK": "Read the anti-cheat notice before starting.",
@@ -219,7 +219,7 @@
     "measureHint": "Measures this computer's scheduler (~3 s).",
     "measure": "Measure again",
     "measuring": "Measuring…",
-    "footer": "CH. Clicker {version} · Chenoli Labs"
+    "footer": "CH Auto Clicker {version} · Chenoli Labs"
   },
   "languages": {
     "pt-BR": "Português",
@@ -378,7 +378,7 @@
   },
   "antiCheat": {
     "title": "Online games with anti-cheat",
-    "text": "Anti-cheat systems detect automated input and may suspend or ban your account. CH. Clicker does not hide its activity. Do not use it where the terms of service forbid automation.",
+    "text": "Anti-cheat systems detect automated input and may suspend or ban your account. CH Auto Clicker does not hide its activity. Do not use it where the terms of service forbid automation.",
     "accept": "Got it, start"
   },
   "support": {

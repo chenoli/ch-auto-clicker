@@ -29,15 +29,15 @@ pub const fn text(locale: Locale, key: Text) -> &'static str {
     use Locale::{EnUs, Es419, PtBr};
     use Text::*;
     match (locale, key) {
-        (PtBr, CaptureTitle) => "CH. Clicker — Captura",
-        (EnUs, CaptureTitle) => "CH. Clicker — Capture",
-        (Es419, CaptureTitle) => "CH. Clicker — Captura",
-        (PtBr, VariationTitle) => "CH. Clicker — Variação de intervalo",
-        (EnUs, VariationTitle) => "CH. Clicker — Interval variation",
-        (Es419, VariationTitle) => "CH. Clicker — Variación de intervalo",
-        (PtBr, ProfileFileType) => "Perfil do CH. Clicker",
-        (EnUs, ProfileFileType) => "CH. Clicker profile",
-        (Es419, ProfileFileType) => "Perfil de CH. Clicker",
+        (PtBr, CaptureTitle) => "CH Auto Clicker — Captura",
+        (EnUs, CaptureTitle) => "CH Auto Clicker — Capture",
+        (Es419, CaptureTitle) => "CH Auto Clicker — Captura",
+        (PtBr, VariationTitle) => "CH Auto Clicker — Variação de intervalo",
+        (EnUs, VariationTitle) => "CH Auto Clicker — Interval variation",
+        (Es419, VariationTitle) => "CH Auto Clicker — Variación de intervalo",
+        (PtBr, ProfileFileType) => "Perfil do CH Auto Clicker",
+        (EnUs, ProfileFileType) => "CH Auto Clicker profile",
+        (Es419, ProfileFileType) => "Perfil de CH Auto Clicker",
         (PtBr, StateIdle) => "PARADO",
         (EnUs, StateIdle) => "STOPPED",
         (Es419, StateIdle) => "DETENIDO",
@@ -145,10 +145,10 @@ mod tests {
             }
             assert!(hotkey_taken_title(locale, "F6").starts_with("F6 "));
         }
-        assert!(text(Locale::PtBr, Text::CaptureTitle).contains("CH. Clicker"));
+        assert!(text(Locale::PtBr, Text::CaptureTitle).contains("CH Auto Clicker"));
         assert_eq!(
             text(Locale::EnUs, Text::VariationTitle),
-            "CH. Clicker — Interval variation"
+            "CH Auto Clicker — Interval variation"
         );
         assert_eq!(text(Locale::EnUs, Text::DefaultProfileName), "My profile");
     }

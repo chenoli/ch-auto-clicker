@@ -10,7 +10,7 @@ use tauri_specta::Event;
 use crate::state::AppState;
 
 pub const LABEL: &str = "hud";
-const HUD_TITLE: &str = "CH. Clicker HUD";
+const HUD_TITLE: &str = "CH Auto Clicker HUD";
 const DEFAULT_SIZE: (f64, f64) = (460.0, 56.0);
 const MARGIN: i32 = 16;
 const POLL: Duration = Duration::from_millis(100);

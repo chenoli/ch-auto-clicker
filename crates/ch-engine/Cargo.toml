@@ -1,6 +1,6 @@
 [package]
 name = "ch-engine"
-description = "CH. Clicker engine runtime: high-priority thread, run plan, executors and telemetry."
+description = "CH Auto Clicker engine runtime: high-priority thread, run plan, executors and telemetry."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
