@@ -74,6 +74,7 @@ function setup(overrides: Partial<ProfilesScreenProps> = {}) {
     onDelete: vi.fn(),
     onImport: vi.fn(),
     onImportFile: vi.fn(),
+    onReorder: vi.fn(),
     onRecordHotkey: vi.fn(),
     onClearHotkey: vi.fn(),
     onCancelRecord: vi.fn(),
@@ -238,6 +239,74 @@ describe("ProfilesScreen", () => {
     Object.defineProperty(text, "dataTransfer", { value: { types: ["text/plain"], files: [] } });
     fireEvent(root, text);
     expect(screen.queryByText("Solte o arquivo .chprofile para importar")).toBeNull();
+  });
+
+  it("reorders by dragging a card by its handle", () => {
+    const { props, view } = setup();
+    const slots = [...view.container.querySelectorAll(".profile-slot")];
+    const [first, second, third] = slots;
+    if (!first || !second || !third) throw new Error("slots missing");
+    expect(first).toHaveAttribute("draggable", "false");
+    fireEvent.pointerDown(screen.getByRole("button", { name: /Mover Coleta rápida/ }));
+    expect(first).toHaveAttribute("draggable", "true");
+    const start = createEvent.dragStart(first);
+    Object.defineProperty(start, "dataTransfer", { value: { effectAllowed: "" } });
+    fireEvent(first, start);
+    expect(first).toHaveAttribute("data-dragging", "true");
+    fireEvent.dragOver(third);
+    expect(third).toHaveAttribute("data-drop", "after");
+    fireEvent.drop(third);
+    expect(props.onReorder).toHaveBeenCalledWith(["b", "c", "a"]);
+    expect(third).not.toHaveAttribute("data-drop");
+    expect(first).toHaveAttribute("draggable", "false");
+  });
+
+  it("shows the drop line above when dragging upwards and ignores drops without a drag", () => {
+    const { props, view } = setup();
+    const [first, , third] = [...view.container.querySelectorAll(".profile-slot")];
+    if (!first || !third) throw new Error("slots missing");
+    const none = { dataTransfer: { types: [], files: [] } };
+    fireEvent.drop(first, none);
+    fireEvent.dragOver(first, none);
+    expect(first).not.toHaveAttribute("data-drop");
+    fireEvent.pointerDown(screen.getByRole("button", { name: /Mover Anti-ociosidade/ }));
+    const start = createEvent.dragStart(third);
+    Object.defineProperty(start, "dataTransfer", { value: { effectAllowed: "" } });
+    fireEvent(third, start);
+    fireEvent.dragOver(first);
+    expect(first).toHaveAttribute("data-drop", "before");
+    fireEvent.drop(third);
+    fireEvent.dragEnd(third);
+    expect(props.onReorder).not.toHaveBeenCalled();
+    expect(third).toHaveAttribute("data-dragging", "false");
+  });
+
+  it("reorders with the arrow keys on the handle without activating the card", () => {
+    const { props } = setup();
+    const handle = screen.getByRole("button", { name: /Mover Leitura em loop/ });
+    fireEvent.click(handle);
+    fireEvent.pointerUp(handle);
+    expect(props.onActivate).not.toHaveBeenCalled();
+    fireEvent.keyDown(handle, { key: "ArrowUp" });
+    expect(props.onReorder).toHaveBeenLastCalledWith(["b", "a", "c"]);
+    fireEvent.keyDown(handle, { key: "ArrowDown" });
+    expect(props.onReorder).toHaveBeenLastCalledWith(["a", "c", "b"]);
+    fireEvent.keyDown(screen.getByRole("button", { name: /Mover Coleta rápida/ }), { key: "ArrowUp" });
+    fireEvent.keyDown(screen.getByRole("button", { name: /Mover Anti-ociosidade/ }), { key: "ArrowDown" });
+    fireEvent.keyDown(handle, { key: "Tab" });
+    expect(props.onReorder).toHaveBeenCalledTimes(2);
+  });
+
+  it("hides the handles while searching and with a single profile", () => {
+    setup();
+    fireEvent.change(screen.getByRole("searchbox"), { target: { value: "loop" } });
+    expect(screen.queryByRole("button", { name: /^Mover / })).toBeNull();
+    expect(card("Leitura em loop")).toHaveAttribute("data-handle", "false");
+  });
+
+  it("has no handle with a single profile", () => {
+    setup({ profiles: profiles().slice(0, 1) });
+    expect(screen.queryByRole("button", { name: /^Mover / })).toBeNull();
   });
 
   it("shows the empty state of Tela 05.B", () => {

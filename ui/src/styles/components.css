@@ -1419,6 +1419,19 @@
   .profile-card:hover {
     border-color: color-mix(in oklch, var(--fg) 16%, transparent);
   }
+  .profile-card[data-handle="true"] {
+    grid-template-columns: 14px 64px 1fr auto;
+    padding-left: 6px;
+  }
+  .profile-slot[data-dragging="true"] .profile-card {
+    opacity: 0.35;
+  }
+  .profile-slot[data-drop="before"] .profile-card {
+    box-shadow: 0 -5px 0 -3px var(--accent);
+  }
+  .profile-slot[data-drop="after"] .profile-card {
+    box-shadow: 0 5px 0 -3px var(--accent);
+  }
   .profile-card[data-active="true"] {
     border-color: color-mix(in oklch, var(--accent) 45%, transparent);
   }

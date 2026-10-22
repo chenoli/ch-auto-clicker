@@ -112,6 +112,7 @@ export function ProfilesRoute({ recording, onBack, onMinimize, onClose }: Profil
             if (r) imported(r.data);
           });
       }}
+      onReorder={(order) => void run(commands.profileReorder(order))}
       onRecordHotkey={recording.recordProfile}
       onClearHotkey={recording.clearProfile}
       onCancelRecord={recording.cancel}

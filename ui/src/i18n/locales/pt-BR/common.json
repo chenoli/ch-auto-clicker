@@ -316,6 +316,7 @@
     "actions": "Ações de {name}",
     "rename": "Renomear",
     "renameLabel": "Nome do perfil",
+    "drag": "Mover {name} (arraste ou use ↑ ↓)",
     "setHotkey": "Definir atalho…",
     "clearHotkey": "Remover atalho",
     "duplicate": "Duplicar",

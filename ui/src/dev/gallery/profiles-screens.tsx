@@ -67,6 +67,7 @@ function Screen(props: Partial<ProfilesScreenProps>) {
           onDelete={noop}
           onImport={noop}
           onImportFile={noop}
+          onReorder={noop}
           onRecordHotkey={noop}
           onClearHotkey={noop}
           onCancelRecord={noop}

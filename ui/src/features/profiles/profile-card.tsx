@@ -7,7 +7,7 @@ import { Kbd } from "../../components/kbd";
 import { hotkeyLabel } from "../hotkeys/format-hotkey";
 
 import type { Modifier, Profile } from "../../ipc";
-import type { ReactElement } from "react";
+import type { ReactElement, ReactNode } from "react";
 
 const MOD_LABELS: Record<Modifier, string> = { ctrl: "Ctrl", alt: "Alt", shift: "Shift", win: "Win" };
 
@@ -23,6 +23,7 @@ export interface ProfileCardProps {
   heldMods?: readonly Modifier[];
   renameError?: string | null;
   conflictText?: string | null;
+  handle?: ReactNode;
   onActivate: () => void;
   onMenu: (open: boolean) => void;
   onStartRename: () => void;
@@ -136,6 +137,7 @@ export function ProfileCard(props: ProfileCardProps): ReactElement {
         aria-label={profile.name}
         className="profile-card"
         data-active={props.active}
+        data-handle={Boolean(props.handle)}
         onClick={() => mode === "normal" && props.onActivate()}
         onKeyDown={(e) => {
           if (mode !== "normal" || e.target !== e.currentTarget) return;
@@ -147,6 +149,7 @@ export function ProfileCard(props: ProfileCardProps): ReactElement {
           e.preventDefault();
         }}
       >
+        {props.handle}
         <ModeThumb profile={profile} />
         <div className="flex min-w-0 flex-col gap-1">
           <div className="flex min-w-0 items-center gap-2">

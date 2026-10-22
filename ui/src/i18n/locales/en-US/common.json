@@ -316,6 +316,7 @@
     "actions": "Actions for {name}",
     "rename": "Rename",
     "renameLabel": "Profile name",
+    "drag": "Move {name} (drag or use ↑ ↓)",
     "setHotkey": "Set shortcut…",
     "clearHotkey": "Remove shortcut",
     "duplicate": "Duplicate",

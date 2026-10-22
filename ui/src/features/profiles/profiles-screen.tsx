@@ -6,6 +6,7 @@ import { Button } from "../../components/button";
 import { Callout } from "../../components/callout";
 
 import { TitleBar } from "../main/title-bar";
+import { reorder } from "../points/points-screen";
 import { SubScreenHeader } from "../shell/sub-screen-header";
 import { ProfileCard } from "./profile-card";
 import { matchesSearch, profileSummary } from "./profile-summary";
@@ -35,6 +36,7 @@ export interface ProfilesScreenProps {
   onDelete: (id: string) => void;
   onImport: () => void;
   onImportFile: (file: File) => void;
+  onReorder: (order: string[]) => void;
   onRecordHotkey: (id: string) => void;
   onClearHotkey: (id: string) => void;
   onCancelRecord: () => void;
@@ -77,6 +79,9 @@ export function ProfilesScreen(props: ProfilesScreenProps): ReactElement {
   const [cardMode, setCardMode] = useState<{ id: string; mode: CardMode } | null>(null);
   const [renameError, setRenameError] = useState<{ id: string; code: string } | null>(null);
   const [dropping, setDropping] = useState(false);
+  const [dragging, setDragging] = useState<string | null>(null);
+  const [over, setOver] = useState<string | null>(null);
+  const [armed, setArmed] = useState<string | null>(null);
 
   useEffect(() => {
     if (!menuFor) return;
@@ -104,6 +109,17 @@ export function ProfilesScreen(props: ProfilesScreenProps): ReactElement {
     else end();
   };
   const active = profiles.find((p) => p.id === activeId);
+  const sortable = profiles.length > 1 && query === "";
+  const indexOf = (id: string | null) => profiles.findIndex((p) => p.id === id);
+  const move = (from: number, to: number) => {
+    if (from < 0 || to < 0 || to >= profiles.length || from === to) return;
+    props.onReorder(reorder(profiles, from, to).map((p) => p.id));
+  };
+  const endDrag = () => {
+    setDragging(null);
+    setOver(null);
+    setArmed(null);
+  };
 
   return (
     <div
@@ -173,46 +189,104 @@ export function ProfilesScreen(props: ProfilesScreenProps): ReactElement {
           )}
           <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-auto px-4 pb-3">
             {shown.length === 0 && <p className="m-0 py-6 text-center text-12 text-fg-3">{t("profiles.noMatch")}</p>}
-            {shown.map((p) => (
-              <ProfileCard
+            {shown.map((p, i) => (
+              <div
                 key={p.id}
-                profile={p}
-                summary={profileSummary(p, props.locale, t)}
-                active={p.id === activeId}
-                mode={modeOf(p.id)}
-                menuOpen={menuFor === p.id}
-                canDelete={profiles.length > 1}
-                heldMods={props.heldMods}
-                renameError={
-                  renameError?.id === p.id
-                    ? t(`errors.${renameError.code}`, { defaultValue: t("errors.generic", { code: renameError.code }) })
-                    : null
+                className="profile-slot"
+                draggable={sortable && armed === p.id}
+                data-dragging={dragging === p.id}
+                data-drop={
+                  over === p.id && dragging !== null && dragging !== p.id
+                    ? indexOf(dragging) > i
+                      ? "before"
+                      : "after"
+                    : undefined
                 }
-                conflictText={
-                  conflict?.target.kind === "profile" && conflict.target.id === p.id
-                    ? t("hotkeys.conflictShort", { name: conflict.withName })
-                    : null
-                }
-                onActivate={() => props.onActivate(p.id)}
-                onMenu={(open) => setMenuFor(open ? p.id : null)}
-                onStartRename={() => setCardMode({ id: p.id, mode: "renaming" })}
-                onRename={(name) => void rename(p.id, name)}
-                onCancel={() => {
-                  if (props.recordingProfile === p.id) props.onCancelRecord();
-                  end();
+                onDragStart={(e) => {
+                  e.dataTransfer.effectAllowed = "move";
+                  setDragging(p.id);
                 }}
-                onRecordHotkey={() => props.onRecordHotkey(p.id)}
-                onClearHotkey={() => props.onClearHotkey(p.id)}
-                onDuplicate={() => props.onDuplicate(p.id)}
-                onExport={() => props.onExport(p.id)}
-                onAskDelete={() => profiles.length > 1 && setCardMode({ id: p.id, mode: "confirmDelete" })}
-                onDelete={() => {
-                  end();
-                  props.onDelete(p.id);
+                onDragOver={(e) => {
+                  if (dragging === null) return;
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (over !== p.id) setOver(p.id);
                 }}
-                onReplaceHotkey={props.onReplaceHotkey}
-                onKeepHotkey={props.onKeepHotkey}
-              />
+                onDrop={(e) => {
+                  if (dragging === null) return;
+                  e.preventDefault();
+                  e.stopPropagation();
+                  move(indexOf(dragging), i);
+                  endDrag();
+                }}
+                onDragEnd={endDrag}
+              >
+                <ProfileCard
+                  profile={p}
+                  summary={profileSummary(p, props.locale, t)}
+                  active={p.id === activeId}
+                  handle={
+                    sortable && (
+                      <button
+                        type="button"
+                        className="drag-handle"
+                        aria-label={t("profiles.drag", { name: p.name })}
+                        onClick={(e) => e.stopPropagation()}
+                        onPointerDown={() => setArmed(p.id)}
+                        onPointerUp={() => setArmed(null)}
+                        onKeyDown={(e) => {
+                          const to = e.key === "ArrowUp" ? i - 1 : e.key === "ArrowDown" ? i + 1 : null;
+                          if (to === null) return;
+                          e.preventDefault();
+                          move(i, to);
+                        }}
+                      >
+                        <span />
+                        <span />
+                        <span />
+                        <span />
+                        <span />
+                        <span />
+                      </button>
+                    )
+                  }
+                  mode={modeOf(p.id)}
+                  menuOpen={menuFor === p.id}
+                  canDelete={profiles.length > 1}
+                  heldMods={props.heldMods}
+                  renameError={
+                    renameError?.id === p.id
+                      ? t(`errors.${renameError.code}`, {
+                          defaultValue: t("errors.generic", { code: renameError.code }),
+                        })
+                      : null
+                  }
+                  conflictText={
+                    conflict?.target.kind === "profile" && conflict.target.id === p.id
+                      ? t("hotkeys.conflictShort", { name: conflict.withName })
+                      : null
+                  }
+                  onActivate={() => props.onActivate(p.id)}
+                  onMenu={(open) => setMenuFor(open ? p.id : null)}
+                  onStartRename={() => setCardMode({ id: p.id, mode: "renaming" })}
+                  onRename={(name) => void rename(p.id, name)}
+                  onCancel={() => {
+                    if (props.recordingProfile === p.id) props.onCancelRecord();
+                    end();
+                  }}
+                  onRecordHotkey={() => props.onRecordHotkey(p.id)}
+                  onClearHotkey={() => props.onClearHotkey(p.id)}
+                  onDuplicate={() => props.onDuplicate(p.id)}
+                  onExport={() => props.onExport(p.id)}
+                  onAskDelete={() => profiles.length > 1 && setCardMode({ id: p.id, mode: "confirmDelete" })}
+                  onDelete={() => {
+                    end();
+                    props.onDelete(p.id);
+                  }}
+                  onReplaceHotkey={props.onReplaceHotkey}
+                  onKeepHotkey={props.onKeepHotkey}
+                />
+              </div>
             ))}
           </div>
         </>
