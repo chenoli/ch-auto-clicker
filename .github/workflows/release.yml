@@ -48,6 +48,14 @@ jobs:
             click "More info" → "Run anyway". With Smart App Control turned on, Windows 11
             blocks the app until it is signed.
 
+            Microsoft Defender may flag the unsigned app as a false positive (for example
+            `Trojan:Win32/Bearfoos.B!ml`). To restore it: Windows Security → Virus & threat protection →
+            Protection history → select the detection → Actions → Allow on device. "Start with Windows"
+            returns in v0.9.0, once the app is signed.
+
+            The MSI packages install for all users and do not delete your profiles on uninstall;
+            remove `%APPDATA%\Chenoli\CH Auto Clicker` by hand if you want them gone.
+
             Anti-cheat systems detect automated input. Do not use it where the terms of service forbid automation.
           releaseDraft: true
           prerelease: false
