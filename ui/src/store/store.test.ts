@@ -255,6 +255,24 @@ describe("primaryAction", () => {
     expect(useAppStore.getState().commandError).toBe("NO_AREA");
   });
 
+  it("drops the screen-change warning once the run resumes, but keeps the timing one", () => {
+    const resume = {
+      state: "running",
+      prevState: "paused",
+      reason: null,
+      countdownTotalMs: null,
+      errorCode: null,
+    } as const;
+    useAppStore.setState({ degraded: "displayChanged" });
+    applyStatus({ ...resume, state: "paused", prevState: "running" });
+    expect(useAppStore.getState().degraded).toBe("displayChanged");
+    applyStatus(resume);
+    expect(useAppStore.getState().degraded).toBeNull();
+    useAppStore.setState({ degraded: "timing" });
+    applyStatus(resume);
+    expect(useAppStore.getState().degraded).toBe("timing");
+  });
+
   it("status updates the engine state immediately", () => {
     applyStatus({ state: "paused", prevState: "running", reason: null, countdownTotalMs: null, errorCode: null });
     expect(useAppStore.getState().engine.state).toBe("paused");

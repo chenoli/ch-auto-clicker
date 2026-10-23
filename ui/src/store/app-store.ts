@@ -80,7 +80,11 @@ export function applyTick(tick: EngineTick): void {
 export function applyStatus(status: EngineStatus): void {
   useAppStore.setState((s) => ({
     lastStatus: status,
-    degraded: status.state === "countdown" ? null : s.degraded,
+    degraded:
+      status.state === "countdown" ||
+      (status.state === "running" && status.prevState === "paused" && s.degraded === "displayChanged")
+        ? null
+        : s.degraded,
     engine: { ...s.engine, state: status.state },
     countdownTotalMs: status.countdownTotalMs ?? s.countdownTotalMs,
   }));
