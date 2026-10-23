@@ -10,10 +10,10 @@ Create `TAURI_SIGNING_PRIVATE_KEY` under **Settings â†’ Secrets and variables â†
 gh secret set TAURI_SIGNING_PRIVATE_KEY -R chenoli/ch-auto-clicker < "$USERPROFILE/.tauri/ch-clicker-updater.key"
 ```
 
-Optional, to refresh the landing page right after a release: a repository variable `LANDING_REPO` (`owner/repo` of the landing) and a secret `LANDING_DISPATCH_TOKEN`, a fine-grained token limited to that repository with **Contents: read and write** (required by `repository_dispatch`). Without them the release still publishes, and the landing picks it up within an hour.
+Optional, to refresh the landing page right after a release: a repository variable `LANDING_REPO` (`chenoli/ch-auto-clicker-landing-page`, already set) and a secret `LANDING_DISPATCH_TOKEN`, a fine-grained token limited to that repository with **Contents: read and write** (required by `repository_dispatch`). The landing's `release-sync.yml` then calls its `/api/revalidate` route with its own `REVALIDATE_SECRET`. Without the token the release still publishes, and the landing picks it up within an hour (it reads `releases/latest` when `RELEASES_REPO` is set in its environment).
 
 ```bash
-gh variable set LANDING_REPO -R chenoli/ch-auto-clicker --body "chenoli/<landing-repo>"
+gh variable set LANDING_REPO -R chenoli/ch-auto-clicker --body "chenoli/ch-auto-clicker-landing-page"
 gh secret set LANDING_DISPATCH_TOKEN -R chenoli/ch-auto-clicker
 ```
 
