@@ -57,6 +57,10 @@ pub fn spawn<R: Runtime>(app: AppHandle<R>) {
                     baseline = None;
                     continue;
                 }
+                if engine == EngineState::Paused {
+                    baseline = Some(now);
+                    continue;
+                }
                 let start = baseline.get_or_insert_with(|| now.clone());
                 let changed = *start != now;
                 match reaction(engine, changed) {

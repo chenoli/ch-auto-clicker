@@ -81,6 +81,13 @@ impl AppState {
         let engine = Engine::spawn_system(Box::new(move |change| {
             if let Some(error) = &change.error {
                 log::warn!("engine stopped: {error}");
+            } else {
+                log::info!(
+                    "engine {:?} -> {:?} ({:?})",
+                    change.prev,
+                    change.state,
+                    change.reason
+                );
             }
             let _ = EngineStatus::from(change).emit(&hook_app);
             crate::tray::refresh(&hook_app);

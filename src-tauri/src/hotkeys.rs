@@ -225,6 +225,7 @@ fn on_triggered<R: Runtime>(app: &AppHandle<R>, id: u32) {
     };
     let engine_state = state.engine.shared().state();
     let active = engine_state.is_active();
+    log::info!("hotkey {target:?} while {engine_state:?}");
     let result = match target {
         HotkeyTarget::Action(HotkeyAction::StartStop) => match start_stop(engine_state) {
             StartStop::Resume => {
