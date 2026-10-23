@@ -59,6 +59,7 @@ export interface SettingsScreenProps {
   themeLabel: string;
   measuring?: boolean;
   elevated?: boolean;
+  autostartAvailable?: boolean;
   errorCode?: string | null;
   onChange: (next: Settings) => void;
   onRestartAsAdmin?: () => void;
@@ -190,12 +191,14 @@ export function SettingsScreen(props: SettingsScreenProps): ReactElement {
             options={LOCALES.map((l) => ({ value: l, label: t(`languages.${l}`) }))}
           />
         </div>
-        <ToggleRow
-          title={t("settings.autostart")}
-          hint={t("settings.autostartHint")}
-          checked={settings.autostart}
-          onChange={(autostart) => set({ autostart })}
-        />
+        {props.autostartAvailable && (
+          <ToggleRow
+            title={t("settings.autostart")}
+            hint={t("settings.autostartHint")}
+            checked={settings.autostart}
+            onChange={(autostart) => set({ autostart })}
+          />
+        )}
         <ToggleRow
           title={t("settings.runAsAdmin")}
           hint={t(props.elevated ? "settings.runAsAdminActive" : "settings.runAsAdminHint")}

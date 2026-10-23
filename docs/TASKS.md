@@ -185,6 +185,7 @@ References: `docs/ARCHITECTURE.md` (sections cited as §N) and the design handof
 | T11.11 | HUD Countdown/Running/Paused states (1 s / 1.4 s pulses, counter, remaining time, F6/F7 chips) — **Screen 04**                                                                  | T11.10      | Parity with 04.A–C.                                                                                                             |
 | T11.12 | 40% hover through polling (`hud://hover`) and Ctrl drag `[D5]` + saved position                                                                                                 | T11.10      | Hovering fades it. Ctrl+drag moves it, and the position persists across sessions.                                               |
 | T11.13 | "Always run as administrator" setting: relaunch through UAC at startup, "Restart as administrator now", warning when clicks hit an elevated window                              | T11.5       | An elevated window under the cursor skips clicks with a warning; with the option on, the app relaunches elevated and clicks it. |
+| T11.14 | Hide "Start with Windows" for v0.8.0 (Defender `Bearfoos.B!ml` false positive on the unsigned build): force `autostart` off and remove the Run entry on launch                  | T11.5       | The switch is hidden and no Run entry exists after launch. Brought back with signing (T13.1) in v0.9.0.                         |
 
 ## Phase 12 — Packaging
 

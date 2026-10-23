@@ -118,6 +118,7 @@ pub fn run() {
             }
             state.hotkeys().apply(app.handle(), &state.data());
             theme::apply(app.handle(), &state.data().settings);
+            commands::retire_unavailable_autostart(&state);
             commands::sync_autostart(app.handle(), state.settings().autostart);
             tray::install(app.handle())?;
             hud::create(app.handle())?;

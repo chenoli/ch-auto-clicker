@@ -13,6 +13,10 @@ Download [`ch-auto-clicker-setup.exe`](https://github.com/chenoli/ch-auto-clicke
 
 > **Not code-signed yet.** Windows shows "Unknown publisher": click **More info → Run anyway**. With **Smart App Control** turned on, Windows 11 blocks the app until it is signed. We are applying for free open-source signing through SignPath Foundation; see the [code signing policy](docs/code-signing-policy.md).
 
+> **Microsoft Defender false positive.** Unsigned auto clickers can be flagged by Defender's machine-learning detection (for example `Trojan:Win32/Bearfoos.B!ml`), which quarantines the app. To get it back, open **Windows Security → Virus & threat protection → Protection history**, select the detection and choose **Actions → Allow on device** (or **Restore**). "Start with Windows" triggered this detection, so it is left out until the app is signed and returns in v0.9.0.
+
+To uninstall, use **Settings → Apps**. The regular installer asks whether to delete your profiles and settings as well. The MSI package does not: delete `%APPDATA%\Chenoli\CH Auto Clicker` by hand if you want them gone.
+
 > **Online games with anti-cheat** detect automated input and may suspend or ban your account. CH Auto Clicker does not hide its activity. Do not use it where the terms of service forbid automation.
 
 ## Development

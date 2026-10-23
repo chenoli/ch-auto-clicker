@@ -62,8 +62,13 @@ function setup(overrides: Partial<SettingsScreenProps> = {}) {
 }
 
 describe("SettingsScreen", () => {
+  it("hides Start with Windows until it is available", () => {
+    setup();
+    expect(screen.queryByRole("switch", { name: "Iniciar com o Windows" })).not.toBeInTheDocument();
+  });
+
   it("saves every preference of Tela 08 at once", () => {
-    const props = setup();
+    const props = setup({ autostartAvailable: true });
     fireEvent.click(screen.getByRole("switch", { name: "Iniciar com o Windows" }));
     expect(props.onChange).toHaveBeenLastCalledWith({ ...settings, autostart: true });
     fireEvent.click(screen.getByRole("switch", { name: "Minimizar para a bandeja" }));

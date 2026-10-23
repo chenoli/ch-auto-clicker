@@ -60,6 +60,10 @@ pub fn settings_update(
     if let Some(e) = validate_settings(&settings).into_iter().next() {
         return Err(e.into());
     }
+    let settings = Settings {
+        autostart: available_autostart(settings.autostart),
+        ..settings
+    };
     let previous = state.data().settings;
     let saved = state.with_data(|data| {
         let next = data.settings.merge_user_edit(settings);
@@ -114,6 +118,23 @@ fn set_autostart(app: &AppHandle, enabled: bool) -> Result<(), String> {
         launcher.disable()
     };
     result.map_err(|e| e.to_string())
+}
+
+pub const AUTOSTART_AVAILABLE: bool = false;
+
+pub fn available_autostart(wanted: bool) -> bool {
+    AUTOSTART_AVAILABLE && wanted
+}
+
+pub fn retire_unavailable_autostart(state: &AppState) {
+    if state.settings().autostart && !available_autostart(true) {
+        let saved = state.with_data(|data| {
+            data.settings.autostart = false;
+            data.settings.clone()
+        });
+        state.persister.save_settings(&saved);
+        log::info!("autostart: turned off, not available in this version");
+    }
 }
 
 pub fn autostart_fix(wanted: bool, registered: bool) -> Option<bool> {
@@ -662,6 +683,12 @@ mod tests {
         assert_eq!(autostart_fix(false, true), Some(false));
         assert_eq!(autostart_fix(true, true), None);
         assert_eq!(autostart_fix(false, false), None);
+    }
+
+    #[test]
+    fn autostart_stays_off_while_it_is_unavailable() {
+        assert!(!available_autostart(true));
+        assert!(!available_autostart(false));
     }
 
     #[test]
