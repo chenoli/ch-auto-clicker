@@ -10,12 +10,15 @@ Create `TAURI_SIGNING_PRIVATE_KEY` under **Settings â†’ Secrets and variables â†
 gh secret set TAURI_SIGNING_PRIVATE_KEY -R chenoli/ch-auto-clicker < "$USERPROFILE/.tauri/ch-clicker-updater.key"
 ```
 
-Optional, to refresh the landing page right after a release: a repository variable `LANDING_REPO` (`chenoli/ch-auto-clicker-landing-page`, already set) and a secret `LANDING_DISPATCH_TOKEN`, a fine-grained token limited to that repository with **Contents: read and write** (required by `repository_dispatch`). The landing's `release-sync.yml` then calls its `/api/revalidate` route with its own `REVALIDATE_SECRET`. Without the token the release still publishes, and the landing picks it up within an hour (it reads `releases/latest` when `RELEASES_REPO` is set in its environment).
+Optional, to refresh the landing page right after a release: the GitHub App `ch-auto-clicker-release-sync` (private to this account, no webhook, **Contents: read and write** only, as `repository_dispatch` requires, installed on the landing repository alone). The release workflow turns it into a one-hour token with `actions/create-github-app-token`. It needs the repository variables `LANDING_REPO` (`chenoli/ch-auto-clicker-landing-page`) and `LANDING_APP_CLIENT_ID` (the app's Client ID), both already set, and the secret `LANDING_APP_PRIVATE_KEY` (the app's `.pem` private key). The landing's `release-sync.yml` then calls its `/api/revalidate` route with its own `REVALIDATE_SECRET`. Without the app the release still publishes, and the landing picks it up within an hour (it reads `releases/latest` when `RELEASES_REPO` is set in its environment).
 
 ```bash
 gh variable set LANDING_REPO -R chenoli/ch-auto-clicker --body "chenoli/ch-auto-clicker-landing-page"
-gh secret set LANDING_DISPATCH_TOKEN -R chenoli/ch-auto-clicker
+gh variable set LANDING_APP_CLIENT_ID -R chenoli/ch-auto-clicker --body "Iv23liI8VKNye6Phj6bx"
+gh secret set LANDING_APP_PRIVATE_KEY -R chenoli/ch-auto-clicker < path/to/private-key.pem
 ```
+
+Keep the `.pem` off the repository, next to the updater key backup.
 
 Do not create `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`: GitHub rejects empty secrets, and a missing secret reaches the workflow as an empty string, which is what a key without a password needs.
 

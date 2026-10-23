@@ -65,14 +65,23 @@ jobs:
           cp "${installers[0]}" ch-auto-clicker-setup.exe
           gh release upload "$GITHUB_REF_NAME" ch-auto-clicker-setup.exe --clobber
           gh release edit "$GITHUB_REF_NAME" --draft=false --latest
+      - name: Create a token for the landing repository
+        id: landing-token
+        if: vars.LANDING_APP_CLIENT_ID != ''
+        continue-on-error: true
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.LANDING_APP_CLIENT_ID }}
+          private-key: ${{ secrets.LANDING_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
       - name: Notify the landing page
         shell: bash
         env:
-          GH_TOKEN: ${{ secrets.LANDING_DISPATCH_TOKEN }}
+          GH_TOKEN: ${{ steps.landing-token.outputs.token }}
           LANDING_REPO: ${{ vars.LANDING_REPO }}
         run: |
           if [ -z "$GH_TOKEN" ] || [ -z "$LANDING_REPO" ]; then
-            echo "::warning::LANDING_REPO or LANDING_DISPATCH_TOKEN is not set; the landing page picks up the release within an hour"
+            echo "::warning::The landing GitHub App or LANDING_REPO is not set up; the landing page picks up the release within an hour"
             exit 0
           fi
           gh api "repos/$LANDING_REPO/dispatches" -f event_type=app-release
