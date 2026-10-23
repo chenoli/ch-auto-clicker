@@ -4,6 +4,7 @@ use crate::{
     capabilities, commands, events, hotkeys, hud, overlay, profiles, tray, tray_menu, updater,
 };
 
+#[cfg(any(debug_assertions, test))]
 const BINDINGS_PATH: &str = "../ui/src/ipc/bindings.ts";
 
 pub fn builder() -> Builder<tauri::Wry> {
@@ -81,6 +82,7 @@ pub fn builder() -> Builder<tauri::Wry> {
         ])
 }
 
+#[cfg(any(debug_assertions, test))]
 pub fn export_bindings(builder: &Builder<tauri::Wry>) {
     builder
         .export(specta_typescript::Typescript::default(), BINDINGS_PATH)
@@ -90,6 +92,7 @@ pub fn export_bindings(builder: &Builder<tauri::Wry>) {
         .expect("write the TypeScript bindings");
 }
 
+#[cfg(any(debug_assertions, test))]
 fn without_comments(source: &str) -> String {
     let mut out = String::with_capacity(source.len());
     let mut in_block = false;

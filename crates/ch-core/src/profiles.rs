@@ -243,10 +243,7 @@ mod tests {
 
     #[test]
     fn names_are_normalized_and_bounded() {
-        assert_eq!(
-            normalize_name("  Coleta   rápida "),
-            Ok("Coleta rápida".into())
-        );
+        assert_eq!(normalize_name("  Café   run "), Ok("Café run".into()));
         assert_eq!(normalize_name("   "), Err(ProfileError::NameEmpty));
         assert_eq!(normalize_name("A\tB\u{7}C\n"), Ok("A B C".into()));
         assert_eq!(
@@ -276,9 +273,9 @@ mod tests {
 
     #[test]
     fn create_appends_without_activating() {
-        let (mut s, mut p) = library(&["Meu perfil"]);
-        let created = create(&mut s, &mut p, "new", "Meu perfil", NOW).expect("create");
-        assert_eq!(created.name, "Meu perfil (2)");
+        let (mut s, mut p) = library(&["My profile"]);
+        let created = create(&mut s, &mut p, "new", "My profile", NOW).expect("create");
+        assert_eq!(created.name, "My profile (2)");
         assert_eq!(s.profile_order, ["p0", "new"]);
         assert_eq!(s.active_profile_id.as_deref(), Some("p0"));
         assert_eq!(

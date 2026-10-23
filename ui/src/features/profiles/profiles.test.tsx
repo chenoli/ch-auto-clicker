@@ -17,9 +17,9 @@ const t = i18n.t.bind(i18n);
 function profiles(): Profile[] {
   const base = prototypeProfile();
   return [
-    { ...base, id: "a", name: "Coleta rápida", hotkey: { mods: ["ctrl"], key: "1" } },
-    { ...base, id: "b", name: "Leitura em loop", mode: "scan" },
-    { ...base, id: "c", name: "Anti-ociosidade", mode: "wiggle" },
+    { ...base, id: "a", name: "Quick farm", hotkey: { mods: ["ctrl"], key: "1" } },
+    { ...base, id: "b", name: "Reading loop", mode: "scan" },
+    { ...base, id: "c", name: "Anti-idle", mode: "wiggle" },
   ];
 }
 
@@ -48,9 +48,9 @@ describe("profile summary and search", () => {
   });
 
   it("searches ignoring case and accents", () => {
-    expect(matchesSearch("Coleta rápida", "RAPIDA")).toBe(true);
-    expect(matchesSearch("Coleta rápida", "  col ")).toBe(true);
-    expect(matchesSearch("Coleta rápida", "farm")).toBe(false);
+    expect(matchesSearch("Café run", "CAFE")).toBe(true);
+    expect(matchesSearch("Café run", "  ru ")).toBe(true);
+    expect(matchesSearch("Café run", "farm")).toBe(false);
   });
 });
 
@@ -93,22 +93,22 @@ const openMenu = (name: string) => fireEvent.click(screen.getByRole("button", { 
 describe("ProfilesScreen", () => {
   it("lists the profiles like Tela 05.A and filters by name", () => {
     const { props } = setup();
-    expect(card("Coleta rápida")).toHaveAttribute("data-active", "true");
+    expect(card("Quick farm")).toHaveAttribute("data-active", "true");
     expect(screen.getByText("Ctrl 1")).toBeInTheDocument();
     expect(screen.getByText(/3 perfis/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "%APPDATA%\\Chenoli\\CH Auto Clicker" }));
     expect(props.onOpenFolder).toHaveBeenCalledOnce();
     fireEvent.change(screen.getByRole("searchbox", { name: "Buscar perfil" }), { target: { value: "loop" } });
-    expect(screen.queryByText("Coleta rápida")).toBeNull();
+    expect(screen.queryByText("Quick farm")).toBeNull();
     fireEvent.change(screen.getByRole("searchbox"), { target: { value: "zzz" } });
     expect(screen.getByText("Nenhum perfil com esse nome.")).toBeInTheDocument();
   });
 
   it("activates, creates, imports and exports", () => {
     const { props } = setup();
-    fireEvent.click(card("Leitura em loop"));
+    fireEvent.click(card("Reading loop"));
     expect(props.onActivate).toHaveBeenCalledWith("b");
-    fireEvent.keyDown(card("Anti-ociosidade"), { key: "Enter" });
+    fireEvent.keyDown(card("Anti-idle"), { key: "Enter" });
     expect(props.onActivate).toHaveBeenCalledWith("c");
     fireEvent.click(screen.getByRole("button", { name: "+ Novo" }));
     fireEvent.click(screen.getByRole("button", { name: "Importar" }));
@@ -122,52 +122,52 @@ describe("ProfilesScreen", () => {
 
   it("runs every menu action and closes the menu on outside clicks", async () => {
     const { props } = setup();
-    openMenu("Coleta rápida");
+    openMenu("Quick farm");
     const menu = screen.getByRole("menu");
     expect(within(menu).getByRole("menuitem", { name: /Remover atalho/ })).toBeInTheDocument();
     fireEvent.click(within(menu).getByRole("menuitem", { name: /Duplicar/ }));
     expect(props.onDuplicate).toHaveBeenCalledWith("a");
     expect(screen.queryByRole("menu")).toBeNull();
 
-    openMenu("Coleta rápida");
+    openMenu("Quick farm");
     fireEvent.click(screen.getByRole("menuitem", { name: /Exportar…/ }));
     expect(props.onExport).toHaveBeenCalledWith("a");
-    openMenu("Coleta rápida");
+    openMenu("Quick farm");
     fireEvent.click(screen.getByRole("menuitem", { name: /Definir atalho/ }));
     expect(props.onRecordHotkey).toHaveBeenCalledWith("a");
-    openMenu("Coleta rápida");
+    openMenu("Quick farm");
     fireEvent.click(screen.getByRole("menuitem", { name: /Remover atalho/ }));
     expect(props.onClearHotkey).toHaveBeenCalledWith("a");
 
-    openMenu("Leitura em loop");
+    openMenu("Reading loop");
     expect(screen.queryByRole("menuitem", { name: /Remover atalho/ })).toBeNull();
     await act(async () => new Promise((r) => setTimeout(r, 1)));
     fireEvent.click(document.body);
     expect(screen.queryByRole("menu")).toBeNull();
-    openMenu("Leitura em loop");
+    openMenu("Reading loop");
     fireEvent.keyDown(window, { key: "Escape" });
     expect(screen.queryByRole("menu")).toBeNull();
   });
 
   it("renames inline and shows a refused name", async () => {
-    const onRename = vi.fn(async (_id: string, name: string) => (name === "Anti-ociosidade" ? "NAME_TAKEN" : null));
+    const onRename = vi.fn(async (_id: string, name: string) => (name === "Anti-idle" ? "NAME_TAKEN" : null));
     setup({ onRename });
-    openMenu("Leitura em loop");
+    openMenu("Reading loop");
     fireEvent.click(screen.getByRole("menuitem", { name: /Renomear/ }));
     const input = screen.getByRole("textbox", { name: "Nome do perfil" });
-    fireEvent.change(input, { target: { value: "Anti-ociosidade" } });
+    fireEvent.change(input, { target: { value: "Anti-idle" } });
     fireEvent.keyDown(input, { key: "Enter" });
     expect(await screen.findByText("Já existe um perfil com esse nome.")).toBeInTheDocument();
-    fireEvent.change(input, { target: { value: "Leitura" } });
+    fireEvent.change(input, { target: { value: "Reading" } });
     fireEvent.keyDown(input, { key: "Enter" });
     await waitFor(() => expect(screen.queryByRole("textbox", { name: "Nome do perfil" })).toBeNull());
-    expect(onRename).toHaveBeenLastCalledWith("b", "Leitura");
+    expect(onRename).toHaveBeenLastCalledWith("b", "Reading");
 
-    fireEvent.keyDown(card("Coleta rápida"), { key: "F2" });
+    fireEvent.keyDown(card("Quick farm"), { key: "F2" });
     const again = screen.getByRole("textbox", { name: "Nome do perfil" });
     fireEvent.keyDown(again, { key: "Escape" });
     expect(screen.queryByRole("textbox")).toBeNull();
-    fireEvent.keyDown(card("Coleta rápida"), { key: "F2" });
+    fireEvent.keyDown(card("Quick farm"), { key: "F2" });
     fireEvent.blur(screen.getByRole("textbox", { name: "Nome do perfil" }));
     expect(screen.queryByRole("textbox")).toBeNull();
     expect(onRename).toHaveBeenCalledTimes(2);
@@ -175,28 +175,28 @@ describe("ProfilesScreen", () => {
 
   it("confirms before deleting and never deletes the last profile", () => {
     const { props, view } = setup();
-    fireEvent.keyDown(card("Anti-ociosidade"), { key: "Delete" });
+    fireEvent.keyDown(card("Anti-idle"), { key: "Delete" });
     expect(screen.getByText(/Excluir este perfil/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Cancelar" }));
     expect(props.onDelete).not.toHaveBeenCalled();
-    openMenu("Anti-ociosidade");
+    openMenu("Anti-idle");
     fireEvent.click(screen.getByRole("menuitem", { name: /Excluir/ }));
     fireEvent.click(screen.getByRole("button", { name: "Excluir" }));
     expect(props.onDelete).toHaveBeenCalledWith("c");
 
     view.unmount();
     setup({ profiles: profiles().slice(0, 1) });
-    openMenu("Coleta rápida");
+    openMenu("Quick farm");
     expect(screen.getByRole("menuitem", { name: /Excluir/ })).toBeDisabled();
-    fireEvent.keyDown(card("Coleta rápida"), { key: "Delete" });
+    fireEvent.keyDown(card("Quick farm"), { key: "Delete" });
     expect(screen.queryByText(/Excluir este perfil/)).toBeNull();
   });
 
   it("duplicates with Ctrl D and ignores other keys", () => {
     const { props } = setup();
-    fireEvent.keyDown(card("Coleta rápida"), { key: "d", ctrlKey: true });
+    fireEvent.keyDown(card("Quick farm"), { key: "d", ctrlKey: true });
     expect(props.onDuplicate).toHaveBeenCalledWith("a");
-    fireEvent.keyDown(card("Coleta rápida"), { key: "x" });
+    fireEvent.keyDown(card("Quick farm"), { key: "x" });
     expect(props.onActivate).not.toHaveBeenCalled();
   });
 
@@ -206,8 +206,8 @@ describe("ProfilesScreen", () => {
       heldMods: ["ctrl", "shift"],
       conflict: { target: { kind: "profile", id: "c" }, combo: { mods: [], key: "F6" }, withName: "Iniciar / Parar" },
     });
-    expect(within(card("Leitura em loop")).getByText("Shift")).toBeInTheDocument();
-    fireEvent.click(card("Leitura em loop"));
+    expect(within(card("Reading loop")).getByText("Shift")).toBeInTheDocument();
+    fireEvent.click(card("Reading loop"));
     expect(props.onActivate).not.toHaveBeenCalled();
     expect(screen.getByRole("alert")).toHaveTextContent("Já usado por “Iniciar / Parar”.");
     fireEvent.click(screen.getByRole("button", { name: "Substituir" }));
@@ -250,7 +250,7 @@ describe("ProfilesScreen", () => {
     const [first, second, third] = slots;
     if (!first || !second || !third) throw new Error("slots missing");
     expect(first).toHaveAttribute("draggable", "false");
-    fireEvent.pointerDown(screen.getByRole("button", { name: /Mover Coleta rápida/ }));
+    fireEvent.pointerDown(screen.getByRole("button", { name: /Mover Quick farm/ }));
     expect(first).toHaveAttribute("draggable", "true");
     const start = createEvent.dragStart(first);
     Object.defineProperty(start, "dataTransfer", { value: { effectAllowed: "" } });
@@ -272,7 +272,7 @@ describe("ProfilesScreen", () => {
     fireEvent.drop(first, none);
     fireEvent.dragOver(first, none);
     expect(first).not.toHaveAttribute("data-drop");
-    fireEvent.pointerDown(screen.getByRole("button", { name: /Mover Anti-ociosidade/ }));
+    fireEvent.pointerDown(screen.getByRole("button", { name: /Mover Anti-idle/ }));
     const start = createEvent.dragStart(third);
     Object.defineProperty(start, "dataTransfer", { value: { effectAllowed: "" } });
     fireEvent(third, start);
@@ -286,7 +286,7 @@ describe("ProfilesScreen", () => {
 
   it("reorders with the arrow keys on the handle without activating the card", () => {
     const { props } = setup();
-    const handle = screen.getByRole("button", { name: /Mover Leitura em loop/ });
+    const handle = screen.getByRole("button", { name: /Mover Reading loop/ });
     fireEvent.click(handle);
     fireEvent.pointerUp(handle);
     expect(props.onActivate).not.toHaveBeenCalled();
@@ -294,8 +294,8 @@ describe("ProfilesScreen", () => {
     expect(props.onReorder).toHaveBeenLastCalledWith(["b", "a", "c"]);
     fireEvent.keyDown(handle, { key: "ArrowDown" });
     expect(props.onReorder).toHaveBeenLastCalledWith(["a", "c", "b"]);
-    fireEvent.keyDown(screen.getByRole("button", { name: /Mover Coleta rápida/ }), { key: "ArrowUp" });
-    fireEvent.keyDown(screen.getByRole("button", { name: /Mover Anti-ociosidade/ }), { key: "ArrowDown" });
+    fireEvent.keyDown(screen.getByRole("button", { name: /Mover Quick farm/ }), { key: "ArrowUp" });
+    fireEvent.keyDown(screen.getByRole("button", { name: /Mover Anti-idle/ }), { key: "ArrowDown" });
     fireEvent.keyDown(handle, { key: "Tab" });
     expect(props.onReorder).toHaveBeenCalledTimes(2);
   });
@@ -304,7 +304,7 @@ describe("ProfilesScreen", () => {
     setup();
     fireEvent.change(screen.getByRole("searchbox"), { target: { value: "loop" } });
     expect(screen.queryByRole("button", { name: /^Mover / })).toBeNull();
-    expect(card("Leitura em loop")).toHaveAttribute("data-handle", "false");
+    expect(card("Reading loop")).toHaveAttribute("data-handle", "false");
   });
 
   it("has no handle with a single profile", () => {
@@ -330,20 +330,20 @@ describe("Header profile dropdown", () => {
     const onOpenProfiles = vi.fn();
     render(
       <Header
-        profileName="Coleta rápida"
+        profileName="Quick farm"
         profiles={profiles()}
         activeProfileId="a"
         onSelectProfile={onSelectProfile}
         onOpenProfiles={onOpenProfiles}
       />,
     );
-    const trigger = screen.getByRole("button", { name: /Coleta rápida/ });
+    const trigger = screen.getByRole("button", { name: /Quick farm/ });
     fireEvent.click(trigger);
-    expect(screen.getByRole("menuitemradio", { name: "Coleta rápida" })).toHaveAttribute("aria-checked", "true");
-    fireEvent.click(screen.getByRole("menuitemradio", { name: "Coleta rápida" }));
+    expect(screen.getByRole("menuitemradio", { name: "Quick farm" })).toHaveAttribute("aria-checked", "true");
+    fireEvent.click(screen.getByRole("menuitemradio", { name: "Quick farm" }));
     expect(onSelectProfile).not.toHaveBeenCalled();
     fireEvent.click(trigger);
-    fireEvent.click(screen.getByRole("menuitemradio", { name: "Leitura em loop" }));
+    fireEvent.click(screen.getByRole("menuitemradio", { name: "Reading loop" }));
     expect(onSelectProfile).toHaveBeenCalledWith("b");
     fireEvent.click(trigger);
     fireEvent.click(screen.getByRole("menuitem", { name: "Gerenciar perfis…" }));

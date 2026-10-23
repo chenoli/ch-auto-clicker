@@ -62,7 +62,7 @@ export function TokensScreen(): ReactElement {
             ))}
           </div>
           <p className="m-0 text-11 text-fg-2">
-            Space Grotesk 500 · <span className="font-semibold text-accent tabular-nums">1.284 cliques</span>
+            Space Grotesk 500 · <span className="font-semibold text-accent tabular-nums">1,284 clicks</span>
           </p>
         </section>
       ))}

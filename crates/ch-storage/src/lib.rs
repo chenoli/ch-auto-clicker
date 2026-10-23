@@ -326,7 +326,7 @@ mod tests {
     }
 
     fn profile(id: &str) -> Profile {
-        Profile::new_default(id, format!("Perfil {id}"), "2026-10-04T00:00:00Z")
+        Profile::new_default(id, format!("Profile {id}"), "2026-10-04T00:00:00Z")
     }
 
     fn init(store: &Store) -> LoadedState {
@@ -474,7 +474,7 @@ mod tests {
         )
         .expect("json");
         assert_eq!(current.name, "Renomeado");
-        assert_eq!(previous.name, "Perfil p");
+        assert_eq!(previous.name, "Profile p");
         assert!(!path.with_extension("json.tmp").exists());
     }
 

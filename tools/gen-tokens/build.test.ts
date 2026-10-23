@@ -55,7 +55,7 @@ describe("gen-tokens", () => {
       'export type ThemeId = "grafite" | "blueprint" | "fosforo" | "bancada" | "papel" | "contraste";',
     );
     expect(ts).toContain('export const DEFAULT_THEME: ThemeId = "grafite";');
-    expect(ts).toContain('"description": "O escuro do site. Neutro quente, verde de marca como sinal."');
+    expect(ts).toContain(`"description": "The site's dark look. Warm neutrals, brand green as the signal."`);
   });
 
   it("emits a Rust palette per theme in sRGB", () => {

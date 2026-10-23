@@ -80,7 +80,7 @@ pub fn file_name(profile: &Profile) -> String {
     let stem = stem.trim().trim_end_matches('.');
     format!(
         "{}.{EXTENSION}",
-        if stem.is_empty() { "perfil" } else { stem }
+        if stem.is_empty() { "profile" } else { stem }
     )
 }
 
@@ -157,7 +157,7 @@ mod tests {
     const NOW: &str = "2026-10-05T12:00:00Z";
 
     fn sample() -> Profile {
-        let mut p = Profile::new_default("orig", "Coleta rápida", "2026-01-01T00:00:00Z");
+        let mut p = Profile::new_default("orig", "Café run", "2026-01-01T00:00:00Z");
         p.click.interval_ms = 42;
         p
     }
@@ -183,14 +183,14 @@ mod tests {
         let existing = [sample()];
         let imported =
             import(&text, "new", NOW, &HotkeyBindings::default(), &existing).expect("import");
-        assert_eq!(imported.profile.name, "Coleta rápida (2)");
+        assert_eq!(imported.profile.name, "Café run (2)");
         assert_eq!(imported.profile.hotkey, None);
         assert_eq!(
             imported.notes,
             vec![
                 ImportNote::Renamed {
-                    from: "Coleta rápida".into(),
-                    to: "Coleta rápida (2)".into()
+                    from: "Café run".into(),
+                    to: "Café run (2)".into()
                 },
                 ImportNote::HotkeyDropped {
                     combo: Hotkey::new(&[], "F6")
@@ -288,10 +288,10 @@ mod tests {
     #[test]
     fn file_names_are_safe_for_windows() {
         let mut p = sample();
-        assert_eq!(file_name(&p), "Coleta rápida.chprofile");
+        assert_eq!(file_name(&p), "Café run.chprofile");
         p.name = "a/b:c*?. ".into();
         assert_eq!(file_name(&p), "a_b_c__.chprofile");
         p.name = "...".into();
-        assert_eq!(file_name(&p), "perfil.chprofile");
+        assert_eq!(file_name(&p), "profile.chprofile");
     }
 }

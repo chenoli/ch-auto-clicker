@@ -278,7 +278,7 @@ mod tests {
     }
 
     fn profile() -> Profile {
-        Profile::new_default("p", "Teste", "2026-10-04T00:00:00Z")
+        Profile::new_default("p", "Test", "2026-10-04T00:00:00Z")
     }
 
     fn simulate(plan: RunPlan, fires: usize) -> (Vec<Call>, Vec<u64>, Arc<Shared>, RunEnd) {

@@ -5,9 +5,9 @@ import type { ReactElement } from "react";
 const noop = () => {};
 
 const PROFILES = [
-  { id: "coleta", name: "Coleta rápida" },
-  { id: "leitura", name: "Leitura em loop" },
-  { id: "anti", name: "Anti-ociosidade" },
+  { id: "quick-farm", name: "Quick farm" },
+  { id: "reading-loop", name: "Reading loop" },
+  { id: "anti-idle", name: "Anti-idle" },
 ];
 
 export function TrayMenuDemo(): ReactElement {
@@ -15,9 +15,9 @@ export function TrayMenuDemo(): ReactElement {
     <div className="tray-demo">
       <TrayMenuView
         state="idle"
-        profileName="Coleta rápida"
+        profileName="Quick farm"
         profiles={PROFILES}
-        activeProfileId="coleta"
+        activeProfileId="quick-farm"
         showHud
         startHint="F6"
         pauseHint="F7"
@@ -27,9 +27,9 @@ export function TrayMenuDemo(): ReactElement {
       />
       <TrayMenuView
         state="running"
-        profileName="Leitura em loop"
+        profileName="Reading loop"
         profiles={PROFILES}
-        activeProfileId="leitura"
+        activeProfileId="reading-loop"
         showHud={false}
         startHint="F6"
         pauseHint="F7"

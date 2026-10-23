@@ -11,7 +11,7 @@ function setup(overrides: Partial<HudViewProps> = {}) {
   const props: HudViewProps = {
     state: "running",
     locale: "pt-BR",
-    profileName: "Coleta rápida",
+    profileName: "Quick farm",
     clicks: 1284,
     countdownRemainingMs: null,
     remainingMs: 272_000,
@@ -31,7 +31,7 @@ describe("HudView", () => {
     expect(pill).toHaveAttribute("data-state", "countdown");
     expect(pill).toHaveTextContent("Iniciando");
     expect(pill).toHaveTextContent("3");
-    expect(pill).toHaveTextContent("Coleta rápida");
+    expect(pill).toHaveTextContent("Quick farm");
     expect(pill).toHaveTextContent("F6cancelar");
   });
 

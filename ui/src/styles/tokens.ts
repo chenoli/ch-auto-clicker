@@ -14,8 +14,8 @@ export const THEMES: readonly ThemeTokens[] = [
   {
     "id": "grafite",
     "name": "Grafite",
-    "tag": "Padrão",
-    "description": "O escuro do site. Neutro quente, verde de marca como sinal.",
+    "tag": "Default",
+    "description": "The site's dark look. Warm neutrals, brand green as the signal.",
     "tokens": {
       "bg": "#141412",
       "bg-2": "#1C1B19",
@@ -34,8 +34,8 @@ export const THEMES: readonly ThemeTokens[] = [
   {
     "id": "blueprint",
     "name": "Blueprint",
-    "tag": "Técnico",
-    "description": "Azul de prancheta, grade mais presente, acento ciano.",
+    "tag": "Technical",
+    "description": "Drafting-table blue, a more visible grid, cyan accent.",
     "tokens": {
       "bg": "#0D1520",
       "bg-2": "#132031",
@@ -55,7 +55,7 @@ export const THEMES: readonly ThemeTokens[] = [
     "id": "fosforo",
     "name": "Fósforo",
     "tag": "Terminal",
-    "description": "Âmbar monocromático de terminal, para sessões longas à noite.",
+    "description": "Monochrome terminal amber, for long sessions at night.",
     "tokens": {
       "bg": "#13100A",
       "bg-2": "#1B170F",
@@ -74,8 +74,8 @@ export const THEMES: readonly ThemeTokens[] = [
   {
     "id": "bancada",
     "name": "Bancada",
-    "tag": "Laboratório",
-    "description": "Verde clínico e calmo, como um osciloscópio de bancada.",
+    "tag": "Lab",
+    "description": "Calm clinical green, like a bench oscilloscope.",
     "tokens": {
       "bg": "#0F1512",
       "bg-2": "#151D19",
@@ -94,8 +94,8 @@ export const THEMES: readonly ThemeTokens[] = [
   {
     "id": "papel",
     "name": "Papel",
-    "tag": "Claro",
-    "description": "O creme do site. Para ambientes iluminados e capturas de tela.",
+    "tag": "Light",
+    "description": "The site's cream. For bright rooms and screenshots.",
     "tokens": {
       "bg": "#F5F2EC",
       "bg-2": "#EDEAD3",
@@ -114,8 +114,8 @@ export const THEMES: readonly ThemeTokens[] = [
   {
     "id": "contraste",
     "name": "Contraste",
-    "tag": "Acessível",
-    "description": "Preto absoluto, bordas fortes, foco sempre visível. AAA.",
+    "tag": "Accessible",
+    "description": "Pure black, strong borders, focus always visible. AAA.",
     "tokens": {
       "bg": "#000000",
       "bg-2": "#0B0B0B",

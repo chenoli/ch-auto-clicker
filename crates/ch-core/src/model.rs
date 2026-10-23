@@ -395,7 +395,7 @@ mod tests {
 
     #[test]
     fn profile_serializes_to_the_documented_shape() {
-        let p = Profile::new_default("p1", "Coleta rápida", "2026-10-04T20:00:00Z");
+        let p = Profile::new_default("p1", "Café run", "2026-10-04T20:00:00Z");
         let v = serde_json::to_value(&p).expect("json");
         assert_eq!(v["schemaVersion"], 1);
         assert_eq!(v["mode"], "click");

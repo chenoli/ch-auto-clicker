@@ -4,7 +4,7 @@ export function prototypeProfile(): Profile {
   return {
     schemaVersion: 1,
     id: "proto",
-    name: "Coleta rápida",
+    name: "Quick farm",
     mode: "click",
     hotkey: null,
     createdAt: "2026-10-04T00:00:00Z",

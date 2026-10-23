@@ -46,7 +46,7 @@ describe("MainWindowView", () => {
 
   it("renders the idle window like Tela 01.A", () => {
     setup();
-    expect(screen.getByText("Coleta rápida")).toBeInTheDocument();
+    expect(screen.getByText("Quick farm")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Pronto.*Iniciar/ })).toHaveAttribute("data-state", "idle");
     expect(screen.getByText("10,0")).toBeInTheDocument();
     expect(screen.getByText("1 · 35 · 70 ms em ciclo")).toBeInTheDocument();

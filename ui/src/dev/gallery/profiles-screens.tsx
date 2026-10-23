@@ -13,35 +13,35 @@ const noop = () => {};
 
 function handoffProfiles(): Profile[] {
   const base = prototypeProfile();
-  const coleta: Profile = {
+  const quickFarm: Profile = {
     ...base,
-    id: "coleta",
+    id: "quick-farm",
     hotkey: { mods: ["ctrl"], key: "1" },
     click: { ...base.click, variation: { ...base.click.variation, enabled: false } },
   };
-  const leitura: Profile = {
+  const readingLoop: Profile = {
     ...base,
-    id: "leitura",
-    name: "Leitura em loop",
+    id: "reading-loop",
+    name: "Reading loop",
     mode: "scan",
     hotkey: { mods: ["ctrl"], key: "2" },
     modes: { ...base.modes, scan: { ...base.modes.scan, area: { x: 412, y: 236, w: 776, h: 260 } } },
   };
-  const anti: Profile = {
+  const antiIdle: Profile = {
     ...base,
-    id: "anti",
-    name: "Anti-ociosidade",
+    id: "anti-idle",
+    name: "Anti-idle",
     mode: "wiggle",
     hotkey: { mods: ["ctrl"], key: "3" },
   };
-  const teste: Profile = {
+  const formTest: Profile = {
     ...base,
-    id: "teste",
-    name: "Teste de formulário",
+    id: "form-test",
+    name: "Form test",
     click: { ...base.click, kind: "double" },
     modes: { ...base.modes, click: { ...base.modes.click, position: "cursor" } },
   };
-  return [coleta, leitura, anti, teste];
+  return [quickFarm, readingLoop, antiIdle, formTest];
 }
 
 function Screen(props: Partial<ProfilesScreenProps>) {
@@ -50,7 +50,7 @@ function Screen(props: Partial<ProfilesScreenProps>) {
       {() => (
         <ProfilesScreen
           profiles={handoffProfiles()}
-          activeId="coleta"
+          activeId="quick-farm"
           locale="pt-BR"
           dataPath={DATA_PATH}
           recordingProfile={null}
@@ -81,7 +81,7 @@ function Screen(props: Partial<ProfilesScreenProps>) {
 }
 
 export function ProfilesScreenDemo(): ReactElement {
-  return <Screen initialMenuFor="leitura" />;
+  return <Screen initialMenuFor="reading-loop" />;
 }
 
 export function ProfilesEmptyDemo(): ReactElement {

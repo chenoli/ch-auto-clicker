@@ -124,7 +124,7 @@ describe("MainWindow", () => {
     mocks.commands.engineStart.mockResolvedValue({ status: "ok", data: null });
     mocks.commands.windowOpenVariation.mockResolvedValue({ status: "ok", data: null });
     render(<MainWindow />);
-    expect(await screen.findByText("Coleta rápida")).toBeInTheDocument();
+    expect(await screen.findByText("Quick farm")).toBeInTheDocument();
     expect(screen.getByText("F6")).toBeInTheDocument();
     expect(mocks.commands.windowSetContentHeight).toHaveBeenCalled();
 
@@ -153,7 +153,7 @@ describe("MainWindow", () => {
     fireEvent.click(screen.getByRole("button", { name: "Voltar" }));
     fireEvent.click(screen.getByRole("button", { name: "Minimizar" }));
     fireEvent.click(screen.getByRole("button", { name: "Fechar" }));
-    expect(await screen.findByText("Coleta rápida")).toBeInTheDocument();
+    expect(await screen.findByText("Quick farm")).toBeInTheDocument();
   });
 
   it("shows the conflict state when F6 could not be registered", async () => {
@@ -382,7 +382,7 @@ describe("ProfilesRoute", () => {
       error: { code: "PROFILE_NOT_FOUND", message: "" },
     });
     render(<MainWindow />);
-    fireEvent.click(await screen.findByRole("button", { name: /Coleta rápida/ }));
+    fireEvent.click(await screen.findByRole("button", { name: /Quick farm/ }));
     fireEvent.click(screen.getByRole("menuitemradio", { name: "Outro" }));
     expect(mocks.commands.profileActivate).toHaveBeenCalledWith("other");
     expect(await screen.findByRole("alert")).toHaveTextContent("Perfil não encontrado.");
@@ -399,11 +399,11 @@ describe("ProfilesRoute", () => {
     mocks.commands.profileRename.mockResolvedValue({ status: "error", error: { code: "NAME_TAKEN", message: "" } });
     await openProfiles();
 
-    fireEvent.click(screen.getByRole("button", { name: "Coleta rápida" }));
+    fireEvent.click(screen.getByRole("button", { name: "Quick farm" }));
     expect(mocks.commands.profileActivate).toHaveBeenCalledWith("proto");
     fireEvent.click(screen.getByRole("button", { name: "+ Novo" }));
     expect(mocks.commands.profileCreate).toHaveBeenCalledWith("Novo perfil");
-    fireEvent.keyDown(screen.getByRole("button", { name: "Coleta rápida" }), { key: "d", ctrlKey: true });
+    fireEvent.keyDown(screen.getByRole("button", { name: "Quick farm" }), { key: "d", ctrlKey: true });
     expect(await screen.findByRole("alert")).toHaveTextContent("até 48 caracteres");
     fireEvent.click(screen.getByRole("button", { name: "Exportar" }));
     expect(await screen.findByText("Exportado para C:\\x.chprofile")).toBeInTheDocument();
@@ -411,7 +411,7 @@ describe("ProfilesRoute", () => {
     await act(async () => {});
     expect(screen.queryByText(/Exportado/)).toBeNull();
 
-    fireEvent.keyDown(screen.getByRole("button", { name: "Coleta rápida" }), { key: "F2" });
+    fireEvent.keyDown(screen.getByRole("button", { name: "Quick farm" }), { key: "F2" });
     const input = screen.getByRole("textbox", { name: "Nome do perfil" });
     fireEvent.change(input, { target: { value: "Outro" } });
     fireEvent.keyDown(input, { key: "Enter" });
@@ -419,17 +419,17 @@ describe("ProfilesRoute", () => {
     fireEvent.keyDown(input, { key: "Escape" });
 
     fireEvent.click(screen.getByRole("button", { name: "Voltar" }));
-    expect(await screen.findByText("Coleta rápida")).toBeInTheDocument();
+    expect(await screen.findByText("Quick farm")).toBeInTheDocument();
   });
 
   it("explains imports, their notes and refused files", async () => {
-    const profile = { ...prototypeProfile(), id: "new", name: "Coleta rápida (2)" };
+    const profile = { ...prototypeProfile(), id: "new", name: "Quick farm (2)" };
     mocks.commands.profileImport
       .mockResolvedValueOnce(
         ok({
           profile,
           notes: [
-            { kind: "renamed", from: "Coleta rápida", to: "Coleta rápida (2)" },
+            { kind: "renamed", from: "Quick farm", to: "Quick farm (2)" },
             { kind: "hotkeyDropped", combo: { mods: [], key: "F6" } },
             { kind: "migrated", fromVersion: 0 },
           ],
@@ -444,15 +444,15 @@ describe("ProfilesRoute", () => {
     await openProfiles();
 
     fireEvent.click(screen.getByRole("button", { name: "Importar" }));
-    expect(await screen.findByText("Perfil “Coleta rápida (2)” importado.")).toBeInTheDocument();
-    expect(screen.getByText(/ficou “Coleta rápida \(2\)”/)).toBeInTheDocument();
+    expect(await screen.findByText("Perfil “Quick farm (2)” importado.")).toBeInTheDocument();
+    expect(screen.getByText(/ficou “Quick farm \(2\)”/)).toBeInTheDocument();
     expect(screen.getByText(/O atalho F6 já estava em uso/)).toBeInTheDocument();
     expect(screen.getByText(/versão anterior/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Importar" }));
     await act(async () => {});
     expect(screen.queryByText(/importado/)).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Importar" }));
-    expect(await screen.findByText("Perfil “Coleta rápida (2)” importado.")).toBeInTheDocument();
+    expect(await screen.findByText("Perfil “Quick farm (2)” importado.")).toBeInTheDocument();
 
     const root = screen.getByRole("heading", { name: "Perfis" }).closest(".relative") as HTMLElement;
     const drop = (file: File) => {
@@ -484,7 +484,7 @@ describe("ProfilesRoute", () => {
     fireEvent.click(screen.getByRole("menuitem", { name: /Definir atalho/ }));
     expect(mocks.commands.hotkeyBeginRecord).toHaveBeenCalledOnce();
     expect(screen.getByText("Pressione as teclas…")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Ações de Coleta rápida" }));
+    fireEvent.click(screen.getByRole("button", { name: "Ações de Quick farm" }));
     fireEvent.click(screen.getByRole("menuitem", { name: /Excluir/ }));
     fireEvent.click(screen.getByRole("button", { name: "Excluir" }));
     expect(mocks.commands.profileDelete).toHaveBeenCalledWith("proto");
@@ -522,7 +522,7 @@ describe("PointsRoute", () => {
       expect.any(String),
     );
     fireEvent.click(screen.getByRole("button", { name: "Voltar" }));
-    expect(await screen.findByText("Coleta rápida")).toBeInTheDocument();
+    expect(await screen.findByText("Quick farm")).toBeInTheDocument();
   });
 
   it("warns when the screens changed since the capture", async () => {
@@ -619,7 +619,7 @@ describe("OverlayWindow", () => {
     mocks.commands.overlayAddPoint.mockResolvedValue({ status: "ok", data: state });
     render(<OverlayWindow />);
     expect(await screen.findByText("50, 60")).toBeInTheDocument();
-    expect(mocks.commands.overlayFocus).toHaveBeenCalledWith(0);
+    await waitFor(() => expect(mocks.commands.overlayFocus).toHaveBeenCalledWith(0));
     fireEvent.keyDown(window, { key: " " });
     expect(mocks.commands.overlayAddPoint).toHaveBeenLastCalledWith(0, 50, 60);
     fireEvent.keyDown(window, { key: "ArrowDown", shiftKey: true });

@@ -141,7 +141,7 @@ mod tests {
     use crate::model::{Area, Locale, ScreenPoint};
 
     fn profile() -> Profile {
-        Profile::new_default("p", "Coleta rápida", "2026-10-04T00:00:00Z")
+        Profile::new_default("p", "Café run", "2026-10-04T00:00:00Z")
     }
 
     #[test]

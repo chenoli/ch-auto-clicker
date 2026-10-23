@@ -8,14 +8,14 @@ import { TrayMenuView, stateKey } from "./tray-menu-view";
 import type { TrayMenuViewProps } from "./tray-menu-view";
 
 const PROFILES = [
-  { id: "a", name: "Coleta rápida" },
-  { id: "b", name: "Leitura em loop" },
+  { id: "a", name: "Quick farm" },
+  { id: "b", name: "Reading loop" },
 ];
 
 function setup(overrides: Partial<TrayMenuViewProps> = {}) {
   const props: TrayMenuViewProps = {
     state: "idle",
-    profileName: "Coleta rápida",
+    profileName: "Quick farm",
     profiles: PROFILES,
     activeProfileId: "a",
     showHud: true,
@@ -66,8 +66,8 @@ describe("TrayMenuView", () => {
     expect(props.onAction).toHaveBeenNthCalledWith(3, "quit");
     fireEvent.pointerEnter(item(/Perfil/));
     const sub = screen.getByRole("menu", { name: "Perfil" });
-    fireEvent.pointerEnter(within(sub).getByRole("menuitemradio", { name: /Leitura/ }));
-    fireEvent.click(within(sub).getByRole("menuitemradio", { name: /Leitura/ }));
+    fireEvent.pointerEnter(within(sub).getByRole("menuitemradio", { name: /Reading/ }));
+    fireEvent.click(within(sub).getByRole("menuitemradio", { name: /Reading/ }));
     expect(props.onAction).toHaveBeenLastCalledWith("profile:b");
     fireEvent.pointerEnter(item("Configurações"));
     expect(screen.queryByRole("menu", { name: "Perfil" })).toBeNull();
@@ -101,7 +101,7 @@ describe("TrayMenuView", () => {
     fireEvent.keyDown(menu, { key: "ArrowDown" });
     fireEvent.keyDown(menu, { key: "ArrowLeft" });
     const sub = screen.getByRole("menu", { name: "Perfil" });
-    expect(within(sub).getByRole("menuitemradio", { name: /Coleta/ })).toHaveAttribute("data-focused", "true");
+    expect(within(sub).getByRole("menuitemradio", { name: /Quick farm/ })).toHaveAttribute("data-focused", "true");
     fireEvent.keyDown(menu, { key: "ArrowDown" });
     fireEvent.keyDown(menu, { key: "ArrowDown" });
     fireEvent.keyDown(menu, { key: "ArrowUp" });

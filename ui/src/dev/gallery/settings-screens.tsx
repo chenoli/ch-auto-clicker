@@ -63,7 +63,7 @@ export function HudStatesDemo(): ReactElement {
   const { i18n } = useTranslation();
   const common = {
     locale: i18n.language,
-    profileName: "Coleta rápida",
+    profileName: "Quick farm",
     clicks: 1284,
     startStop: "F6",
     pauseResume: "F7",
