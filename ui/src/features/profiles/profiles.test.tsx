@@ -80,6 +80,7 @@ function setup(overrides: Partial<ProfilesScreenProps> = {}) {
     onCancelRecord: vi.fn(),
     onReplaceHotkey: vi.fn(),
     onKeepHotkey: vi.fn(),
+    onOpenFolder: vi.fn(),
     ...overrides,
   };
   const view = render(<ProfilesScreen {...props} />);
@@ -91,10 +92,12 @@ const openMenu = (name: string) => fireEvent.click(screen.getByRole("button", { 
 
 describe("ProfilesScreen", () => {
   it("lists the profiles like Tela 05.A and filters by name", () => {
-    setup();
+    const { props } = setup();
     expect(card("Coleta rápida")).toHaveAttribute("data-active", "true");
     expect(screen.getByText("Ctrl 1")).toBeInTheDocument();
-    expect(screen.getByText("3 perfis · %APPDATA%\\Chenoli\\CH Auto Clicker")).toBeInTheDocument();
+    expect(screen.getByText(/3 perfis/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "%APPDATA%\\Chenoli\\CH Auto Clicker" }));
+    expect(props.onOpenFolder).toHaveBeenCalledOnce();
     fireEvent.change(screen.getByRole("searchbox", { name: "Buscar perfil" }), { target: { value: "loop" } });
     expect(screen.queryByText("Coleta rápida")).toBeNull();
     fireEvent.change(screen.getByRole("searchbox"), { target: { value: "zzz" } });
@@ -317,7 +320,7 @@ describe("ProfilesScreen", () => {
     fireEvent.click(screen.getByRole("button", { name: "Importar .chprofile" }));
     expect(props.onCreate).toHaveBeenCalledOnce();
     expect(props.onImport).toHaveBeenCalledOnce();
-    expect(screen.getByText("0 perfis · %APPDATA%\\Chenoli\\CH Auto Clicker")).toBeInTheDocument();
+    expect(screen.getByText(/^0 perfis/)).toBeInTheDocument();
   });
 });
 

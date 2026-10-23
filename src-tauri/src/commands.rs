@@ -223,6 +223,16 @@ pub const SUPPORT_URL: &str = "https://ko-fi.com/chenoli";
 
 #[tauri::command]
 #[specta::specta]
+pub fn app_open_profiles_folder(app: AppHandle) -> AppResult<()> {
+    use tauri_plugin_opener::OpenerExt;
+    let dir = ch_storage::Store::default_root().join("profiles");
+    app.opener()
+        .open_path(dir.to_string_lossy(), None::<&str>)
+        .map_err(|e| AppError::new("OPEN_FAILED", e.to_string()))
+}
+
+#[tauri::command]
+#[specta::specta]
 pub fn settings_get(state: State<'_, AppState>) -> Settings {
     state.data().settings
 }

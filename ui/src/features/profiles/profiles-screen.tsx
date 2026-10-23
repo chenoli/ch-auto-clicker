@@ -21,6 +21,7 @@ export interface ProfilesScreenProps {
   activeId: string | null;
   locale: string;
   dataPath: string;
+  onOpenFolder?: () => void;
   recordingProfile: string | null;
   heldMods: readonly Modifier[];
   conflict: PendingConflict | null;
@@ -292,7 +293,15 @@ export function ProfilesScreen(props: ProfilesScreenProps): ReactElement {
         </>
       )}
       <div className="flex h-9 flex-none items-center border-t border-divider px-4 text-11 text-fg-3">
-        <span className="truncate">{t("profiles.footer", { count: profiles.length, path: props.dataPath })}</span>
+        <span className="flex-none">{t("profiles.footer", { count: profiles.length })}&nbsp;·&nbsp;</span>
+        <button
+          type="button"
+          className="footer-action truncate"
+          title={t("profiles.openFolder")}
+          onClick={props.onOpenFolder}
+        >
+          {props.dataPath}
+        </button>
       </div>
       {dropping && (
         <div className="profiles-drop" aria-hidden="true">

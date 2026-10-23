@@ -7,6 +7,7 @@ export const commands = {
 	settingsGet: () => __TAURI_INVOKE<Settings>("settings_get"),
 	settingsAcknowledgeAntiCheat: () => __TAURI_INVOKE<Settings>("settings_acknowledge_anti_cheat"),
 	appRestartAsAdmin: () => typedError<null, AppError>(__TAURI_INVOKE("app_restart_as_admin")),
+	appOpenProfilesFolder: () => typedError<null, AppError>(__TAURI_INVOKE("app_open_profiles_folder")),
 	appOpenSupport: () => typedError<null, AppError>(__TAURI_INVOKE("app_open_support")),
 	hudResize: (width: number | null, height: number | null) => __TAURI_INVOKE<void>("hud_resize", { width, height }),
 	trayMenuResize: (width: number | null, height: number | null) => __TAURI_INVOKE<void>("tray_menu_resize", { width, height }),

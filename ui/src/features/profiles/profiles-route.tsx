@@ -75,6 +75,7 @@ export function ProfilesRoute({ recording, onBack, onMinimize, onClose }: Profil
       activeId={settings?.activeProfileId ?? null}
       locale={settings?.locale ?? "pt-BR"}
       dataPath={DATA_PATH}
+      onOpenFolder={() => void run(commands.appOpenProfilesFolder())}
       recordingProfile={recording.recordingProfile}
       heldMods={recording.heldMods}
       conflict={recording.conflict}

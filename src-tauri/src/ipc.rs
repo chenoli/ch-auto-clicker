@@ -14,6 +14,7 @@ pub fn builder() -> Builder<tauri::Wry> {
             commands::settings_get,
             commands::settings_acknowledge_anti_cheat,
             commands::app_restart_as_admin,
+            commands::app_open_profiles_folder,
             commands::app_open_support,
             hud::hud_resize,
             tray_menu::tray_menu_resize,
