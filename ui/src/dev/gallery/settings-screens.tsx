@@ -41,7 +41,7 @@ export function SettingsScreenDemo(): ReactElement {
       {() => (
         <SettingsScreen
           settings={settings}
-          version="0.1.0"
+          version="0.8.0"
           capabilities={CAPABILITIES}
           themeLabel="Grafite"
           onChange={setSettings}

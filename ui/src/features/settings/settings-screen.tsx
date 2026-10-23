@@ -282,7 +282,7 @@ export function SettingsScreen(props: SettingsScreenProps): ReactElement {
         </div>
       </div>
       <div className="flex h-9 flex-none items-center justify-between border-t border-divider px-4 text-11 text-fg-3">
-        <span>{t("settings.footer", { version: props.version || "0.1.0" })}</span>
+        <span>{t("settings.footer", { version: props.version || "0.8.0" })}</span>
         {props.update && (
           <UpdateAction update={props.update} onCheck={props.onCheckUpdate} onInstall={props.onInstallUpdate} />
         )}

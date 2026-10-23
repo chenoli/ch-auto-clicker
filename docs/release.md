@@ -26,7 +26,7 @@ This key signs updates only (the app checks it before installing). It is not a W
 ## 2. Publishing a version
 
 1. Bump the version in `src-tauri/tauri.conf.json`, `package.json` and `Cargo.toml` (`workspace.package.version`).
-2. Commit to `main`, then `git tag v0.1.0 && git push origin main --tags`.
+2. Commit to `main`, then `git tag v0.8.0 && git push origin main --tags`.
 3. The `Release` workflow runs every CI check and builds the NSIS installer, the MSIs and `latest.json` into a draft release. It then uploads a copy of the NSIS installer as `ch-auto-clicker-setup.exe`, publishes the release as the latest one and sends an `app-release` dispatch to the landing page. Installed apps find the new version within 24 hours, or right away through "Check for updates" in Settings.
 4. The stable download link is `https://github.com/chenoli/ch-auto-clicker/releases/latest/download/ch-auto-clicker-setup.exe`. It only serves the new file after step 3 publishes the release, so it never points to a release without the copy.
 
@@ -35,7 +35,7 @@ This key signs updates only (the app checks it before installing). It is not a W
 Without a signature, Windows shows "Unknown publisher" and Smart App Control blocks the app. The free path for open-source projects:
 
 1. Requirements already met: MIT license (OSI approved), fully open code, public repository.
-2. Publish at least one release (the unsigned v0.1.0) with the app described in the README.
+2. Publish at least one release (the unsigned v0.8.0) with the app described in the README.
 3. Apply at <https://signpath.org> (open-source project form).
 4. Once approved, add the SignPath settings to the repository (API token, organization, project and signing policy) and point `bundle.windows.signCommand` in `tauri.conf.json` at a script that sends each file to SignPath and waits for the signed file.
 
