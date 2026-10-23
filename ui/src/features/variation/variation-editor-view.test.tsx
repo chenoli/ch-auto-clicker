@@ -81,6 +81,16 @@ describe("VariationEditorView", () => {
     expect(props.onMinimize).toHaveBeenCalledOnce();
   });
 
+  it("keeps the selected block in view while the strip scrolls", () => {
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
+    setup({ initialBlocks: [35, 35, 35, 35, 35, 35, 35, 35] });
+    expect(screen.getByRole("listbox")).toHaveClass("var-strip");
+    fireEvent.click(screen.getByRole("button", { name: "Adicionar bloco" }));
+    expect(scrollIntoView).toHaveBeenLastCalledWith({ block: "nearest", inline: "nearest" });
+    expect(scrollIntoView.mock.contexts.at(-1)).toBe(block("B09"));
+  });
+
   it("stops adding at 32 blocks", () => {
     setup({ initialBlocks: Array.from({ length: 32 }, () => 10) });
     expect(screen.getByRole("button", { name: "Adicionar bloco" })).toBeDisabled();

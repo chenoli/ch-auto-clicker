@@ -563,9 +563,18 @@
     color: var(--fg);
   }
 
+  .var-strip {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: stretch;
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
   .var-block {
     position: relative;
-    min-width: 72px;
+    min-width: max-content;
     border-radius: 9px;
     padding: 10px 12px;
     display: flex;
@@ -595,6 +604,7 @@
     font-size: var(--text-24);
     letter-spacing: var(--tracking-logo);
     line-height: 1;
+    white-space: nowrap;
     color: var(--fg);
   }
   .var-block[aria-pressed="true"] .var-block__value {

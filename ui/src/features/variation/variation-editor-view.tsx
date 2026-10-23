@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useTranslation } from "react-i18next";
 
@@ -44,6 +44,11 @@ export function VariationEditorView({
   const [blocks, setBlocks] = useState<number[]>(() => (initialBlocks.length ? [...initialBlocks] : [100]));
   const [selected, setSelected] = useState(0);
   const [draft, setDraft] = useState(String(blocks[0] ?? 100));
+  const stripRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    stripRef.current?.children[selected]?.scrollIntoView?.({ block: "nearest", inline: "nearest" });
+  }, [selected, blocks.length]);
 
   const select = (i: number) => {
     setSelected(i);
@@ -105,29 +110,31 @@ export function VariationEditorView({
             <span className="row-label">{t("variation.sequence")}</span>
             <span className="row-label tracking-status">{t("variation.widthHint")}</span>
           </div>
-          <div className="flex h-21 items-stretch gap-1.5" role="listbox" aria-label={t("variation.sequence")}>
-            {blocks.map((ms, i) => (
-              <button
-                key={i}
-                type="button"
-                role="option"
-                aria-selected={i === selected}
-                aria-pressed={i === selected}
-                data-low={ms < minReliableMs}
-                className="var-block"
-                style={{ flex: `${Math.max(ms, 14)} 1 0` }}
-                onClick={() => select(i)}
-              >
-                <span className="flex items-center justify-between">
-                  <span className="var-block__id">{blockId(i)}</span>
-                  {ms < minReliableMs && <span className="size-1.5 rounded-full bg-warn" />}
-                </span>
-                <span className="var-block__value">
-                  {ms}
-                  <span className="unit-suffix"> {t("units.ms")}</span>
-                </span>
-              </button>
-            ))}
+          <div className="flex h-21 items-stretch gap-1.5">
+            <div ref={stripRef} className="var-strip" role="listbox" aria-label={t("variation.sequence")}>
+              {blocks.map((ms, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  role="option"
+                  aria-selected={i === selected}
+                  aria-pressed={i === selected}
+                  data-low={ms < minReliableMs}
+                  className="var-block"
+                  style={{ flex: `${Math.max(ms, 14)} 1 0` }}
+                  onClick={() => select(i)}
+                >
+                  <span className="flex items-center justify-between">
+                    <span className="var-block__id">{blockId(i)}</span>
+                    {ms < minReliableMs && <span className="size-1.5 rounded-full bg-warn" />}
+                  </span>
+                  <span className="var-block__value">
+                    {ms}
+                    <span className="unit-suffix"> {t("units.ms")}</span>
+                  </span>
+                </button>
+              ))}
+            </div>
             <button
               type="button"
               className="var-add"
